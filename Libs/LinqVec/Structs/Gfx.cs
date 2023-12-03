@@ -9,7 +9,7 @@ public sealed record Gfx(
 	Res Res
 );
 
-readonly record struct GPen(
+public readonly record struct GPen(
 	uint ColorValue,
 	float Thickness,
 	bool IsPx
@@ -18,7 +18,7 @@ readonly record struct GPen(
 	public Color Color => MkCol(ColorValue);
 }
 
-static class GfxExt
+public static class GfxExt
 {
 	public static R ClientR(this Gfx gfx) => new(new Pt(0, 0), new Pt(gfx.ClientSz.X, gfx.ClientSz.Y));
 

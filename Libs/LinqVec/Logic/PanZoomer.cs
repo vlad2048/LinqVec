@@ -20,14 +20,14 @@ static class PanZoomer
 
 		var isOn = evt.IsKeyDown(C.KeyMap.PanZoom, d);
 
-		isOn.Subscribe(e => ctrl.Cursor = e ? C.Cursors.HandOpened : Cursors.Default).D(d);
+		isOn.Subscribe(e => ctrl.Cursor = e ? CBase.Cursors.HandOpened : Cursors.Default).D(d);
 
 		isOn
 			.SubscribeWithDisp((on, onD) =>
 			{
 				if (!on) return;
 				var isPanning = SetupPanning(evt, transform, ctrl).D(onD);
-				isPanning.Subscribe(panning => ctrl.Cursor = panning ? C.Cursors.HandClosed : C.Cursors.HandOpened).D(onD);
+				isPanning.Subscribe(panning => ctrl.Cursor = panning ? CBase.Cursors.HandClosed : CBase.Cursors.HandOpened).D(onD);
 			}).D(d);
 
 		SetupZooming(evt, transform, ctrl).D(d);

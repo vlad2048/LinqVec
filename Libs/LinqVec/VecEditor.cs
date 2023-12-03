@@ -22,6 +22,8 @@ public partial class VecEditor : UserControl
 	private readonly IRwVar<Tool> curTool;
 	private readonly IToolEnv env;
 
+	public IObservable<IEvtGen<PtInt>> EditorEvt { get; }
+
 	public VecEditor()
 	{
 		InitializeComponent();
@@ -30,10 +32,10 @@ public partial class VecEditor : UserControl
 		curTool = Var.Make(tools[0]).D(this);
 		var ctrl = new Ctrl(drawPanel);
 
-		var editorEvt = EvtUtils.MakeForControl(drawPanel, curTool.ToUnit());
-		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform).D(this);
+		EditorEvt = EvtUtils.MakeForControl(drawPanel, curTool.ToUnit());
+		var isPanZoom = PanZoomer.Setup(EditorEvt, ctrl, transform).D(this);
 
-		env = new ToolEnv(drawPanel, ctrl, curTool, isPanZoom, transform, editorEvt);
+		env = new ToolEnv(drawPanel, ctrl, curTool, isPanZoom, transform, EditorEvt);
 
 		/*drawPanel.Events().KeyPress.Subscribe(e =>
 		{

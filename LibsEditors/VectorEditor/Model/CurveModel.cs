@@ -1,35 +1,34 @@
-﻿using PowMaybe;
+﻿using LinqVec.Utils;
+using PowMaybe;
+using VectorEditor.Model.Structs;
+using VectorEditor.Tools.Curve_.Mods;
+using VectorEditor.Tools.Curve_.Structs;
 
-namespace LinqVec.Tools.Curve_.Model;
+namespace VectorEditor.Model;
 
 
-interface ICurveMod;
-sealed record NoneCurveMod : ICurveMod;
-sealed record AddPointCurveMod(Pt? StartPos) : ICurveMod;
-sealed record MovePointCurveMod(PointId Id) : ICurveMod;
-sealed record RemovePointCurveMod(int Idx) : ICurveMod;
-
-sealed record CurveModel(
+public sealed record CurveModel(
+	Guid Id,
 	CurvePt[] Pts
 )
 {
-	public static readonly CurveModel Empty = new(Array.Empty<CurvePt>());
+	public ObjId ObjId => new(ObjType.Curve, Id);
+	public static CurveModel Empty() => new(
+		Guid.NewGuid(),
+		Array.Empty<CurvePt>()
+	);
 }
-
-
-
 
 
 static class CurveModelOps
 {
-	private sealed record PtNfo(CurvePt P, PointId Id, double Distance);
+	private sealed record PtNfo(PointId Id, double Distance);
 
 	public static Pt GetPointById(this CurveModel model, PointId id) => model.Pts[id.Idx].GetPt(id.Type);
 
 	public static Maybe<PointId> GetClosestPointTo(this CurveModel model, Pt pt, double threshold)
 	{
-		//if (mayPt.IsNone(out var pt)) return May.None<PointId>();
-		PtNfo Mk(CurvePt mp, int idx, PointType type) => new (mp, new PointId(idx, type), (mp.GetPt(type) - pt).Length);
+		PtNfo Mk(CurvePt mp, int idx, PointType type) => new(new PointId(idx, type), (mp.GetPt(type) - pt).Length);
 
 		Maybe<PointId> For(PointType type) =>
 			model.Pts
@@ -39,7 +38,7 @@ static class CurveModelOps
 				.Select(e => e.Id)
 				.FirstOrMaybe();
 
-		return Aggregate(
+		return MaybeUtils.Aggregate(
 			For(PointType.Point),
 			For(PointType.LeftHandle),
 			For(PointType.RightHandle)
@@ -89,28 +88,5 @@ static class CurveModelOps
 	{
 		var delta = pos - p.P;
 		return new CurvePt(p.P, p.P - delta, pos);
-	}
-
-	private static T[] Add<T>(this T[] arr, T e) => arr.ToList().Append(e).ToArray();
-	private static T[] ChangeIdx<T>(this T[] arr, int idx, Func<T, T> fun)
-	{
-		var list = arr.Take(idx).ToList();
-        list.Add(fun(arr[idx]));
-        list.AddRange(arr.Skip(idx + 1));
-        return list.ToArray();
-	}
-	private static T[] RemoveIdx<T>(this T[] arr, int idx)
-	{
-		var list = arr.Take(idx).ToList();
-		list.AddRange(arr.Skip(idx + 1));
-		return list.ToArray();
-	}
-
-	private static Maybe<T> Aggregate<T>(params Maybe<T>[] arr)
-	{
-		foreach (var elt in arr)
-			if (elt.IsSome())
-				return elt;
-		return May.None<T>();
 	}
 }

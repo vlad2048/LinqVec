@@ -1,5 +1,10 @@
-using LinqVec.Tools.Curve_;
+using LinqVec.Logic;
 using LinqVec.Tools.None_;
+using LinqVec.Utils.WinForms_;
+using PhysicsEditor.Tools.Play_;
+using VectorEditor.Model;
+using VectorEditor.Tools.Curve_;
+using PowRxVar;
 
 namespace LinqVecDemo;
 
@@ -9,9 +14,15 @@ sealed partial class MainWin : Form
 	{
 		InitializeComponent();
 
-		vecEditor.InitTools(
-			new NoneTool(),
-			new CurveTool()
-		);
+		this.InitRX(d =>
+		{
+			//var model = new Undoer<DocModel>(DocModel.Empty, vecEditor.EditorEvt).D(d);
+
+			vecEditor.InitTools(
+				new NoneTool(),
+				new CurveTool()
+				//new PlayTool()
+			);
+		});
 	}
 }

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libs\LinqVec\LinqVec.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Tools\Curve_\Drawing\" />
+  </ItemGroup>
+
+</Project>

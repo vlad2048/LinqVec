@@ -16,7 +16,7 @@ static class GridNfoExt
 	}
 }
 
-static class C
+public static class CBase
 {
 	// ***********
 	// * Cursors *
@@ -28,7 +28,10 @@ static class C
 		public static readonly Cursor Pen = CUtils.LoadCursor(Resource.pen);
 		public static readonly Cursor BlackArrowSmall = CUtils.LoadCursor(Resource.black_arrow_small);
 	}
+}
 
+static class C
+{
 	// *********
 	// * Fonts *
 	// *********
@@ -104,28 +107,7 @@ static class C
 		// @formatter:on
 	}
 
-	// ***********
-	// * Markers *
-	// ***********
-	public static class Markers
-	{
-		// @formatter:off
-		public const			int		Radius = 2;
-		public static readonly	GPen	PointPen = new(0x4F80FF, 1, true);
-		public static readonly	Color	PointBrush = MkCol(0x4F80FF);
-		public static readonly	GPen	PointPenDone = new(0xAAC2FF, 1, true);
-		public static readonly	Color	PointBrushDone = MkCol(0xAAC2FF);
-		// @formatter:on
-	}
-
-	// *********
-	// * Curve *
-	// *********
-	public const double ActivateMoveMouseDistance = 1;
-	public static readonly GPen PenCurve = new(0x000000, 2, true);
-	public static readonly Bitmap BmpPenContinue = Resource.pen_continue;
-	public static readonly Bitmap BmpPenContinueDark = Resource.pen_continue_dark;
-	public static readonly Bitmap BmpPenContinueLight = Resource.pen_continue_light;
+	
 }
 
 

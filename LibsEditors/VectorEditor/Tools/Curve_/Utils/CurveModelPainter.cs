@@ -1,11 +1,9 @@
-﻿using System.Drawing.Drawing2D;
-using LinqVec.Drawing;
+﻿using LinqVec.Drawing;
 using LinqVec.Structs;
-using LinqVec.Utils;
-using PowBasics.CollectionsExt;
-using PowMaybe;
+using VectorEditor.Model;
+using VectorEditor.Tools.Curve_.Drawing;
 
-namespace LinqVec.Tools.Curve_.Model;
+namespace VectorEditor.Tools.Curve_.Utils;
 
 static class CurveModelPainter
 {

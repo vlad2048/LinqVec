@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<LangVersion>preview</LangVersion>
 		<EnablePreviewFeatures>True</EnablePreviewFeatures>
+		<GenerateRequiresPreviewFeaturesAttribute>True</GenerateRequiresPreviewFeaturesAttribute>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<DebugType>embedded</DebugType>
@@ -11,13 +12,8 @@
 		<Authors>vlad2048</Authors>
 		<Description>Vector editor for LINQPad</Description>
 		<PackageTags>LINQPad, Vector</PackageTags>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageProjectUrl>https://github.com/vlad2048/LinqVec</PackageProjectUrl>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
 
 	<PropertyGroup>
 		<NoWarn>CS1591</NoWarn>

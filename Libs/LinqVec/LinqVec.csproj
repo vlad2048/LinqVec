@@ -31,8 +31,4 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Tools\Curve_\Symmetry\" />
-  </ItemGroup>
-
 </Project>

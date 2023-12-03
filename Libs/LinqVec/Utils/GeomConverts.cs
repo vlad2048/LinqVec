@@ -1,6 +1,6 @@
 ﻿namespace LinqVec.Utils;
 
-static class GeomConverts
+public static class GeomConverts
 {
 	// Float/Int
 	public static Pt ToFloat(this PtInt p) => new(p.X, p.Y);

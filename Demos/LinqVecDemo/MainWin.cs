@@ -1,3 +1,6 @@
+using LinqVec.Tools.Curve_;
+using LinqVec.Tools.None_;
+
 namespace LinqVecDemo;
 
 sealed partial class MainWin : Form
@@ -9,7 +12,6 @@ sealed partial class MainWin : Form
 		vecEditor.InitTools(
 			new NoneTool(),
 			new CurveTool()
-			//new SnapTool()
 		);
 	}
 }

@@ -27,9 +27,10 @@ static class PanZoomer
 			{
 				if (!on) return;
 				var isPanning = SetupPanning(evt, transform, ctrl).D(onD);
-				SetupZooming(evt, transform, ctrl).D(onD);
 				isPanning.Subscribe(panning => ctrl.Cursor = panning ? C.Cursors.HandClosed : C.Cursors.HandOpened).D(onD);
 			}).D(d);
+
+		SetupZooming(evt, transform, ctrl).D(d);
 
 		ctrl.WhenSizeChanged.Subscribe(_ => transform.V = transform.V.Cap(ctrl)).D(d);
 

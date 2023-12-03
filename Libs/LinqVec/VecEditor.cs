@@ -35,6 +35,11 @@ public partial class VecEditor : UserControl
 
 		env = new ToolEnv(drawPanel, ctrl, curTool, isPanZoom, transform, editorEvt);
 
+		/*drawPanel.Events().KeyPress.Subscribe(e =>
+		{
+			L.WriteLine($"keyc:{e.KeyChar}  ctrl:{KeyUtils.IsCtrlPressed}");
+		}).D(this);*/
+
 		this.InitRX(d =>
 		{
 			var res = new Res().D(d);

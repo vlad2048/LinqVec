@@ -18,7 +18,7 @@ public enum MouseBtn
 public enum UpDown
 {
     Down,
-    Up
+    Up,
 }
 
 public interface IEvtGen<T>;
@@ -80,7 +80,7 @@ public static class EvtUtils
         var whenKeyDown = ctrl.Events().KeyDown.Select(e => new KeyEvtGen<PtInt>(UpDown.Down, e.KeyCode));
         var whenKeyUp = ctrl.Events().KeyUp.Select(e => new KeyEvtGen<PtInt>(UpDown.Up, e.KeyCode));
 
-        var whenMouseMoveRepeat = whenRepeatLastMouseMove.WithLatestFrom(whenMouseMove).Select(e => e.Second);
+		var whenMouseMoveRepeat = whenRepeatLastMouseMove.WithLatestFrom(whenMouseMove).Select(e => e.Second);
 
         return
             Obs.Merge<IEvtGen<PtInt>>(
@@ -90,7 +90,7 @@ public static class EvtUtils
                 whenMouseWheel,
                 whenKeyDown,
                 whenKeyUp,
-                whenMouseMoveRepeat
+				whenMouseMoveRepeat
             )
                 .MakeHot(ctrl);
     }

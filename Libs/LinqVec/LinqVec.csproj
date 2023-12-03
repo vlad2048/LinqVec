@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Tools\Curve_\SubTools\" />
+    <Folder Include="Tools\Curve_\Symmetry\" />
   </ItemGroup>
 
 </Project>

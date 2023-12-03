@@ -63,6 +63,16 @@ namespace LinqVec {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] black_arrow_small {
+            get {
+                object obj = ResourceManager.GetObject("black_arrow_small", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] hand_closed {
             get {
                 object obj = ResourceManager.GetObject("hand_closed", resourceCulture);

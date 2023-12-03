@@ -6,7 +6,8 @@ namespace LinqVec.Utils.WinForms_;
 
 public interface ICurs
 {
-	IDisposable SetToolCurs(Cursor curs);
+	//IDisposable SetToolCurs(Cursor curs);
+	Cursor Cursor { set; }
 }
 
 public class Ctrl(Control ctrl) : ICurs

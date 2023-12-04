@@ -11,4 +11,6 @@ public static class MaybeUtils
 				return elt;
 		return May.None<T>();
 	}
+
+	public static Maybe<T> SingleOrMaybe<T>(this T[] arr, Func<T, bool> predicate) where T : class => arr.SingleOrDefault(predicate).ToMaybe();
 }

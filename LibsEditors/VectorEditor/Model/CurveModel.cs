@@ -1,4 +1,6 @@
-﻿using LinqVec.Utils;
+﻿using LinqVec.Logic;
+using LinqVec.Structs;
+using LinqVec.Utils;
 using PowMaybe;
 using VectorEditor.Model.Structs;
 using VectorEditor.Tools.Curve_.Mods;
@@ -7,12 +9,12 @@ using VectorEditor.Tools.Curve_.Structs;
 namespace VectorEditor.Model;
 
 
+
 public sealed record CurveModel(
 	Guid Id,
 	CurvePt[] Pts
-)
+) : IId
 {
-	public ObjId ObjId => new(ObjType.Curve, Id);
 	public static CurveModel Empty() => new(
 		Guid.NewGuid(),
 		Array.Empty<CurvePt>()
@@ -22,6 +24,16 @@ public sealed record CurveModel(
 
 static class CurveModelOps
 {
+	public static ISmartId<CurveModel> SmartId(this CurveModel curveModel, ModelMan<DocModel> mm) => new SmartId<DocModel, CurveModel>(
+		curveModel.Id,
+		mm,
+		find: m => m.Curves.SingleOrMaybe(e => e.Id == curveModel.Id),
+		set: (m, e) => m.WithCurves(m.Curves.SetId(curveModel.Id, e)),
+		delete: m => m.WithCurves(m.Curves.RemoveId(curveModel.Id))
+	);
+
+	public static DocModel WithCurves(this DocModel model, CurveModel[] curves) => model with { Curves = curves };
+
 	private sealed record PtNfo(PointId Id, double Distance);
 
 	public static Pt GetPointById(this CurveModel model, PointId id) => model.Pts[id.Idx].GetPt(id.Type);

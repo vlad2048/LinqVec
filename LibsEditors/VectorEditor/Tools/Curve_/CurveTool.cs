@@ -1,7 +1,4 @@
-﻿using LinqVec.Tools._Base.Events;
-using LinqVec.Tools._Base;
-using PowRxVar;
-using System.Windows.Forms;
+﻿using PowRxVar;
 using LinqVec;
 using LinqVec.Logic;
 using PowMaybe;
@@ -10,6 +7,8 @@ using VectorEditor.Tools.Curve_.Drawing;
 using VectorEditor.Tools.Curve_.Mods;
 using VectorEditor.Tools.Curve_.Structs;
 using VectorEditor.Tools.Curve_.Utils;
+using LinqVec.Tools;
+using LinqVec.Tools.Events;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -21,17 +20,17 @@ public sealed class CurveTool : Tool
 	private sealed record MovePointPrep(PointId Id) : ICurveState;
 	private sealed record MovePointProgress : ICurveState;
 
-	//private readonly Undoer<DocModel> model;
+	private readonly ModelMan<DocModel> mm;
 
 	public override string Name => "curve";
 	public override Keys Shortcut => Keys.F1;
 
-	/*public CurveTool(Undoer<DocModel> model)
+	public CurveTool(ModelMan<DocModel> mm)
 	{
-		this.model = model;
-	}*/
+		this.mm = mm;
+	}
 
-	public override (Tool, IDisposable) Init(IToolEnv env)
+	public override (Tool, IDisposable) Init(ToolEnv env)
 	{
 		var d = new Disp();
 
@@ -44,7 +43,7 @@ public sealed class CurveTool : Tool
 			.RestrictToGrid()
 			.MakeHot(d);
 
-		var model = new Undoer<CurveModel>(CurveModel.Empty(), curveEvt).D(d);
+		var model = mm.CreateEdit(Entities.Curve).D(d);
 
 		var state = Var.Make<ICurveState>(new AddPointPrep()).D(d);
 
@@ -73,11 +72,15 @@ public sealed class CurveTool : Tool
 		void ApplyModAndGoto(ICurveState stateNext)
 		{
 			if (mousePos.V.IsSome(out var p))
-				model.Do(model.V.ApplyMod(mod.V, p));
+				model.V = model.V.ApplyMod(mod.V, p);
 			mod.V = new NoneCurveMod();
 			state.V = stateNext;
 		}
 
+		mm.WhenUndoRedo.Subscribe(_ =>
+		{
+			DiscardModAndGoto(new AddPointPrep());
+		}).D(d);
 
 		curveEvt.Subscribe(evt =>
 		{
@@ -168,7 +171,8 @@ public sealed class CurveTool : Tool
 
 		Obs.Merge(
 			curveEvt.ToUnit(),
-			model.WhenChanged,
+			//model.WhenChanged,
+			mm.WhenChanged.ToUnit(),
 			mod.ToUnit(),
 			mousePos.ToUnit()
 		).Subscribe(_ => env.Invalidate()).D(d);

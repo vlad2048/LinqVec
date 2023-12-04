@@ -1,57 +1,63 @@
 ﻿namespace LinqVecDemo
 {
-    partial class MainWin
-    {
-        /// <summary>
-        ///  Required designer variable.
-        /// </summary>
-        private System.ComponentModel.IContainer components = null;
+	partial class MainWin
+	{
+		/// <summary>
+		/// Required designer variable.
+		/// </summary>
+		private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        ///  Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+		/// <summary>
+		/// Clean up any resources being used.
+		/// </summary>
+		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing && (components != null))
+			{
+				components.Dispose();
+			}
+			base.Dispose(disposing);
+		}
 
 		#region Windows Form Designer generated code
 
 		/// <summary>
-		///  Required method for Designer support - do not modify
-		///  the contents of this method with the code editor.
+		/// Required method for Designer support - do not modify
+		/// the contents of this method with the code editor.
 		/// </summary>
 		private void InitializeComponent()
 		{
-			vecEditor = new LinqVec.VecEditor();
+			dockPanel = new WeifenLuo.WinFormsUI.Docking.DockPanel();
+			vS2015BlueTheme = new WeifenLuo.WinFormsUI.Docking.VS2015BlueTheme();
 			SuspendLayout();
 			// 
-			// vecEditor
+			// dockPanel
 			// 
-			vecEditor.Dock = DockStyle.Fill;
-			vecEditor.Location = new Point(0, 0);
-			vecEditor.Name = "vecEditor";
-			vecEditor.Size = new Size(800, 450);
-			vecEditor.TabIndex = 0;
+			dockPanel.Dock = DockStyle.Fill;
+			dockPanel.DockBackColor = Color.FromArgb(41, 57, 85);
+			dockPanel.Location = new Point(0, 0);
+			dockPanel.Name = "dockPanel";
+			dockPanel.Padding = new Padding(6);
+			dockPanel.ShowAutoHideContentOnHover = false;
+			dockPanel.Size = new Size(800, 450);
+			dockPanel.TabIndex = 0;
+			dockPanel.Theme = vS2015BlueTheme;
 			// 
 			// MainWin
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(800, 450);
-			Controls.Add(vecEditor);
+			Controls.Add(dockPanel);
 			Name = "MainWin";
-			Text = "LinqVec Demo";
+			Text = "LinqVec";
 			ResumeLayout(false);
 		}
 
 		#endregion
 
-		private LinqVec.VecEditor vecEditor;
+		private WeifenLuo.WinFormsUI.Docking.DockPanel dockPanel;
+		private WeifenLuo.WinFormsUI.Docking.VS2015BlueTheme vS2015BlueTheme;
 	}
 }

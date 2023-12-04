@@ -1,7 +1,7 @@
 ﻿using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using LinqVec.Tools._Base.Events;
+using LinqVec.Tools.Events;
 using LinqVec.Utils.WinForms_;
 using PowRxVar;
 
@@ -27,9 +27,10 @@ public sealed class Undoer<T> : IDisposable
     public T V => cur.V;
     public IObservable<Unit> WhenChanged => cur.ToUnit();
     public void Do(T val) => whenDo.OnNext(val);
+    public IObservable<Unit> WhenUndoRedo => Obs.Merge(WhenUndo, WhenRedo);
 
 
-    public Undoer(T init, IObservable<IEvtGen<Pt>> whenEvt)
+    public Undoer(T init, IObservable<IEvtGen<PtInt>> whenEvt)
     {
         cur = Var.Make(init).D(d);
         stackUndo.Push(init);
@@ -60,21 +61,8 @@ public sealed class Undoer<T> : IDisposable
             cur.V = valRedo;
         }).D(d);
 
-        whenEvt
-            .OfType<KeyEvtGen<Pt>>()
-            .Where(e => e.UpDown == UpDown.Down)
-            .Select(e => e.Key)
-            .Subscribe(e =>
-            {
-                switch (e)
-                {
-                    case Keys.Z when KeyUtils.IsCtrlPressed:
-                        Undo();
-                        break;
-                    case Keys.Y when KeyUtils.IsCtrlPressed:
-                        Redo();
-                        break;
-                }
-            }).D(d);
+
+        whenEvt.WhenKeyRepeat(Keys.Z, true).Subscribe(_ => Undo()).D(d);
+        whenEvt.WhenKeyRepeat(Keys.Y, true).Subscribe(_ => Redo()).D(d);
     }
 }

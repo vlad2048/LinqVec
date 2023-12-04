@@ -1,28 +1,23 @@
-using LinqVec.Logic;
-using LinqVec.Tools.None_;
-using LinqVec.Utils.WinForms_;
-using PhysicsEditor.Tools.Play_;
-using VectorEditor.Model;
-using VectorEditor.Tools.Curve_;
-using PowRxVar;
+﻿using LinqVec.Utils.WinForms_;
+using VectorEditor.Panes;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace LinqVecDemo;
 
-sealed partial class MainWin : Form
+partial class MainWin : Form
 {
 	public MainWin()
 	{
 		InitializeComponent();
+		var mainPane = new MainPane();
+		var modelTreePane = new ModelTreePane();
+		mainPane.Show(dockPanel, DockState.Document);
+		modelTreePane.Show(dockPanel, DockState.DockRight);
 
-		this.InitRX(d =>
+
+		this.Events().Load.Subscribe(_ =>
 		{
-			//var model = new Undoer<DocModel>(DocModel.Empty, vecEditor.EditorEvt).D(d);
-
-			vecEditor.InitTools(
-				new NoneTool(),
-				new CurveTool()
-				//new PlayTool()
-			);
-		});
+			modelTreePane.Init(mainPane.ModelMan);
+		}).D(this);
 	}
 }

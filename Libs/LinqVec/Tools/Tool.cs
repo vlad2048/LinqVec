@@ -1,4 +1,4 @@
-﻿namespace LinqVec.Tools._Base;
+﻿namespace LinqVec.Tools;
 
 
 public abstract class Tool
@@ -6,5 +6,5 @@ public abstract class Tool
     public abstract string Name { get; }
     public abstract Keys Shortcut { get; }
 
-    public abstract (Tool, IDisposable) Init(IToolEnv env);
+    public abstract (Tool, IDisposable) Init(ToolEnv env);
 }

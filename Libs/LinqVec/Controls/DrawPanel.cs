@@ -9,14 +9,14 @@ using LinqVec.Drawing;
 
 namespace LinqVec.Controls;
 
-sealed partial class DrawPanel : UserControl
+public sealed partial class DrawPanel : UserControl
 {
 	private readonly ISubject<DrawPanelInitNfo> whenInit;
 	private readonly ISubject<Gfx> whenPaint;
 	private IObservable<DrawPanelInitNfo> WhenInit => whenInit.AsObservable();
 	public IObservable<Gfx> WhenPaint => whenPaint.AsObservable();
 
-	public void Init(DrawPanelInitNfo initNfo)
+	internal void Init(DrawPanelInitNfo initNfo)
 	{
 		whenInit.OnNext(initNfo);
 		whenInit.OnCompleted();

@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Linq;
 using LinqVec.Structs;
-using LinqVec.Tools._Base.Events;
+using LinqVec.Tools.Events;
 using LinqVec.Utils;
 using LinqVec.Utils.WinForms_;
 using PowBasics.MathCode;

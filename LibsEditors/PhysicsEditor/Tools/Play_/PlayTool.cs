@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using LinqVec.Tools._Base;
 using PowRxVar;
 using System.Windows.Forms;
 using Box2D.NetStandard.Dynamics.Bodies;
@@ -8,6 +7,7 @@ using LinqVec.Structs;
 using LinqVec.Utils.WinForms_;
 using PhysicsEditor.Drawing;
 using PhysicsEditor.Physics_;
+using LinqVec.Tools;
 
 namespace PhysicsEditor.Tools.Play_;
 
@@ -16,7 +16,7 @@ public sealed class PlayTool : Tool
 	public override string Name => "curve";
 	public override Keys Shortcut => Keys.F1;
 
-	public override (Tool, IDisposable) Init(IToolEnv env)
+	public override (Tool, IDisposable) Init(ToolEnv env)
 	{
 		var d = new Disp();
 

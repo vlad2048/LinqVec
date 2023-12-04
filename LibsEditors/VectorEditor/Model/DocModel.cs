@@ -1,18 +1,12 @@
-﻿using LinqVec.Logic;
+﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using LinqVec.Logic;
+using LinqVec.Structs;
 using LinqVec.Utils;
+using PowRxVar;
 
 namespace VectorEditor.Model;
 
-
-public enum ObjType
-{
-	Curve,
-}
-
-public sealed record ObjId(
-	ObjType Type,
-	Guid Id
-);
 
 
 public sealed record DocModel(
@@ -23,12 +17,15 @@ public sealed record DocModel(
 }
 
 
-public static class DocModelOps
+static class Entities
 {
-	public static ObjId CreateCurve(this Undoer<DocModel> model)
-	{
-		var curve = CurveModel.Empty();
-		model.Do(model.V with { Curves = model.V.Curves.Add(curve) });
-		return curve.ObjId;
-	}
+	public static readonly Func<ModelMan<DocModel>, Func<DocModel, (DocModel, ISmartId<CurveModel>)>> Curve =
+		mm =>
+			m =>
+			{
+				var entity = CurveModel.Empty();
+				var id = entity.SmartId(mm);
+				var mNext = m.WithCurves(m.Curves.Add(entity));
+				return (mNext, id);
+			};
 }

@@ -5,7 +5,7 @@ using VectorEditor.Tools.Curve_.Drawing;
 
 namespace VectorEditor.Tools.Curve_.Utils;
 
-static class CurveModelPainter
+public static class CurveModelPainter
 {
 	public static void Draw(
 		Gfx gfx,

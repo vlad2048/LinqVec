@@ -17,6 +17,10 @@ public readonly record struct RGen<T> where T : struct, INumber<T>
         Max = max;
     }
 
+    public static readonly RGen<T> Empty = new(new PtGen<T>(T.Zero, T.Zero), new PtGen<T>(T.Zero, T.Zero));
+
+    public static RGen<T> Make(T x, T y, T width, T height) => new(new PtGen<T>(x, y), new PtGen<T>(x + width, y + height));
+
     public bool Contains(PtGen<T> p) =>
 	    p.X >= Min.X &&
 	    p.Y >= Min.Y &&

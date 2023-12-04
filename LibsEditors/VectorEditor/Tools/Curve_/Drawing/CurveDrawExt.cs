@@ -1,6 +1,5 @@
 ﻿using LinqVec.Structs;
 using PowMaybe;
-using System.Drawing;
 using LinqVec.Drawing;
 using VectorEditor.Model.Structs;
 

@@ -8,18 +8,16 @@ using LinqVec.Utils.WinForms_;
 using PhysicsEditor.Drawing;
 using PhysicsEditor.Physics_;
 using LinqVec.Tools;
+using PhysicsEditor.Model;
+using LinqVec.Logic;
 
 namespace PhysicsEditor.Tools.Play_;
 
-public sealed class PlayTool : Tool
+/*
+public sealed class PlayTool : Tool<DocModel>
 {
-	public override string Name => "curve";
-	public override Keys Shortcut => Keys.F1;
-
-	public override (Tool, IDisposable) Init(ToolEnv env)
+	public PlayTool(ToolEnv env, ModelMan<DocModel> mm) : base(env, mm)
 	{
-		var d = new Disp();
-
 		var world = new World(new Vector2(0, -10));
 		world.MakeBody(
 			BodyType.Static,
@@ -41,7 +39,7 @@ public sealed class PlayTool : Tool
 		//L.WriteLine($"body.pos = {box.Position}");
 
 
-		ShowFps(env.WhenPaint).D(d);
+		ShowFps(env.WhenPaint).D(D);
 
 		env.WhenPaint
 			.Subscribe(gfx =>
@@ -51,7 +49,7 @@ public sealed class PlayTool : Tool
 				{
 					gfx.DrawBody(body);
 				}
-			}).D(d);
+			}).D(D);
 
 
 		Obs.Interval(TimeSpan.FromSeconds(1) / 60)
@@ -60,10 +58,7 @@ public sealed class PlayTool : Tool
 			{
 				world.Step();
 				env.Invalidate();
-			}).D(d);
-		
-
-		return (this, d);
+			}).D(D);
 	}
 
 
@@ -88,3 +83,4 @@ public sealed class PlayTool : Tool
 		});
 	}
 }
+*/

@@ -9,11 +9,10 @@ namespace LinqVec.Tools;
 public sealed class ToolEnv(
         DrawPanel drawPanel,
         ICurs curs,
-        IRoVar<Tool> curTool,
+        IRoVar<ITool> curTool,
         IRoVar<bool> isPanZoom,
         IRoVar<Transform> transform,
-        IObservable<IEvtGen<PtInt>> editorEvt,
-        Action setNoneTool
+        IObservable<IEvtGen<PtInt>> editorEvt
     )
 {
     public ICurs Curs { get; } = curs;
@@ -22,7 +21,5 @@ public sealed class ToolEnv(
     public IObservable<Gfx> WhenPaint { get; } = drawPanel.WhenPaint;
 
     public IObservable<IEvtGen<PtInt>> EditorEvt => editorEvt;
-    public IObservable<IEvtGen<PtInt>> GetEvtForTool(Tool tool) => editorEvt.RestrictToTool(tool, curTool, isPanZoom);
-
-    public void SetNoneTool() => setNoneTool();
+    public IObservable<IEvtGen<PtInt>> GetEvtForTool(ITool tool) => editorEvt.RestrictToTool(tool, curTool, isPanZoom);
 }

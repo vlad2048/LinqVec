@@ -2,6 +2,7 @@
 
 namespace LinqVec.Tools;
 
+/*
 public class NoneTool : Tool
 {
     public override string Name => "none";
@@ -13,3 +14,4 @@ public class NoneTool : Tool
         return (this, Disposable.Empty);
     }
 }
+*/

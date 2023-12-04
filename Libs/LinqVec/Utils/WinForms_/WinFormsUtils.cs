@@ -5,6 +5,18 @@ namespace LinqVec.Utils.WinForms_;
 
 public static class WinFormsUtils
 {
+	public static void InitRX<T>(this Control ctrl, IObservable<T> whenInit, Action<T, IRoDispBase> initAction)
+	{
+		var d = new Disp().D(ctrl);
+		ctrl.Events().HandleCreated.Subscribe(_ =>
+		{
+            whenInit.Subscribe(init =>
+            {
+	            initAction(init, d);
+            }).D(d);
+		}).D(d);
+	}
+
 	public static void InitRX(this Control ctrl, Action<IRoDispBase> initAction)
     {
         var d = new Disp().D(ctrl);

@@ -1,7 +1,9 @@
-﻿using LinqVec;
+﻿using System.Reactive;
+using LinqVec;
 using LinqVec.Logic;
 using LinqVec.Tools;
 using PowRxVar;
+using PowRxVar.Utils;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
 using VectorEditor.Tools.Curve_.Utils;
@@ -14,29 +16,36 @@ public static class VectorEditorInit
 	{
 		var d = new Disp();
 
-		var modelMan = new ModelMan<DocModel>(
+		var env = vecEditor.Env;
+		var (requireToolReset, whenToolResetRequired) = RxEventMaker.Make<Unit>().D(d);
+		var mm = new ModelMan<DocModel>(
 			DocModel.Empty,
-			vecEditor.Env.EditorEvt,
-			vecEditor.Env.SetNoneTool
+			env.EditorEvt,
+			() => requireToolReset(Unit.Default)
 		).D(d);
 
-		vecEditor.InitTools(
-			new NoneTool(),
-			new CurveTool(modelMan)
+		vecEditor.Init(
+			new VecEditorInitNfo(
+				whenToolResetRequired,
+				new ITool[]
+				{
+					new CurveTool(env, mm)
+				}
+			)
 		);
 
-		vecEditor.Env.WhenPaint
+		env.WhenPaint
 			.Subscribe(gfx =>
 			{
-				foreach (var curve in modelMan.V.Curves)
+				foreach (var curve in mm.V.Curves)
 				{
-					if (modelMan.IsEdited(curve)) continue;
+					if (mm.IsEdited(curve)) continue;
 					CurveModelPainter.Draw(gfx, curve);
 				}
 			}).D(d);
 
-		modelMan.WhenChanged.Subscribe(_ => vecEditor.Env.Invalidate()).D(d);
+		mm.WhenChanged.Subscribe(_ => env.Invalidate()).D(d);
 
-		return (modelMan, d);
+		return (mm, d);
 	}
 }

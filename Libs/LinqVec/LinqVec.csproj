@@ -32,4 +32,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Utils\Rx\" />
+  </ItemGroup>
+
 </Project>

@@ -1,5 +1,6 @@
 ﻿using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
 using PowMaybe;
@@ -32,7 +33,7 @@ public class ModelMan<M> : IModelMan<M>, IDisposable
 	public ModelMan(
 		M init,
 		IObservable<IEvtGen<PtInt>> whenEvt,
-		Action setNoneTool
+		Action requireToolReset
 	)
 	{
 		model = new Undoer<M>(init, whenEvt).D(d);
@@ -43,7 +44,7 @@ public class ModelMan<M> : IModelMan<M>, IDisposable
 			.Subscribe(_ =>
 			{
 				entityEdited.V = May.None<ISmartId>();
-				setNoneTool();
+				requireToolReset();
 			}).D(d);
 
 	}

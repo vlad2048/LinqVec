@@ -32,54 +32,6 @@ public sealed record KeyEvtGen<T>(UpDown UpDown, Keys Key) : IEvtGen<T>;
 
 public static class EvtUtils
 {
-	private static readonly TimeSpan KeyDelayStart = (SystemInformation.KeyboardDelay + 1) * TimeSpan.FromMilliseconds(250);
-	private static readonly TimeSpan KeyDelayRepeat = TimeSpan.FromSeconds(1.0 / (2.5 + 27.5 * SystemInformation.KeyboardSpeed / 31.0));
-
-	public static IObservable<Unit> WhenKeyRepeat<T>(this IObservable<IEvtGen<T>> src, Keys key, bool ctrl)
-	{
-		var whenStart = src.WhenKeyDown(key).Where(_ => !ctrl || KeyUtils.IsCtrlPressed).ToUnit();
-		var whenStop = src.OfType<KeyEvtGen<T>>().ToUnit();
-		return
-			from _ in whenStart
-			from evt in Obs.Timer(KeyDelayStart, KeyDelayRepeat).Prepend(0).Select(_ => Unit.Default).TakeUntil(whenStop)
-			select evt;
-	}
-
-	public static IObservable<T> WhenMouseMove<T>(this IObservable<IEvtGen<T>> src) => src.OfType<MouseMoveEvtGen<T>>().Select(e => e.Pos);
-	public static IObservable<T> WhenLeftMouseDown<T>(this IObservable<IEvtGen<T>> src) =>
-		src
-			.OfType<MouseBtnEvtGen<T>>()
-			.Where(e => e is { UpDown: UpDown.Down, Btn: MouseBtn.Left })
-			.Select(e => e.Pos);
-	public static IObservable<T> WhenLeftMouseUp<T>(this IObservable<IEvtGen<T>> src) =>
-		src
-			.OfType<MouseBtnEvtGen<T>>()
-			.Where(e => e is { UpDown: UpDown.Up, Btn: MouseBtn.Left })
-			.Select(e => e.Pos);
-	public static IObservable<MouseWheelEvtGen<T>> WhenMouseWheel<T>(this IObservable<IEvtGen<T>> src) =>
-		src
-			.OfType<MouseWheelEvtGen<T>>();
-	public static IObservable<Unit> WhenKeyDown<T>(this IObservable<IEvtGen<T>> src, Keys key) =>
-		src
-			.OfType<KeyEvtGen<T>>()
-			.Where(e => e.UpDown == UpDown.Down && e.Key == key)
-			.ToUnit();
-	public static IObservable<Unit> WhenKeyUp<T>(this IObservable<IEvtGen<T>> src, Keys key) =>
-		src
-			.OfType<KeyEvtGen<T>>()
-			.Where(e => e.UpDown == UpDown.Up && e.Key == key)
-			.ToUnit();
-
-	public static IRoVar<bool> IsKeyDown<T>(this IObservable<IEvtGen<T>> src, Keys key, IRoDispBase d) =>
-		Var.Make(
-			false,
-			Observable.Merge(
-				src.WhenKeyDown(key).Select(_ => true),
-				src.WhenKeyUp(key).Select(_ => false)
-			)
-		).D(d);
-
-
 	public static IObservable<IEvtGen<PtInt>> MakeForControl(
 		Control ctrl,
 		IObservable<Unit> whenRepeatLastMouseMove
@@ -109,12 +61,16 @@ public static class EvtUtils
 
 	public static IObservable<IEvtGen<PtInt>> RestrictToTool(
 		this IObservable<IEvtGen<PtInt>> src,
-		Tool tool,
-		IRoVar<Tool> curTool,
+		ITool tool,
+		IRoVar<ITool> curTool,
 		IRoVar<bool> isPanZoom
 	)
 	{
-		var isEvtOn = Var.Expr(() => curTool.V == tool && !isPanZoom.V);
+
+		//var isEvtOn = Var.Expr(() => curTool.V.IsSomeAndEqualTo(tool) && !isPanZoom.V);
+
+		var isEvtOn = Var.Combine(curTool, isPanZoom, (cur, pan) => cur == tool && !pan);
+
 		var whenMouseMove = src.WhenMouseMoveEvt();
 		var whenMouseMoveRepeat = isEvtOn.WithLatestFrom(whenMouseMove).Select(e => e.Second);
 		return src.Merge(

@@ -48,7 +48,7 @@ static class PanZoomer
 		var lastMousePt = PtInt.Zero;
 		var isPanning = Var.Make(false).D(d);
 
-		evt.WhenLeftMouseDown()
+		evt.WhenMouseDown()
 			.Where(_ => !isPanning.V)
 			.Subscribe(e =>
 			{
@@ -56,7 +56,7 @@ static class PanZoomer
 				lastMousePt = e;
 			}).D(d);
 
-		evt.WhenLeftMouseUp()
+		evt.WhenMouseUp()
 			.Where(_ => isPanning.V)
 			.Subscribe(_ =>
 			{

@@ -14,13 +14,16 @@ public sealed partial class DrawPanel : UserControl
 	private readonly ISubject<DrawPanelInitNfo> whenInit;
 	private readonly ISubject<Gfx> whenPaint;
 	private IObservable<DrawPanelInitNfo> WhenInit => whenInit.AsObservable();
-	public IObservable<Gfx> WhenPaint => whenPaint.AsObservable();
 
 	internal void Init(DrawPanelInitNfo initNfo)
 	{
 		whenInit.OnNext(initNfo);
 		whenInit.OnCompleted();
 	}
+
+
+	public IObservable<Gfx> WhenPaint => whenPaint.AsObservable();
+
 
 	public DrawPanel()
 	{
@@ -29,24 +32,21 @@ public sealed partial class DrawPanel : UserControl
 		whenPaint = new Subject<Gfx>().D(this);
 		InitializeComponent();
 
-		this.InitRX(d =>
+		this.InitRX(WhenInit, (init, d) =>
 		{
-			WhenInit.Subscribe(initNfo =>
+			var (transform, res) = init;
+			if (DrawPanelUtils.SetupForDesignMode(DesignMode, d, this, res, transform)) return;
+
+			Obs.Merge(
+					transform.ToUnit()
+				)
+				.Subscribe(_ => Invalidate()).D(d);
+
+			this.Events().Paint.Subscribe(evt =>
 			{
-				var (transform, res) = initNfo;
-				if (DrawPanelUtils.SetupForDesignMode(DesignMode, d, this, res, transform)) return;
-
-				Obs.Merge(
-						transform.ToUnit()
-					)
-					.Subscribe(_ => Invalidate()).D(d);
-
-				this.Events().Paint.Subscribe(evt =>
-				{
-					var gfx = DrawPanelUtils.InitTransformAndMakeGfx(this, evt, res, transform);
-					GridPainter.DrawAndSetTransform(gfx);
-					whenPaint.OnNext(gfx);
-				}).D(d);
+				var gfx = DrawPanelUtils.InitTransformAndMakeGfx(this, evt, res, transform);
+				GridPainter.DrawAndSetTransform(gfx);
+				whenPaint.OnNext(gfx);
 			}).D(d);
 		});
 	}

@@ -12,7 +12,7 @@ static class ModelTreeLogic
 	{
 		var d = new Disp();
 
-		SetNods(ctrl);
+		/*SetNods(ctrl);
 		ctrl.AddTextColumn<CurveModel>("Curve", null, e => $"pts:{e.Pts.Length}");
 
 		modelMan.WhenChanged
@@ -20,7 +20,7 @@ static class ModelTreeLogic
 			.Subscribe(_ =>
 			{
 				ctrl.SetObjects(modelMan.V.Curves);
-			}).D(d);
+			}).D(d);*/
 
 		return d;
 	}

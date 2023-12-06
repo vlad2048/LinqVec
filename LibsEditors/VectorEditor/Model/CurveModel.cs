@@ -1,9 +1,7 @@
-﻿using LinqVec.Logic;
-using LinqVec.Structs;
-using LinqVec.Utils;
+﻿using LinqVec.Utils;
+using PowBasics.CollectionsExt;
 using PowMaybe;
 using VectorEditor.Model.Structs;
-using VectorEditor.Tools.Curve_.Mods;
 using VectorEditor.Tools.Curve_.Structs;
 
 namespace VectorEditor.Model;
@@ -13,16 +11,45 @@ namespace VectorEditor.Model;
 public sealed record CurveModel(
 	Guid Id,
 	CurvePt[] Pts
-) : IId
+) : ILayerObject
 {
 	public static CurveModel Empty() => new(
 		Guid.NewGuid(),
 		Array.Empty<CurvePt>()
 	);
+
+	public override string ToString() => "Curve(" + Pts.SelectToArray(e => $"{(int)e.P.X},{(int)e.P.Y}").JoinText() + ")";
+}
+
+static class CurveModelOps
+{
+	private sealed record PtNfo(PointId Id, double Distance);
+
+	public static Pt GetPointById(this CurveModel model, PointId id) => model.Pts[id.Idx].GetPt(id.Type);
+
+	public static Maybe<PointId> GetClosestPointTo(this CurveModel model, Pt pt, double threshold)
+	{
+		PtNfo Mk(CurvePt mp, int idx, PointType type) => new(new PointId(idx, type), (mp.GetPt(type) - pt).Length);
+
+		Maybe<PointId> For(PointType type) =>
+			model.Pts
+				.Select((e, i) => Mk(e, i, type))
+				.OrderByDescending(e => e.Distance)
+				.Where(e => e.Distance < threshold)
+				.Select(e => e.Id)
+				.FirstOrMaybe();
+
+		return MaybeUtils.Aggregate(
+			For(PointType.Point),
+			For(PointType.LeftHandle),
+			For(PointType.RightHandle)
+		);
+	}
 }
 
 
-static class CurveModelOps
+
+/*static class CurveModelOps
 {
 	public static ISmartId<CurveModel> SmartId(this CurveModel curveModel, ModelMan<DocModel> mm) => new SmartId<DocModel, CurveModel>(
 		curveModel.Id,
@@ -101,4 +128,4 @@ static class CurveModelOps
 		var delta = pos - p.P;
 		return new CurvePt(p.P, p.P - delta, pos);
 	}
-}
+}*/

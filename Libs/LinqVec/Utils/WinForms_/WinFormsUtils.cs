@@ -52,5 +52,10 @@ public static class WinFormsUtils
 	    return con;
     }
 
-	public static IObservable<T> ObserveOnUI<T>(this IObservable<T> obs) => obs.ObserveOn(SynchronizationContext.Current!);
+	public static IObservable<T> ObserveOnUI<T>(this IObservable<T> obs)
+	{
+        //L.WriteLine($"ThreadCtx: {SynchronizationContext.Current != null}");
+        //if (SynchronizationContext.Current == null) return obs;
+		return obs.ObserveOn(SynchronizationContext.Current!);
+	}
 }

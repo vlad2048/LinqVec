@@ -1,6 +1,4 @@
-﻿using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using PowRxVar;
 using LinqVec.Controls;
@@ -32,7 +30,7 @@ public partial class VecEditor : UserControl
 	{
 		InitializeComponent();
 
-		var noneTool = new NoneTool(() => Cursor = Cursors.Default);
+		var noneTool = new NoneTool(() => drawPanel.Cursor = Cursors.Default);
 		var transform = Var.Make(Transform.Id).D(this);
 		whenInit = new AsyncSubject<VecEditorInitNfo>().D(this);
 		var curTool = Var.Make<ITool>(noneTool).D(this);
@@ -59,23 +57,63 @@ public partial class VecEditor : UserControl
 
 			var (whenToolResetRequired, tools) = init;
 
-			var toolRunner = Env.RunTools(
+			editorEvt.WhenKeyDown(Keys.D1).Subscribe(_ => Cursor = Cursors.Default).D(d);
+			editorEvt.WhenKeyDown(Keys.D2).Subscribe(_ => Cursor = CBase.Cursors.Pen).D(d);
+			editorEvt.WhenKeyDown(Keys.D3).Subscribe(_ => Cursor = CBase.Cursors.BlackArrowSmall).D(d);
+
+			Env.RunTools(
 				tools.Append(noneTool).ToArray(),
 				curTool
 			).D(d);
 
-			whenToolResetRequired.Subscribe(_ => toolRunner.Reset()).D(d);
-
 			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
 			statusStrip.AddLabel("zoom", transform.Select(e => $"{C.ZoomLevels[e.ZoomIndex]:P}")).D(d);
 			statusStrip.AddLabel("center", transform.Select(e => e.Center)).D(d);
-			statusStrip.AddLabel("tool", Var.Expr(() => $"{curTool.V.Name}{(toolRunner.IsAtRest.V ? " (rest)" : "")}")).D(this);
+			statusStrip.AddLabel("tool", Var.Expr(() => $"{curTool.V.Name}")).D(this);
+
+			//statusStrip.AddLabel("tool", Var.Expr(() => $"{curTool.V.Name}{(toolRunner.IsAtRest.V ? " (rest)" : "")}")).D(this);
 		});
 	}
 }
 
 
 
+
+file static class VecEditorUtils
+{
+	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool)
+	{
+		var d = new Disp();
+
+		tools
+			.Select(tool =>
+				env.EditorEvt.WhenKeyDown(tool.Shortcut)
+					.Select(_ => tool)
+			)
+			.Merge()
+			.SubscribeWithDisp(async (tool, toolD) =>
+			{
+				curTool.V = tool;
+
+				try
+				{
+					await tool.Run(toolD);
+				}
+				catch (InvalidOperationException)
+				{
+				}
+			}).D(d);
+
+		return d;
+	}
+}
+
+
+
+
+
+
+/*
 interface IToolRunner
 {
 	IRoVar<bool> IsAtRest { get; }
@@ -179,100 +217,4 @@ file static class VecEditorUtils
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*public partial class VecEditor : UserControl
-{
-	//private static readonly Tool[] emptyTools = { new NoneTool() };
-	//private bool AreToolsInited => tools != emptyTools;
-	//private readonly IRwVar<Tool> curTool;
-	//private readonly ISubject<Tool> whenOverrideTool;
-	//private IObservable<VecEditorInitNfo> WhenInit => whenInit.AsObservable();
-	//private IObservable<Tool> WhenOverrideTool => whenOverrideTool.AsObservable();
-
-	private readonly ISubject<VecEditorInitNfo> whenInit;
-	private IObservable<VecEditorInitNfo> WhenInit => whenInit.AsObservable();
-
-	public ToolEnv Env { get; }
-	public void Init(VecEditorInitNfo initNfo)
-	{
-		whenInit.OnNext(initNfo);
-		whenInit.OnCompleted();
-	}
-
-	public VecEditor()
-	{
-		InitializeComponent();
-
-		var transform = Var.Make(Transform.Id).D(this);
-		whenInit = new AsyncSubject<VecEditorInitNfo>().D(this);
-		whenOverrideTool = new Subject<Tool>().D(this);
-		curTool = VarMay.Make(tools[0]).D(this);
-		var ctrl = new Ctrl(drawPanel);
-
-		var editorEvt = EvtUtils.MakeForControl(drawPanel, curTool.ToUnit());
-		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform).D(this);
-
-		Env = new ToolEnv(drawPanel, ctrl, curTool, isPanZoom, transform, editorEvt, () => whenOverrideTool.OnNext(tools[0]));
-
-
-		this.InitRX(d =>
-		{
-			var res = new Res().D(d);
-			drawPanel.Init(new DrawPanelInitNfo(transform, res));
-			if (DesignMode) return;
-
-			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
-			statusStrip.AddLabel("zoom", transform.Select(e => $"{C.ZoomLevels[e.ZoomIndex]:P}")).D(d);
-			statusStrip.AddLabel("center", transform.Select(e => e.Center)).D(d);
-
-			WhenInit.Subscribe(init =>
-			{
-				var tools = init.Tools;
-			}).D(d);
-		});
-	}
-
-	public void InitTools(params Tool[] pTools)
-	{
-		if (AreToolsInited) throw new ArgumentException("Tools already inited");
-		tools = pTools;
-		if (!AreToolsInited) throw new ArgumentException("Tools not inited correctly");
-		InitToolsFinish();
-	}
-
-	private void InitToolsFinish()
-	{
-		curTool.V = tools[0];
-		statusStrip.AddLabel("tool", curTool.Select(e => e.Name)).D(this);
-
-		Obs.Merge(
-				tools
-					.Select(tool =>
-						drawPanel.Events().KeyDown
-							.Where(e => e.KeyCode == tool.Shortcut)
-							.Select(_ => tool)
-					)
-					.Merge(),
-				WhenOverrideTool
-			)
-			.SubscribeWithDisp((tool, lifeD) =>
-			{
-				Disposable.Create(() => Env.Invalidate()).D(lifeD);
-				curTool.V = tool.Init(Env).D(lifeD);
-				Env.Invalidate();
-			}).D(this);
-	}
-}*/
+*/

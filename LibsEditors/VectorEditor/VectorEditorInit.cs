@@ -2,6 +2,7 @@
 using LinqVec;
 using LinqVec.Logic;
 using LinqVec.Tools;
+using LinqVec.Tools.Events;
 using PowRxVar;
 using PowRxVar.Utils;
 using VectorEditor.Model;
@@ -24,6 +25,12 @@ public static class VectorEditorInit
 			() => requireToolReset(Unit.Default)
 		).D(d);
 
+		var evt = env.EditorEvt
+			.ToGrid(env.Transform)
+			.SnapToGrid(env.Transform)
+			.TrackPos(out var mousePos, d)
+			.MakeHot(d);
+
 		vecEditor.Init(
 			new VecEditorInitNfo(
 				whenToolResetRequired,
@@ -37,14 +44,29 @@ public static class VectorEditorInit
 		env.WhenPaint
 			.Subscribe(gfx =>
 			{
-				foreach (var curve in mm.V.Curves)
+				var m = mm.GetGfxModel(mousePos);
+				foreach (var layer in m.Layers)
 				{
-					if (mm.IsEdited(curve)) continue;
-					CurveModelPainter.Draw(gfx, curve);
+					foreach (var obj in layer.Objects)
+					{
+						switch (obj)
+						{
+							case CurveModel curve:
+								CurveModelPainter.Draw(gfx, curve);
+								break;
+						}
+					}
 				}
 			}).D(d);
 
-		mm.WhenChanged.Subscribe(_ => env.Invalidate()).D(d);
+		Obs.Merge(
+				mm.WhenChanged,
+				mousePos.ToUnit()
+			)
+			.Subscribe(_ =>
+			{
+				env.Invalidate();
+			}).D(d);
 
 		return (mm, d);
 	}

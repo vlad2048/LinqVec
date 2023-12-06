@@ -7,15 +7,35 @@ namespace LinqVec.Utils;
 public static class EnumExt
 {
 	public static bool ContainsId<T>(this T[] arr, Guid id) where T : IId => arr.Count(e => e.Id == id) == 1;
-	public static T[] Add<T>(this T[] arr, T e) => arr.ToList().Append(e).ToArray();
 
-	//public static T GetId<T>(this T[] arr, Guid id) where T : IId => arr.Single(e => e.Id == id);
-
-	public static Maybe<T> GetMayId<T>(this T[] arr, Guid id) where T : class, IId => arr.SingleOrMaybe(e => e.Id == id);
-
-	public static T[] SetId<T>(this T[] arr, Guid id, T e) where T : IId
+	public static bool ContainsIdAndIsOfType<T, U>(this T[] arr, Guid id) where T : IId where U : T
 	{
-		var idx = arr.SingleIndexWhere(e => e.Id == id);
+		var mayElt = arr.GetMayId(id);
+		if (mayElt.IsNone(out var elt)) return false;
+		return elt is U;
+	}
+
+	public static T[] Add<T>(this T[] arr, T e) => arr.ToList().Append(e).ToArray();
+	public static T[] Remove<T>(this T[] arr, T e)
+	{
+		var l = arr.ToList();
+		l.Remove(e);
+		return l.ToArray();
+	}
+
+	public static T[] AddId<T>(this T[] arr, T e) where T : IId
+	{
+		if (arr.Any(f => f.Id == e.Id)) throw new ArgumentException();
+		return arr.Add(e);
+	}
+
+	public static T GetId<T>(this T[] arr, Guid id) where T : IId => arr.Single(e => e.Id == id);
+
+	public static Maybe<T> GetMayId<T>(this T[] arr, Guid id) where T : IId => arr.SingleOrMaybe(e => e.Id == id);
+
+	public static T[] SetId<T>(this T[] arr, T e) where T : IId
+	{
+		var idx = arr.SingleIndexWhere(f => f.Id == e.Id);
 		return arr.SetIdx(idx, e);
 	}
 

@@ -27,6 +27,7 @@ public static class EvtExt
 		}
 	}
 	public static IObservable<T> WhenMouseMove<T>(this IObservable<IEvtGen<T>> src) => src.OfType<MouseMoveEvtGen<T>>().Select(e => e.Pos);
+	public static IObservable<Pt> WhenMouseMove(this Evt src) => src.WhenEvt.WhenMouseMove();
 
 	// Mouse Down
 	// ==========
@@ -49,6 +50,7 @@ public static class EvtExt
 			.OfType<MouseBtnEvtGen<T>>()
 			.Where(e => e is { UpDown: UpDown.Down, Btn: var mouseBtn } && mouseBtn == btn)
 			.Select(e => e.Pos);
+	public static IObservable<Pt> WhenMouseDown(this Evt src, MouseBtn btn = MouseBtn.Left) => src.WhenEvt.WhenMouseDown(btn);
 
 	// Mouse Up
 	// ========
@@ -71,6 +73,7 @@ public static class EvtExt
 			.OfType<MouseBtnEvtGen<T>>()
 			.Where(e => e is { UpDown: UpDown.Up, Btn: var mouseBtn } && mouseBtn == btn)
 			.Select(e => e.Pos);
+	public static IObservable<Pt> WhenMouseUp(this Evt src, MouseBtn btn = MouseBtn.Left) => src.WhenEvt.WhenMouseUp(btn);
 
 	// Mouse Wheel
 	// ===========
@@ -78,6 +81,7 @@ public static class EvtExt
 	public static IObservable<MouseWheelEvtGen<T>> WhenMouseWheel<T>(this IObservable<IEvtGen<T>> src) =>
 		src
 			.OfType<MouseWheelEvtGen<T>>();
+	public static IObservable<MouseWheelEvtGen<Pt>> WhenMouseWheel(this Evt src) => src.WhenEvt.WhenMouseWheel();
 
 	// Key Down
 	// ========
@@ -87,6 +91,7 @@ public static class EvtExt
 			.OfType<KeyEvtGen<T>>()
 			.Where(e => e.UpDown == UpDown.Down && e.Key == key)
 			.ToUnit();
+	public static IObservable<Unit> WhenKeyDown(this Evt src, Keys key) => src.WhenEvt.WhenKeyDown(key);
 
 	// Key Up
 	// ======
@@ -96,7 +101,10 @@ public static class EvtExt
 			.OfType<KeyEvtGen<T>>()
 			.Where(e => e.UpDown == UpDown.Up && e.Key == key)
 			.ToUnit();
+	public static IObservable<Unit> WhenKeyUp(this Evt src, Keys key) => src.WhenEvt.WhenKeyUp(key);
 
+	// Is Key Down
+	// ===========
 	public static IRoVar<bool> IsKeyDown<T>(this IObservable<IEvtGen<T>> src, Keys key, IRoDispBase d) =>
 		Var.Make(
 			false,

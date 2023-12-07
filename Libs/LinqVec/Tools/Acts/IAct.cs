@@ -1,17 +1,29 @@
-﻿using System.Reactive;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.CompilerServices;
-using PowMaybe;
 
 namespace LinqVec.Tools.Acts;
 
 
+static class Sig
+{
+	public static (Action<T>, IObservable<T>) Make<T>()
+	{
+		ISubject<T> when = new AsyncSubject<T>();
+		return (
+			v =>
+			{
+				when.OnNext(v);
+				when.OnCompleted();
+			},
+			when.AsObservable()
+		);
+	}
+}
 
 
 
 
-
+/*
 public delegate IDisposable Act<out Out>(Action start, Action<Out> finish);
 
 public class ActAwaiter<Out> : INotifyCompletion
@@ -60,20 +72,4 @@ public static class ActExt
 		return new ActAwaiter<Out>(action);
 	}
 }
-
-
-static class Sig
-{
-	public static (Action<T>, IObservable<T>) Make<T>()
-	{
-		ISubject<T> when = new AsyncSubject<T>();
-		return (
-			v =>
-			{
-				when.OnNext(v);
-				when.OnCompleted();
-			},
-			when.AsObservable()
-		);
-	}
-}
+*/

@@ -58,7 +58,8 @@ static class Entities
 	public static Func<ModelMan<DocModel>, IEntity<DocModel, CurveModel>> Curve(Guid layerId) =>
 		mm =>
 		{
-			var model = CurveModel.Empty();
+			//var model = CurveModel.Empty();
+			var model = CurveModel.Sample();
 			return new Entity<DocModel, CurveModel>(
 				mm,
 				init: model,

@@ -1,4 +1,5 @@
 using LinqVec.Utils.WinForms_;
+using PowRxVar;
 
 namespace LinqVecDemo;
 
@@ -15,5 +16,7 @@ static class Program
 		ApplicationConfiguration.Initialize();
 		ConUtils.Init();
 		Application.Run(new MainWin());
+
+		VarDbg.CheckForUndisposedDisps(true);
 	}
 }

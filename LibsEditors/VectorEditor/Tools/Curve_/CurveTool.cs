@@ -1,4 +1,7 @@
-﻿using PowRxVar;
+﻿using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using PowRxVar;
 using LinqVec;
 using LinqVec.Logic;
 using LinqVec.Structs;
@@ -9,6 +12,7 @@ using LinqVec.Utils;
 using PowMaybe;
 using VectorEditor.Tools.Curve_.Mods;
 using VectorEditor.Tools.Curve_.Structs;
+using LinqVec.Tools.Enums;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -27,79 +31,92 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 			.MakeHot(d)
 			.ToEvt(e => Env.Curs.Cursor = e);
 
-		evt.WhenEvt.Log(d);
+		//evt.WhenEvt.Log(d);
 
 		var curve = mm.Create(Entities.Curve(mm.V.Layers[0].Id));
 
-		evt.WhenKeyDown(Keys.Enter).Subscribe(_ =>
-		{
-			curve.Commit();
-			Env.RequireToolReset();
-		}).D(d);
+		var movePoint_Start = Acts.MovePoint_Start(evt, curve);
+		var movePoint_Finish = Acts.MovePoint_Finish(evt, curve, mousePos);
+		var addPoint_Start = Acts.AddPoint_Start(evt, curve).Exclude(movePoint_Start);
+		var addPoint_Finish = Acts.AddPoint_Finish(evt, curve, mousePos);
 
-		try
-		{
 
-			while (true)
-			{
-				var hot = await evt.Choose(
-					Hotspots.MovePoint_Start(curve).Map(e => (IHot)new HotPointId(e)),
-					Hotspots.AddPoint_Start(curve).Map(e => (IHot)new HotPt(e))
-				).D(d);
+		//L.WriteLine("curve.start");
+		//Disposable.Create(() => L.WriteLine("curve.dispose")).D(d);
 
-				switch (hot)
-				{
-					case HotPt { Pos: var startPt }:
-						curve.ModSet(CurveMods.AddPoint(startPt));
-						await evt.Choose(Hotspots.AddPoint_Finish).D(d);
-						curve.ModApply(mousePos);
-						break;
 
-					case HotPointId { PointId: var pointId }:
-						curve.ModSet(CurveMods.MovePoint(pointId));
-						await evt.Choose(Hotspots.MovePoint_Finish).D(d);
-						curve.ModApply(mousePos);
-						break;
-				}
-			}
+		Act.Loop(
 
-		}
-		catch (Exception)
-		{
-			curve.Invalidate();
-			throw;
-		}
+				Act.Amb(
+
+					Act.Seq(
+						movePoint_Start.ToSeq(),
+						_ => movePoint_Finish.ToSeq()
+					),
+
+					Act.Seq(
+						addPoint_Start.ToSeq(),
+						_ => addPoint_Finish.ToSeq()
+					)
+
+				)
+
+			)
+			.Run(evt).D(d);
 	}
 }
 
 
-sealed record HotPt(Pt Pos) : IHot;
-sealed record HotPointId(PointId PointId) : IHot;
 
 
-
-static class Hotspots
+static class Acts
 {
-	public static IHotspot<Pt> AddPoint_Start(IEntity<CurveModel> curve) => new PtHotspot(Trigger.Down, onOver: on => curve.ModSet(CurveMods.AddPoint().If(on)));
-	public static IHotspot<Pt> AddPoint_Finish => new PtHotspot(Trigger.Up);
-	public static IHotspot<PointId> MovePoint_Start(IEntity<CurveModel> curve) => new PointIdHotspot(curve);
-	public static IHotspot<Pt> MovePoint_Finish => new PtHotspot(Trigger.Up, CBase.Cursors.BlackArrowSmall);
+	public static Act<Pt> AddPoint_Start(Evt evt, IEntity<CurveModel> curve) =>
+		new(
+			evt,
+			Trigger.Down,
+			new Hotspot<Pt>(
+				May.Some,
+				CBase.Cursors.Pen
+			),
+			OnHover: on => curve.ModSet(CurveMods.AddPoint().If(on)),
+			OnTrigger: startPt => curve.ModSet(CurveMods.AddPoint(startPt))
+		);
 
-	private sealed record PtHotspot(Trigger trigger, Cursor? cursor = null, Action<bool>? onOver = null) : IHotspot<Pt>
-	{
-		public string Name => "Pt";
-		public Cursor Cursor => cursor ?? CBase.Cursors.Pen;
-		public Maybe<Pt> Get(Pt mousePos) => May.Some(mousePos);
-		public Trigger Trigger => trigger;
-		public Action<bool>? OnOver => onOver;
-	}
+	public static Act<Unit> AddPoint_Finish(Evt evt, IEntity<CurveModel> curve, IRoMayVar<Pt> mousePos) =>
+		new(
+			evt,
+			Trigger.Up,
+			new Hotspot<Unit>(
+				_ => May.Some(Unit.Default),
+				CBase.Cursors.Pen
+			),
+			OnHover: null,
+			OnTrigger: _ => curve.ModApply(mousePos)
+		);
 
-	private sealed record PointIdHotspot(IEntity<CurveModel> curve) : IHotspot<PointId>
-	{
-		public string Name => "PointId";
-		public Cursor Cursor => CBase.Cursors.BlackArrowSmall;
-		public Maybe<PointId> Get(Pt mousePos) => curve.V.GetClosestPointTo(mousePos, C.ActivateMoveMouseDistance);
-		public Trigger Trigger => Trigger.Down;
-	}
+
+	public static Act<PointId> MovePoint_Start(Evt evt, IEntity<CurveModel> curve) =>
+		new(
+			evt,
+			Trigger.Down,
+			new Hotspot<PointId>(
+				m => curve.V.GetClosestPointTo(m, C.ActivateMoveMouseDistance),
+				CBase.Cursors.BlackArrowSmall
+			),
+			OnHover: null,
+			OnTrigger: pointId => curve.ModSet(CurveMods.MovePoint(pointId))
+		);
+
+	public static Act<Unit> MovePoint_Finish(Evt evt, IEntity<CurveModel> curve, IRoMayVar<Pt> mousePos) =>
+		new(
+			evt,
+			Trigger.Up,
+			new Hotspot<Unit>(
+				_ => May.Some(Unit.Default),
+				CBase.Cursors.BlackArrowSmall
+			),
+			OnHover: null,
+			OnTrigger: _ => curve.ModApply(mousePos)
+		);
 }
-

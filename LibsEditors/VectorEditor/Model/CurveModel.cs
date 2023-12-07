@@ -18,6 +18,15 @@ public sealed record CurveModel(
 		Array.Empty<CurvePt>()
 	);
 
+	public static CurveModel Sample() => new(
+		Guid.NewGuid(),
+		new[]
+		{
+			CurvePt.Make(new Pt(3, 2), new Pt(3, 5)),
+			CurvePt.Make(new Pt(-3, 2), new Pt(-3, -1)),
+		}
+	);
+
 	public override string ToString() => "Curve(" + Pts.SelectToArray(e => $"{(int)e.P.X},{(int)e.P.Y}").JoinText() + ")";
 }
 

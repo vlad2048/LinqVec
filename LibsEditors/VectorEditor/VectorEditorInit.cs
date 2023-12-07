@@ -18,11 +18,9 @@ public static class VectorEditorInit
 		var d = new Disp();
 
 		var env = vecEditor.Env;
-		var (requireToolReset, whenToolResetRequired) = RxEventMaker.Make<Unit>().D(d);
 		var mm = new ModelMan<DocModel>(
 			DocModel.Empty,
-			env.EditorEvt,
-			() => requireToolReset(Unit.Default)
+			env.EditorEvt
 		).D(d);
 
 		var evt = env.EditorEvt
@@ -33,7 +31,6 @@ public static class VectorEditorInit
 
 		vecEditor.Init(
 			new VecEditorInitNfo(
-				whenToolResetRequired,
 				new ITool[]
 				{
 					new CurveTool(env, mm)

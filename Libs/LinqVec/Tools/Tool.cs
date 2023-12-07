@@ -21,10 +21,6 @@ public enum Trigger
 
 public interface IHot;
 
-/*public sealed record Hot<H>(H V) : IHot
-{
-	//public static IHot Make(H v) => new Hot<H>(v);
-}*/
 
 public interface IHotspot
 {

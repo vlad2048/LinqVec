@@ -10,6 +10,8 @@ using LinqVec.Utils;
 using LinqVec.Tools;
 using LinqVec.Tools.Events;
 using LinqVec.Utils.Rx;
+using PowRxVar.Utils;
+using System.Reactive;
 
 namespace LinqVec;
 
@@ -38,6 +40,7 @@ public partial class VecEditor : UserControl
 
 		var editorEvt = EvtUtils.MakeForControl(drawPanel, curTool.ToUnit());
 		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform).D(this);
+		var (requireToolReset, whenToolResetRequired) = RxEventMaker.Make<Unit>().D(this);
 
 		Env = new ToolEnv(
 			drawPanel,
@@ -45,7 +48,8 @@ public partial class VecEditor : UserControl
 			curTool,
 			isPanZoom,
 			transform,
-			editorEvt
+			editorEvt,
+			() => requireToolReset(Unit.Default)
 		);
 
 
@@ -55,7 +59,7 @@ public partial class VecEditor : UserControl
 			drawPanel.Init(new DrawPanelInitNfo(transform, res));
 			if (DesignMode) return;
 
-			var (whenToolResetRequired, tools) = init;
+			var tools = init.Tools;
 
 			editorEvt.WhenKeyDown(Keys.D1).Subscribe(_ => Cursor = Cursors.Default).D(d);
 			editorEvt.WhenKeyDown(Keys.D2).Subscribe(_ => Cursor = CBase.Cursors.Pen).D(d);
@@ -63,7 +67,8 @@ public partial class VecEditor : UserControl
 
 			Env.RunTools(
 				tools.Append(noneTool).ToArray(),
-				curTool
+				curTool,
+				whenToolResetRequired
 			).D(d);
 
 			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
@@ -81,16 +86,28 @@ public partial class VecEditor : UserControl
 
 file static class VecEditorUtils
 {
-	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool)
+	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool, IObservable<Unit> whenToolResetRequired)
 	{
+
+		//whenToolResetRequired.Subscribe(_ =>
+		//{
+		//	var t = curTool.V;
+		//	curTool.V = noneTool;
+		//	//curTool.V = t;
+		//}).D(this);
+
 		var d = new Disp();
 
-		tools
-			.Select(tool =>
-				env.EditorEvt.WhenKeyDown(tool.Shortcut)
-					.Select(_ => tool)
+		Obs.Merge(
+				tools
+					.Select(tool =>
+						env.EditorEvt.WhenKeyDown(tool.Shortcut)
+							.Select(_ => tool)
+					)
+					.Merge(),
+				whenToolResetRequired
+					.Select(_ => curTool.V)
 			)
-			.Merge()
 			.SubscribeWithDisp(async (tool, toolD) =>
 			{
 				curTool.V = tool;
@@ -99,122 +116,9 @@ file static class VecEditorUtils
 				{
 					await tool.Run(toolD);
 				}
-				catch (InvalidOperationException)
-				{
-				}
+				catch (InvalidOperationException) {}
 			}).D(d);
 
 		return d;
 	}
 }
-
-
-
-
-
-
-/*
-interface IToolRunner
-{
-	IRoVar<bool> IsAtRest { get; }
-	void Reset();
-}
-
-file static class VecEditorUtils
-{
-	public static (IToolRunner, IDisposable) RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool)
-	{
-		var d = new Disp();
-
-		var isAtRest = Var.Make(true).D(d);
-		var cur = new SerVar<ToolRun>(new ToolRun(curTool.V, e => isAtRest.V = e)).D(d);
-
-		cur.SelectVar(e => e.Tool).PipeTo(curTool);
-
-		tools
-			.Select(tool =>
-				env.EditorEvt.WhenKeyDown(tool.Shortcut)
-					.Select(_ => tool)
-			)
-			.Merge()
-			.Subscribe(tool =>
-			{
-				cur.V = new ToolRun(tool, e =>
-				{
-					isAtRest.V = e;
-				});
-			}).D(d);
-
-		var toolRunner = new ToolRunner(
-			() => cur.V.Reset(),
-			isAtRest
-		);
-
-		return (toolRunner, d);
-	}
-
-	private sealed class ToolRunner : IToolRunner
-	{
-		private readonly Action reset;
-
-		public ToolRunner(Action reset, IRoVar<bool> isAtRest)
-		{
-			this.reset = reset;
-			IsAtRest = isAtRest;
-		}
-
-		public void Reset() => reset();
-		public IRoVar<bool> IsAtRest { get; }
-	}
-
-
-	private sealed class ToolRun : IDisposable
-	{
-		private interface IToolState;
-		private sealed record RestToolState : IToolState;
-		private sealed record RunToolState(Pt StartPt) : IToolState;
-
-		private readonly Disp d = new();
-		public void Dispose() => d.Dispose();
-
-		private readonly Action<bool> setIsAtRest;
-		private readonly ISubject<Pt> whenStart;
-		private readonly SerialDisp<IDisposable> stateD;
-		private IToolState state = null!;
-
-		private IObservable<Pt> WhenStart => whenStart.AsObservable();
-
-		private IToolState State
-		{
-			get => state;
-			set
-			{
-				if (value == state) return;
-				state = value;
-				setIsAtRest(state is RestToolState);
-				stateD.Value = null;
-				stateD.Value = state switch
-				{
-					RestToolState => Tool.RunRest(whenStart.OnNext),
-					RunToolState { StartPt: var startPt } => Tool.Run(startPt),
-					_ => throw new ArgumentException()
-				};
-			}
-		}
-
-		public ITool Tool { get; }
-		public void Reset() => State = new RestToolState();
-
-		public ToolRun(ITool tool, Action<bool> setIsAtRest)
-		{
-			this.setIsAtRest = setIsAtRest;
-			Tool = tool;
-			whenStart = new Subject<Pt>().D(d);
-			stateD = new SerialDisp<IDisposable>().D(d);
-			State = new RestToolState();
-
-			WhenStart.Subscribe(startPt => State = new RunToolState(startPt)).D(d);
-		}
-	}
-}
-*/

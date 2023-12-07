@@ -31,6 +31,12 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 
 		var curve = mm.Create(Entities.Curve(mm.V.Layers[0].Id));
 
+		evt.WhenKeyDown(Keys.Enter).Subscribe(_ =>
+		{
+			curve.Commit();
+			Env.RequireToolReset();
+		}).D(d);
+
 		try
 		{
 

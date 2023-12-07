@@ -6,10 +6,6 @@ using VectorEditor.Tools.Curve_.Structs;
 
 namespace VectorEditor.Tools.Curve_.Mods;
 
-interface ICurveMod;
-sealed record AddPointCurveMod(Pt? StartPos) : ICurveMod;
-sealed record MovePointCurveMod(PointId Id) : ICurveMod;
-sealed record RemovePointCurveMod(int Idx) : ICurveMod;
 
 static class CurveMods
 {
@@ -22,11 +18,15 @@ static class CurveMods
 		false => (e, _) => e,
 		true => fun
 	};
-}
 
-static class CurveModExt
-{
-	public static CurveModel ApplyMod(this CurveModel model, ICurveMod mod, Maybe<Pt> mp) =>
+
+	private interface ICurveMod;
+	private sealed record AddPointCurveMod(Pt? StartPos) : ICurveMod;
+	private sealed record MovePointCurveMod(PointId Id) : ICurveMod;
+	private sealed record RemovePointCurveMod(int Idx) : ICurveMod;
+
+
+	private static CurveModel ApplyMod(this CurveModel model, ICurveMod mod, Maybe<Pt> mp) =>
 		mod switch
 		{
 			AddPointCurveMod { StartPos: var startPos } => mp.IsSome(out var p) switch

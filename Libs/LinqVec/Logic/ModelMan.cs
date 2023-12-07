@@ -54,8 +54,7 @@ public class ModelMan<M> : IModelMan<M>, IDisposable
 
 	public ModelMan(
 		M init,
-		IObservable<IEvtGen<PtInt>> whenEvt,
-		Action requireToolReset
+		IObservable<IEvtGen<PtInt>> whenEvt
 	)
 	{
 		model = new Undoer<M>(init, whenEvt).D(d);

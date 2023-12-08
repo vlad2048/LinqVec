@@ -1,4 +1,5 @@
-﻿using LinqVec.Logic;
+﻿using System.Reactive.Disposables;
+using LinqVec.Logic;
 using PowRxVar;
 
 namespace LinqVec.Tools;
@@ -8,7 +9,7 @@ public interface ITool
 {
 	string Name { get; }
 	Keys Shortcut { get; }
-	Task Run(IRoDispBase d);
+	IDisposable Run();
 }
 
 public abstract class Tool<M> : ITool
@@ -25,7 +26,7 @@ public abstract class Tool<M> : ITool
 		MM = mm;
 	}
 
-	public abstract Task Run(IRoDispBase d);
+	public abstract IDisposable Run();
 }
 
 
@@ -42,9 +43,9 @@ sealed class NoneTool : ITool
 
 	public Keys Shortcut => Keys.Escape;
 
-	public Task Run(IRoDispBase d)
+	public IDisposable Run()
 	{
 		setDefaultCursor();
-		return Task.CompletedTask;
+		return Disposable.Empty;
 	}
 }

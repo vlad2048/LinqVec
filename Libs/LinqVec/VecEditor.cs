@@ -108,15 +108,10 @@ file static class VecEditorUtils
 				whenToolResetRequired
 					.Select(_ => curTool.V)
 			)
-			.SubscribeWithDisp(async (tool, toolD) =>
+			.SubscribeWithDisp((tool, toolD) =>
 			{
 				curTool.V = tool;
-
-				try
-				{
-					await tool.Run(toolD);
-				}
-				catch (InvalidOperationException) {}
+				tool.Run().D(toolD);
 			}).D(d);
 
 		return d;

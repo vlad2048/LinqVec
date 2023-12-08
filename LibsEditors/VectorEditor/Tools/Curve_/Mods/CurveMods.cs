@@ -10,14 +10,19 @@ namespace VectorEditor.Tools.Curve_.Mods;
 static class CurveMods
 {
 	public static Func<CurveModel, Maybe<Pt>, CurveModel> AddPoint() => (e, mp) => e.ApplyMod(new AddPointCurveMod(null), mp);
-	public static Func<CurveModel, Maybe<Pt>, CurveModel> AddPoint(Pt startPt) => (e, mp) => e.ApplyMod(new AddPointCurveMod(startPt), mp);
+	public static Func<CurveModel, Maybe<Pt>, CurveModel> AddPoint(Maybe<Pt> mayStartPt) => mayStartPt.IsSome(out var startPt) switch
+	{
+		false => (e, _) => e,
+		true => (e, mp) => e.ApplyMod(new AddPointCurveMod(startPt), mp)
+	};
+	public static Func<CurveModel, Maybe<Pt>, CurveModel> AddPoint(Pt startPt) => AddPoint(May.Some(startPt));
 	public static Func<CurveModel, Maybe<Pt>, CurveModel> MovePoint(PointId id) => (e, mp) => e.ApplyMod(new MovePointCurveMod(id), mp);
 
-	public static Func<CurveModel, Maybe<Pt>, CurveModel> If(this Func<CurveModel, Maybe<Pt>, CurveModel> fun, bool on) => on switch
+	/*public static Func<CurveModel, Maybe<Pt>, CurveModel> If(this Func<CurveModel, Maybe<Pt>, CurveModel> fun, bool on) => on switch
 	{
 		false => (e, _) => e,
 		true => fun
-	};
+	};*/
 
 
 	private interface ICurveMod;

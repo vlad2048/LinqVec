@@ -1,11 +1,12 @@
-﻿using LinqVec.Logic;
-using LinqVec.Structs;
+﻿using LinqVec.Structs;
 using PowMaybe;
 
 namespace LinqVec.Utils;
 
 public static class EnumExt
 {
+	public static T[] SkipToArray<T>(this T[] arr, int n) => arr.Skip(n).ToArray();
+
 	public static bool ContainsId<T>(this T[] arr, Guid id) where T : IId => arr.Count(e => e.Id == id) == 1;
 
 	public static bool ContainsIdAndIsOfType<T, U>(this T[] arr, Guid id) where T : IId where U : T

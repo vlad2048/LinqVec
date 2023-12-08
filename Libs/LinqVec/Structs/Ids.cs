@@ -1,6 +1,6 @@
 ﻿using System.Reactive;
 using LinqVec.Logic;
-using LinqVec.Tools.Acts;
+using LinqVec.Utils.Rx;
 using PowMaybe;
 using PowRxVar;
 using PowRxVar.Utils;
@@ -41,7 +41,7 @@ public interface IEntity<E> : IEntity
 {
 	E V { get; set; }
 	void ModSet(Func<E, Maybe<Pt>, E> mod);
-	void ModApply(IRoMayVar<Pt> mousePos);
+	void ModApply(Maybe<Pt> mousePos);
 }
 
 public interface IEntity<M, E> : IEntityM<M>, IEntity<E>, IDisposable
@@ -96,9 +96,9 @@ public sealed class Entity<M, E> : IEntity<M, E>
 		sigChanged(Unit.Default);
 	}
 
-	public void ModApply(IRoMayVar<Pt> mousePos)
+	public void ModApply(Maybe<Pt> mousePos)
 	{
-		V = mod(V, mousePos.V);
+		V = mod(V, mousePos);
 		mod = (e, _) => e;
 	}
 
@@ -188,6 +188,15 @@ public sealed class Entity<M, E> : IEntity<M, E>
 		if (State == EntityState.Invalid) throw new ArgumentException("Cannot Invalidate() an Invalid entity");
 		State = EntityState.Invalid;
 	}
+}
+
+public static class EntityExt
+{
+	public static void ModApply<E>(this IEntity<E> entity, IRoMayVar<Pt> mousePos) =>
+		entity.ModApply(mousePos.V);
+
+	public static void ModApply<E>(this IEntity<E> entity, Pt mousePos) =>
+		entity.ModApply(May.Some(mousePos));
 }
 
 

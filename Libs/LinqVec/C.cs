@@ -27,6 +27,8 @@ public static class CBase
 		public static readonly Cursor HandClosed = CUtils.LoadCursor(Resource.hand_closed);
 		public static readonly Cursor Pen = CUtils.LoadCursor(Resource.pen);
 		public static readonly Cursor BlackArrowSmall = CUtils.LoadCursor(Resource.black_arrow_small);
+		public static readonly Cursor BlackArrow = CUtils.LoadCursor(Resource.black_arrow);
+		public static readonly Cursor BlackArrowHold = CUtils.LoadCursor(Resource.black_arrow_hold);
 	}
 }
 

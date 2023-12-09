@@ -1,11 +1,9 @@
 ﻿using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using DynamicData;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
-using PowMaybe;
 using PowRxVar;
-using LinqVec.Utils;
+using PowBasics.CollectionsExt;
 
 namespace LinqVec.Logic;
 
@@ -21,7 +19,8 @@ public class ModelMan<M> : IModelMan<M>, IDisposable
 	public void Dispose() => d.Dispose();
 
 	private readonly Undoer<M> model;
-	private readonly IRwVar<IEntityM<M>[]> tracked;
+	private readonly ISourceCache<IEntityM<M>, Guid> trackedSrc;
+	private readonly IObservable<IChangeSet<IEntityM<M>, Guid>> tracked;
 
 	public M V
 	{
@@ -30,7 +29,7 @@ public class ModelMan<M> : IModelMan<M>, IDisposable
 	}
 
 	public M GetGfxModel(IRoMayVar<Pt> mp) =>
-		tracked.V
+		trackedSrc.Items
 			.Aggregate(
 				V,
 				(m, e) => e.GfxCommit(m, mp)
@@ -39,17 +38,11 @@ public class ModelMan<M> : IModelMan<M>, IDisposable
 	public IObservable<Unit> WhenChanged =>
 		Obs.Merge(
 			model.WhenChanged,
-			tracked
-				.Select(ts =>
-					Obs.Merge(
-						ts.Select(t => t.WhenChanged).Merge(),
-						ts.Select(t => t.WhenInvalidated).Merge()
-					)
-				)
-				.Switch()
+			tracked.ToUnit()
 		);
+
+	public IId[] GetTracked() => trackedSrc.Items.SelectToArray(e => e.GetV());
 		
-		//model.WhenChanged;
 	public IObservable<Unit> WhenUndoRedo => model.WhenUndoRedo;
 
 	public ModelMan(
@@ -58,95 +51,21 @@ public class ModelMan<M> : IModelMan<M>, IDisposable
 	)
 	{
 		model = new Undoer<M>(init, whenEvt).D(d);
-		tracked = Var.Make(Array.Empty<IEntityM<M>>()).D(d);
-
-		/*model.WhenChanged
-			.Where(_ => entityEdited.V.IsSome(out var entityEdit_) && !entityEdit_.Exists)
-			.Subscribe(_ =>
-			{
-				entityEdited.V = May.None<ISmartId>();
-				requireToolReset();
-			}).D(d);*/
-
+		trackedSrc = new SourceCache<IEntityM<M>, Guid>(e => e.GetV().Id).D(d);
+		tracked = trackedSrc.Connect();
 	}
 
-	public IEntity<E> Create<E>(Func<ModelMan<M>, IEntity<M, E>> make)
+	public IEntity<E> Create<E>(Func<ModelMan<M>, IEntity<M, E>> make) where E : IId
 	{
 		var entity = make(this);
-		tracked.V = tracked.V.Add(entity.D(d));
-		entity.WhenInvalidated.Subscribe(_ =>
+		trackedSrc.AddOrUpdate(entity);
+		entity.WhenChanged.Subscribe(_ => trackedSrc.AddOrUpdate(entity)).D(entity);
+		entity.WhenDisposed.Subscribe(_ =>
 		{
-			entity.Dispose();
-			tracked.V = tracked.V.Remove(entity);
+			trackedSrc.Remove(entity.V.Id);
 		});
 		return entity;
 	}
+
+	public bool IsTracked<E>(E entity) where E : IId => trackedSrc.Items.Any(e => e.GetV().Id == entity.Id);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-public class ModelMan<M> : IModelMan<M>, IDisposable
-{
-	private readonly Disp d = new();
-	public void Dispose() => d.Dispose();
-
-	private readonly Undoer<M> model;
-	private readonly IRwMayVar<ISmartId> entityEdited;
-
-	public M V
-	{
-		get => model.V;
-		set => model.Do(value);
-	}
-
-	public IObservable<Unit> WhenChanged => model.WhenChanged;
-	public IObservable<Unit> WhenUndoRedo => model.WhenUndoRedo;
-
-	public ModelMan(
-		M init,
-		IObservable<IEvtGen<PtInt>> whenEvt,
-		Action requireToolReset
-	)
-	{
-		model = new Undoer<M>(init, whenEvt).D(d);
-		entityEdited = VarMay.Make<ISmartId>().D(d);
-
-		model.WhenChanged
-			.Where(_ => entityEdited.V.IsSome(out var entityEdit_) && !entityEdit_.Exists)
-			.Subscribe(_ =>
-			{
-				entityEdited.V = May.None<ISmartId>();
-				requireToolReset();
-			}).D(d);
-
-	}
-
-	public bool IsEdited<E>(E entity) where E : IId => entityEdited.V.IsSome(out var edited) && edited.Id == entity.Id;
-
-	public ISmartId<E> Create<E>(Func<ModelMan<M>, Func<M, (M, ISmartId<E>)>> make)
-	{
-		var (mNext, id) = make(this)(V);
-		V = mNext;
-		return id;
-	}
-
-	public (ISmartId<E>, IDisposable) CreateEdit<E>(Func<ModelMan<M>, Func<M, (M, ISmartId<E>)>> make)
-	{
-		var id = Create(make);
-		var toolD = new Disp();
-		entityEdited.V = May.Some((ISmartId)id);
-		toolD.WhenDisposed.Subscribe(_ => entityEdited.V = May.None<ISmartId>());
-		return (id, toolD);
-	}
-}
-*/

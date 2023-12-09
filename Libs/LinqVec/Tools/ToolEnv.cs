@@ -12,8 +12,7 @@ public sealed class ToolEnv(
         IRoVar<ITool> curTool,
         IRoVar<bool> isPanZoom,
         IRoVar<Transform> transform,
-        IObservable<IEvtGen<PtInt>> editorEvt,
-        Action requireToolReset
+        IObservable<IEvtGen<PtInt>> editorEvt
 	)
 {
     public ICurs Curs { get; } = curs;
@@ -23,5 +22,4 @@ public sealed class ToolEnv(
 
     public IObservable<IEvtGen<PtInt>> EditorEvt => editorEvt;
     public IObservable<IEvtGen<PtInt>> GetEvtForTool(ITool tool) => editorEvt.RestrictToTool(tool, curTool, isPanZoom);
-    public void RequireToolReset() => requireToolReset();
 }

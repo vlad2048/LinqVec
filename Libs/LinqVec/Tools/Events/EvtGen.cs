@@ -7,6 +7,7 @@ using PowRxVar;
 using LinqVec.Utils.WinForms_;
 using PowMaybe;
 using PowRxVar.Utils;
+using UILib;
 
 namespace LinqVec.Tools.Events;
 
@@ -228,6 +229,16 @@ public static class EvtUtils
 			.DistinctUntilChanged();
 
 	public static IObservable<IEvtGen<Maybe<Pt>>> TrackPos(this IObservable<IEvtGen<Maybe<Pt>>> src, out IRoMayVar<Pt> mousePos, IRoDispBase d)
+	{
+		mousePos = VarMay.Make(
+			src
+				.OfType<MouseMoveEvtGen<Maybe<Pt>>>()
+				.Select(e => e.Pos)
+		).D(d);
+		return src;
+	}
+
+	public static IObservable<IEvtGen<Pt>> TrackPos(this IObservable<IEvtGen<Pt>> src, out IRoMayVar<Pt> mousePos, IRoDispBase d)
 	{
 		mousePos = VarMay.Make(
 			src

@@ -7,19 +7,19 @@ using PowRxVar;
 using PowRxVar.Utils;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
-using VectorEditor.Tools.Curve_.Utils;
+using VectorEditor.Tools.Select_;
 
 namespace VectorEditor;
 
-public static class VectorEditorInit
+public static class VectorEditorLogic
 {
-	public static (ModelMan<DocModel> , IDisposable) InitVectorEditor(this VecEditor vecEditor)
+	public static (ModelMan<DocModel> , IDisposable) InitVectorEditor(this VecEditor vecEditor, DocModel? initModel = null)
 	{
 		var d = new Disp();
 
 		var env = vecEditor.Env;
 		var mm = new ModelMan<DocModel>(
-			DocModel.Empty,
+			initModel ?? DocModel.Empty,
 			env.EditorEvt
 		).D(d);
 
@@ -33,7 +33,8 @@ public static class VectorEditorInit
 			new VecEditorInitNfo(
 				new ITool[]
 				{
-					new CurveTool(env, mm)
+					new CurveTool(env, mm),
+					new SelectTool(env, mm),
 				}
 			)
 		);
@@ -43,15 +44,14 @@ public static class VectorEditorInit
 			{
 				var m = mm.GetGfxModel(mousePos);
 				foreach (var layer in m.Layers)
+				foreach (var obj in layer.Objects)
 				{
-					foreach (var obj in layer.Objects)
+					if (mm.IsTracked(obj)) continue;
+					switch (obj)
 					{
-						switch (obj)
-						{
-							case CurveModel curve:
-								CurveModelPainter.Draw(gfx, curve);
-								break;
-						}
+						case CurveModel curve:
+							CurvePainter.Draw(gfx, curve, CurveGfxState.None);
+							break;
 					}
 				}
 			}).D(d);

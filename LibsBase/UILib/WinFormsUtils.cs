@@ -1,10 +1,35 @@
-﻿using PowRxVar;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
+using Jot;
+using PowRxVar;
+using UILib.Utils;
 
-namespace LinqVec.Utils.WinForms_;
+namespace UILib;
 
 public static class WinFormsUtils
 {
+	public static Tracker Tracker { get; } = new();
+
+	static WinFormsUtils()
+	{
+		TrackerSetup.Init(Tracker);
+	}
+
+	public static T Track<T>(this T obj) where T : class
+	{
+		switch (obj)
+		{
+			case Form form:
+				form.Events().Load.Subscribe(_ => Tracker.Track(obj)).D(form);
+				break;
+
+			default:
+				Tracker.Track(obj);
+				break;
+		}
+
+		return obj;
+	}
+
 	public static void InitRX<T>(this Control ctrl, IObservable<T> whenInit, Action<T, IRoDispBase> initAction)
 	{
 		var d = new Disp().D(ctrl);

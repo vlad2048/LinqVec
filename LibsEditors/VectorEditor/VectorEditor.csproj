@@ -6,13 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\LibsBase\UILib\UILib.csproj" />
     <ProjectReference Include="..\..\Libs\LinqVec\LinqVec.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Panes\ModelTree_\" />
-    <Folder Include="Tools\Curve_\Drawing\" />
   </ItemGroup>
 
 </Project>

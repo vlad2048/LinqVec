@@ -9,9 +9,7 @@ using LinqVec.Logic;
 using LinqVec.Utils;
 using LinqVec.Tools;
 using LinqVec.Tools.Events;
-using LinqVec.Utils.Rx;
-using PowRxVar.Utils;
-using System.Reactive;
+using UILib;
 
 namespace LinqVec;
 
@@ -32,15 +30,13 @@ public partial class VecEditor : UserControl
 	{
 		InitializeComponent();
 
-		var noneTool = new NoneTool(() => drawPanel.Cursor = Cursors.Default);
 		var transform = Var.Make(Transform.Id).D(this);
 		whenInit = new AsyncSubject<VecEditorInitNfo>().D(this);
-		var curTool = Var.Make<ITool>(noneTool).D(this);
+		var curTool = Var.Make<ITool>(null!).D(this);
 		var ctrl = new Ctrl(drawPanel);
 
 		var editorEvt = EvtUtils.MakeForControl(drawPanel, curTool.ToUnit());
 		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform).D(this);
-		var (requireToolReset, whenToolResetRequired) = RxEventMaker.Make<Unit>().D(this);
 
 		Env = new ToolEnv(
 			drawPanel,
@@ -48,8 +44,7 @@ public partial class VecEditor : UserControl
 			curTool,
 			isPanZoom,
 			transform,
-			editorEvt,
-			() => requireToolReset(Unit.Default)
+			editorEvt
 		);
 
 
@@ -65,18 +60,12 @@ public partial class VecEditor : UserControl
 			editorEvt.WhenKeyDown(Keys.D2).Subscribe(_ => Cursor = CBase.Cursors.Pen).D(d);
 			editorEvt.WhenKeyDown(Keys.D3).Subscribe(_ => Cursor = CBase.Cursors.BlackArrowSmall).D(d);
 
-			Env.RunTools(
-				tools.Append(noneTool).ToArray(),
-				curTool,
-				whenToolResetRequired
-			).D(d);
+			Env.RunTools(tools, curTool).D(d);
 
 			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
 			statusStrip.AddLabel("zoom", transform.Select(e => $"{C.ZoomLevels[e.ZoomIndex]:P}")).D(d);
 			statusStrip.AddLabel("center", transform.Select(e => e.Center)).D(d);
 			statusStrip.AddLabel("tool", Var.Expr(() => $"{curTool.V.Name}")).D(this);
-
-			//statusStrip.AddLabel("tool", Var.Expr(() => $"{curTool.V.Name}{(toolRunner.IsAtRest.V ? " (rest)" : "")}")).D(this);
 		});
 	}
 }
@@ -86,32 +75,28 @@ public partial class VecEditor : UserControl
 
 file static class VecEditorUtils
 {
-	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool, IObservable<Unit> whenToolResetRequired)
+	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool)
 	{
-
-		//whenToolResetRequired.Subscribe(_ =>
-		//{
-		//	var t = curTool.V;
-		//	curTool.V = noneTool;
-		//	//curTool.V = t;
-		//}).D(this);
-
 		var d = new Disp();
 
-		Obs.Merge(
-				tools
-					.Select(tool =>
-						env.EditorEvt.WhenKeyDown(tool.Shortcut)
-							.Select(_ => tool)
-					)
-					.Merge(),
-				whenToolResetRequired
-					.Select(_ => curTool.V)
+		tools
+			.Select(tool =>
+				env.EditorEvt.WhenKeyDown(tool.Shortcut).Select(_ => tool)
 			)
+			.Merge()
+			.Prepend(tools[0])
 			.SubscribeWithDisp((tool, toolD) =>
 			{
 				curTool.V = tool;
-				tool.Run().D(toolD);
+
+				var resetD = new SerialDisp<IRwDispBase>().D(toolD);
+				void Reset()
+				{
+					resetD.Value = null;
+					resetD.Value = new Disp();
+					tool.Run(Reset).D(resetD.Value);
+				}
+				Reset();
 			}).D(d);
 
 		return d;

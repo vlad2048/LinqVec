@@ -1,51 +1,80 @@
 ﻿using BrightIdeasSoftware;
+using DynamicData;
 using LinqVec.Logic;
 using LinqVec.Utils.WinForms_;
+using PowBasics.CollectionsExt;
 using PowRxVar;
+using UILib;
+using UILib.Utils;
 using VectorEditor.Model;
 
 namespace VectorEditor.Panes.ModelTree_;
 
-static class ModelTreeLogic
+static class ModelTrackedLogic
 {
-	public static IDisposable Setup(TreeListView ctrl, ModelMan<DocModel> modelMan)
+	public static IDisposable Setup(ObjectListView list, ModelMan<DocModel> mm)
 	{
 		var d = new Disp();
 
-		/*SetNods(ctrl);
-		ctrl.AddTextColumn<CurveModel>("Curve", null, e => $"pts:{e.Pts.Length}");
+		list.SetupColumns();
 
-		modelMan.WhenChanged
+		var s = new SourceCache<int, int>(e => e);
+
+		mm.WhenChanged
 			.ObserveOnUI()
 			.Subscribe(_ =>
 			{
-				ctrl.SetObjects(modelMan.V.Curves);
-			}).D(d);*/
+				var tracked = mm.GetTracked().SelectToArray(e => Nod.Make(new ModelNode(e)));
+				list.SetObjects(tracked);
+			}).D(d);
 
 		return d;
 	}
+}
 
-	private static void SetNods(TreeListView ctrl)
+
+static class ModelTreeLogic
+{
+	public static IDisposable Setup(TreeListView tree, ModelMan<DocModel> mm)
 	{
-		ctrl.CanExpandGetter = _ => false;
-		ctrl.ChildrenGetter = _ => Array.Empty<object>();
-		ctrl.ParentGetter = _ => null;
-	}
+		var d = new Disp();
 
-	static void AddTextColumn<T>(
-		this ObjectListView ctrl,
-		string name,
-		int? width,
-		Func<T, string> textFun
-	) =>
-		ctrl.Columns.Add(new OLVColumn(name, name)
-		{
-			Width = width ?? 60,
-			FillsFreeSpace = !width.HasValue,
-			AspectGetter = obj => obj switch
+		tree.SetNodGeneric<ModelNode>();
+
+		tree.SetupColumns();
+
+		mm.WhenChanged
+			.ObserveOnUI()
+			.Subscribe(_ =>
 			{
-				T nod => textFun(nod),
-				_ => null
-			}
+				var roots = mm.V.ToTree();
+				tree.SetObjects(roots);
+				tree.ExpandAll();
+			}).D(d);
+
+		return d;
+	}
+}
+
+
+file static class CommonLogic
+{
+	public static void SetupColumns(this ObjectListView list)
+	{
+		list.AddTextColumn<TNod<ModelNode>>("name", null, nod => nod.V.Obj switch
+		{
+			LayerModel => "layer",
+			CurveModel => "curve",
+			_ => "unknown"
 		});
+
+		list.AddTextColumn<TNod<ModelNode>>("info", null, nod => nod.V.Obj switch
+		{
+			LayerModel e => $"kids:{e.Objects.Length}",
+			CurveModel e => $"points:{e.Pts.Length}",
+			_ => "unknown"
+		});
+
+		list.AddTextColumn<TNod<ModelNode>>("id", 70, nod => $"{nod.V.Obj.Id}");
+	}
 }

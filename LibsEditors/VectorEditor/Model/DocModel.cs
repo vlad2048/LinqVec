@@ -1,16 +1,23 @@
-﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using LinqVec.Logic;
+﻿using System.Text.Json.Serialization;
 using LinqVec.Structs;
-using LinqVec.Tools;
-using LinqVec.Utils;
-using PowMaybe;
-using PowRxVar;
+using PowBasics.CollectionsExt;
 using VectorEditor.Model.Structs;
 
 namespace VectorEditor.Model;
 
+// Doc
+// ===
+public sealed record DocModel(
+	LayerModel[] Layers
+)
+{
+	public static readonly DocModel Empty = new(new[] { LayerModel.Empty() });
+}
 
+
+// Layer
+// =====
+[JsonDerivedType(typeof(CurveModel), typeDiscriminator: "Curve")]
 public interface ILayerObject : IId;
 
 public sealed record LayerModel(
@@ -25,92 +32,38 @@ public sealed record LayerModel(
 }
 
 
-public sealed record DocModel(
-	LayerModel[] Layers
-)
+// Curve
+// =====
+public sealed record CurveModel(
+	Guid Id,
+	CurvePt[] Pts
+) : ILayerObject
 {
-	public static readonly DocModel Empty = new(new[] { LayerModel.Empty() });
+	public static CurveModel Empty() => new(
+		Guid.NewGuid(),
+		Array.Empty<CurvePt>()
+	);
+
+	public override string ToString() => "Curve(" + Pts.SelectToArray(e => $"{(int)e.P.X},{(int)e.P.Y}").JoinText() + ")";
 }
 
 
 
-static class Entities
-{
-	public static readonly Func<ModelMan<DocModel>, IEntity<DocModel, LayerModel>> Layer =
-		mm =>
-		{
-			var model = LayerModel.Empty();
-			return new Entity<DocModel, LayerModel>(
-				mm,
-				init: model,
-				isValid: (m, isCommited) => isCommited switch
-				{
-					false => !m.Layers.ContainsId(model.Id),
-					true => m.Layers.ContainsId(model.Id),
-				},
-				add: (m, e) => m.WithLayers(m.Layers.AddId(e)),
-				delete: m => m.WithLayers(m.Layers.RemoveId(model.Id)),
-				get: m => m.Layers.GetId(model.Id),
-				set: (m, e) => m.WithLayers(m.Layers.SetId(e))
-			);
-		};
+public interface ICurveModelEditState;
 
-	public static Func<ModelMan<DocModel>, IEntity<DocModel, CurveModel>> Curve(Guid layerId) =>
-		mm =>
-		{
-			//var model = CurveModel.Empty();
-			var model = CurveModel.Sample();
-			return new Entity<DocModel, CurveModel>(
-				mm,
-				init: model,
-				isValid: (m, isCommited) =>
-				{
-					if (m.Layers.GetMayId(layerId).IsNone(out var layer)) return false;
-					return isCommited switch
-					{
-						false => !layer.Objects.ContainsId(model.Id),
-						true => layer.Objects.ContainsIdAndIsOfType<ILayerObject, CurveModel>(model.Id)
-					};
-				},
-				add: (m, e) =>
-				{
-					var layer = m.Layers.GetId(layerId);
-					var layerNext = layer.WithObjects(layer.Objects.AddId(e));
-					return m.WithLayers(m.Layers.SetId(layerNext));
-				},
-				delete: m =>
-				{
-					var layer = m.Layers.GetId(layerId);
-					var layerNext = layer.WithObjects(layer.Objects.RemoveId(model.Id));
-					return m.WithLayers(m.Layers.SetId(layerNext));
-				},
-				get: m =>
-				{
-					var layer = m.Layers.GetId(layerId);
-					return (CurveModel)layer.Objects.GetId(model.Id);
-				},
-				set: (m, e) =>
-				{
-					var layer = m.Layers.GetId(layerId);
-					var layerNext = layer.WithObjects(layer.Objects.SetId(e));
-					return m.WithLayers(m.Layers.SetId(layerNext));
-				}
-			);
-		};
+// State:	Pts[0], ..., Pts[n-1]
 
+// - draw Marker @ MousePos
+// - draw RedLine @ (Pts[n-1].P, Pts[n-1].HRight) -> (MousePos, MousePos)
+// - draw Handles @ Pts[n-1]
+// - finish: MouseDown(DownPos <- MousePos)
+public sealed record AddPointPre_CurveModelEditState : ICurveModelEditState;
 
+// - draw Marker @ DownPos
+// - draw RedLine @ (Pts[n-1].P, Pts[n-1].HRight) -> (DownPos-(MousePos-DownPos), DownPos)
+// - draw Handles @ (DownPos-(MousePos-DownPos), DownPos, DownPos+(MousePos-DownPos))
+// - finish: MouseUp => Model.AddPoint(DownPos-(MousePos-DownPos), DownPos, DownPos+(MousePos-DownPos))
+public sealed record AddPointHandleDrag_CurveModelEditState(Pt DownPos) : ICurveModelEditState;
 
-	private static DocModel WithLayers(this DocModel m, LayerModel[] xs) => m with { Layers = xs };
-	private static LayerModel WithObjects(this LayerModel m, ILayerObject[] xs) => m with { Objects = xs };
+// State:	Pts[0], ..., Pts[n-1], Pts[n]
 
-
-	/*public static readonly Func<ModelMan<DocModel>, Func<DocModel, (DocModel, ISmartId<CurveModel>)>> Curve =
-		mm =>
-			m =>
-			{
-				var entity = CurveModel.Empty();
-				var id = entity.SmartId(mm);
-				var mNext = m.WithCurves(m.Curves.Add(entity));
-				return (mNext, id);
-			};*/
-}

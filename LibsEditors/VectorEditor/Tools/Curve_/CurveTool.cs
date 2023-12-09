@@ -16,9 +16,9 @@ namespace VectorEditor.Tools.Curve_;
 
 sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env, mm)
 {
-	public override Keys Shortcut => Keys.F1;
+	public override Keys Shortcut => Keys.P;
 
-	public override IDisposable Run()
+	public override IDisposable Run(Action reset)
 	{
 		var d = new Disp();
 
@@ -30,9 +30,25 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 			.MakeHot(d)
 			.ToEvt(e => Env.Curs.Cursor = e);
 
-		var curve = mm.Create(Entities.Curve(mm.V.Layers[0].Id));
+		var curve = mm.Create(Entities.Curve(mm.V.Layers[0].Id)).D(d);
+		var gfxState = CurveGfxState.None;
 
-		
+		Action<Maybe<T>> SetState<T>(CurveGfxState state) => mp =>
+		{
+			if (mp.IsSome())
+				gfxState = state;
+		};
+
+		evt.WhenKeyDown(Keys.Escape).Subscribe(_ =>
+		{
+			reset();
+		}).D(d);
+
+		evt.WhenKeyDown(Keys.Enter).Subscribe(_ =>
+		{
+			curve.Commit();
+			reset();
+		}).D(d);
 
 
 		Act.Loop(
@@ -44,7 +60,7 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 							Hotspots.CurvePoint(curve),
 							Trigger.Down,
 							CBase.Cursors.BlackArrowSmall,
-							onHover: null,
+							onHover: SetState<PointId>(CurveGfxState.None),
 							onTrigger: pointId => curve.ModSet(CurveMods.MovePoint(pointId))
 						),
 						Act.Make(
@@ -63,7 +79,11 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 							Hotspots.Anywhere,
 							Trigger.Down,
 							CBase.Cursors.Pen,
-							onHover: mp => curve.ModSet(CurveMods.AddPoint(mp)),
+							onHover: mp =>
+							{
+								SetState<Pt>(CurveGfxState.AddPoint)(mp);
+								curve.ModSet(CurveMods.AddPoint(mp));
+							},
 							onTrigger: startPt => curve.ModSet(CurveMods.AddPoint(startPt))
 						),
 						Act.Make(
@@ -71,7 +91,7 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 							Hotspots.Anywhere,
 							Trigger.Up,
 							CBase.Cursors.Pen,
-							onHover: null,
+							onHover: SetState<Pt>(CurveGfxState.DragHandle),
 							onTrigger: curve.ModApply
 						)
 					)
@@ -79,6 +99,11 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 				)
 			)
 			.Run(evt).D(d);
+
+		env.WhenPaint.Subscribe(gfx =>
+		{
+			CurvePainter.Draw(gfx, curve.ModGfxApply(mousePos.V), gfxState);
+		}).D(d);
 
 		return d;
 	}

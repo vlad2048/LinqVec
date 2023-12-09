@@ -1,4 +1,6 @@
-﻿namespace VectorEditor.Model.Structs;
+﻿using System.Text.Json.Serialization;
+
+namespace VectorEditor.Model.Structs;
 
 public sealed record CurvePt(
 	Pt P,
@@ -12,7 +14,6 @@ public sealed record CurvePt(
 		not null => new CurvePt(startPt.Value, startPt.Value - (endPt - startPt.Value), endPt)
 	};
 
+	[JsonIgnore]
 	public bool HasHandles => HLeft != P || HRight != P;
 }
-
-

@@ -1,6 +1,6 @@
 ﻿namespace LinqVecDemo
 {
-    partial class MainPane
+    partial class DocPane
 	{
         /// <summary>
         ///  Required designer variable.
@@ -39,14 +39,14 @@
 			vecEditor.Size = new Size(800, 450);
 			vecEditor.TabIndex = 0;
 			// 
-			// MainWin
+			// DocPane
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(800, 450);
 			Controls.Add(vecEditor);
-			Name = "MainWin";
-			Text = "LinqVec Demo";
+			Name = "DocPane";
+			Text = "Untitled";
 			ResumeLayout(false);
 		}
 

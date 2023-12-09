@@ -1,6 +1,6 @@
 ﻿using System.Reactive;
+using System.Reactive.Disposables;
 using LinqVec.Logic;
-using LinqVec.Utils.Rx;
 using PowMaybe;
 using PowRxVar;
 using PowRxVar.Utils;
@@ -11,6 +11,13 @@ public interface IId
 {
 	Guid Id { get; }
 }
+
+/*public interface IGfxState
+public interface IGfxMod<E> where E : IId
+{
+	E Apply(E entity);
+}*/
+
 
 
 
@@ -24,7 +31,6 @@ public enum EntityState
 public interface IEntity
 {
 	IObservable<Unit> WhenChanged { get; }
-	IObservable<Unit> WhenInvalidated { get; }
 	EntityState State { get; }
 	bool IsValid();
 	void Commit();
@@ -34,24 +40,28 @@ public interface IEntity
 
 public interface IEntityM<M> : IEntity
 {
+	IId GetV();
 	M GfxCommit(M m, IRoMayVar<Pt> mousePos);
 }
 
-public interface IEntity<E> : IEntity
+public interface IEntity<E> : IEntity, IRwDispBase
 {
 	E V { get; set; }
 	void ModSet(Func<E, Maybe<Pt>, E> mod);
 	void ModApply(Maybe<Pt> mousePos);
+	E ModGfxApply(Maybe<Pt> mousePos);
 }
 
-public interface IEntity<M, E> : IEntityM<M>, IEntity<E>, IDisposable
+public interface IEntity<M, E> : IEntityM<M>, IEntity<E> where E : IId
 {
 }
 
-public sealed class Entity<M, E> : IEntity<M, E>
+public sealed class Entity<M, E> : IEntity<M, E> where E : IId
 {
 	private readonly Disp d = new();
 	public void Dispose() => d.Dispose();
+	public IObservable<Unit> WhenDisposed => d.WhenDisposed;
+	public bool IsDisposed => d.IsDisposed;
 
 	private readonly IModelMan<M> mm;
 	private readonly Func<M, bool, bool> isValid;
@@ -59,13 +69,10 @@ public sealed class Entity<M, E> : IEntity<M, E>
 	private readonly Func<M, M> delete;
 	private readonly Func<M, E> get;
 	private readonly Func<M, E, M> set;
-	private readonly Action<Unit> sigInvalidate;
 	private readonly Action<Unit> sigChanged;
 
-	private EntityState state;
 	private Maybe<E> uncommitedV;
 
-	public IObservable<Unit> WhenInvalidated { get; }
 	public IObservable<Unit> WhenChanged { get; }
 	private Func<E, Maybe<Pt>, E> mod = (e, _) => e;
 
@@ -86,9 +93,10 @@ public sealed class Entity<M, E> : IEntity<M, E>
 		this.get = get;
 		this.set = set;
 		uncommitedV = May.Some(init);
-		(sigInvalidate, WhenInvalidated) = Sig.Make<Unit>();
 		(sigChanged, WhenChanged) = RxEventMaker.Make<Unit>().D(d);
 	}
+
+	public IId GetV() => V;
 
 	public void ModSet(Func<E, Maybe<Pt>, E> mod_)
 	{
@@ -102,6 +110,9 @@ public sealed class Entity<M, E> : IEntity<M, E>
 		mod = (e, _) => e;
 	}
 
+	public E ModGfxApply(Maybe<Pt> mousePos) => mod(V, mousePos);
+
+
 	public M GfxCommit(M m, IRoMayVar<Pt> mousePos) => State switch
 	{
 		EntityState.Uncommited => add(m, mod(V, mousePos.V)),
@@ -110,17 +121,7 @@ public sealed class Entity<M, E> : IEntity<M, E>
 		_ => throw new ArgumentException()
 	};
 
-	public EntityState State
-	{
-		get => state;
-		private set
-		{
-			if (value == state) return;
-			state = value;
-			if (state == EntityState.Invalid)
-				sigInvalidate(Unit.Default);
-		}
-	}
+	public EntityState State { get; private set; }
 
 	public E V
 	{
@@ -164,6 +165,7 @@ public sealed class Entity<M, E> : IEntity<M, E>
 		if (uncommitedV.IsNone(out var val)) throw new ArgumentException();
 		mm.V = add(mm.V, val);
 		uncommitedV = May.None<E>();
+		State = EntityState.Commited;
 	}
 
 	public void Delete()

@@ -1,4 +1,5 @@
-﻿using LinqVec.Structs;
+﻿using Geom;
+using LinqVec.Structs;
 using PowBasics.CollectionsExt;
 
 namespace LinqVec;

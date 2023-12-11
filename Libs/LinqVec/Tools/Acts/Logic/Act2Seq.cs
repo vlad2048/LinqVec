@@ -39,28 +39,26 @@ static class Act2Seq
 	private static IObservable<IHotEvt> ToEvt(this Act act, Evt evt) =>
 		Observable.Merge(
 			evt.WhenEvt
-					.Select(e => e.GetMayMousePos())
-					.WhenSome()
+					.WhereSelectMousePos()
 					.Select(act.Hotspot)
 					.DistinctUntilChanged()
 					.Select(e => (IHotEvt)new OverHotEvt(e)),
 			evt.WhenEvt
 					.Where(e => e.ToTrigger().IsSomeAndEqualTo(act.Trigger))
-					.Select(e => e.GetMayMousePos())
-					.WhenSome()
+					.WhereSelectMousePos()
 					.Select(act.Hotspot)
 					.WhenSome()
 					.Take(1)
 					.Select(e => (IHotEvt)new TriggerHotEvt(e))
 			);
 
-	private static Maybe<Trigger> ToTrigger(this IEvtGen<Pt> evt) =>
+	private static Maybe<Trigger> ToTrigger(this IEvt evt) =>
 		evt switch
 		{
-			MouseBtnEvtGen<Pt> { UpDown: UpDown.Down, Btn: MouseBtn.Left } => May.Some(Trigger.Down),
-			MouseBtnEvtGen<Pt> { UpDown: UpDown.Up, Btn: MouseBtn.Left } => May.Some(Trigger.Up),
-			MouseBtnEvtGen<Pt> { UpDown: UpDown.Down, Btn: MouseBtn.Right } => May.Some(Trigger.DownRight),
-			MouseClickEvtGen<Pt> { Btn: MouseBtn.Left } => May.Some(Trigger.Click),
+			MouseBtnEvt { UpDown: UpDown.Down, Btn: MouseBtn.Left } => May.Some(Trigger.Down),
+			MouseBtnEvt { UpDown: UpDown.Up, Btn: MouseBtn.Left } => May.Some(Trigger.Up),
+			MouseBtnEvt { UpDown: UpDown.Down, Btn: MouseBtn.Right } => May.Some(Trigger.DownRight),
+			MouseClickEvt { Btn: MouseBtn.Left } => May.Some(Trigger.Click),
 			_ => May.None<Trigger>()
 		};
 }

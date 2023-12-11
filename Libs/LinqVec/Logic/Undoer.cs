@@ -132,7 +132,7 @@ sealed class Undoer<T> : IUndoer
 			stackUndo.Push(cur.V);
 			stackRedo.Clear();
 			cur.V = v;
-			Log("Do");
+			//Log("Do");
 		}).D(d);
 
 		WhenUndo.Subscribe(_ =>
@@ -141,7 +141,7 @@ sealed class Undoer<T> : IUndoer
 			var valUndo = stackUndo.Pop();
 			stackRedo.Push(cur.V);
 			cur.V = valUndo;
-			Log("Undo");
+			//Log("Undo");
 		}).D(d);
 
 		WhenRedo.Subscribe(_ =>
@@ -150,7 +150,7 @@ sealed class Undoer<T> : IUndoer
 			var valRedo = stackRedo.Pop();
 			stackUndo.Push(cur.V);
 			cur.V = valRedo;
-			Log("Redo");
+			//Log("Redo");
 		}).D(d);
 
 

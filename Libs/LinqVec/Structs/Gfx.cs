@@ -1,13 +1,14 @@
 ﻿using System.Drawing.Drawing2D;
 using System.Numerics;
 using System.Reactive.Disposables;
+using Geom;
 using LinqVec.Drawing;
 
 namespace LinqVec.Structs;
 
 public sealed record Gfx(
 	Graphics Graphics,
-	PtInt ClientSz,
+	Pt ClientSz,
 	Transform Transform,
 	Res Res
 );

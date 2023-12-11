@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
+using Geom;
 using WinAPI.Kernel32;
 using WinAPI.User32;
-using R = Geom.RGen<int>;
 
 namespace WinAPI.Utils;
 
@@ -39,7 +39,7 @@ public static class ConUtils
 		wp.NormalPosition = r.ToWinR();
 		User32Methods.SetWindowPlacement(hWnd, ref wp);
 	}
-	private static NetCoreEx.Geometry.Rectangle ToWinR(this R r) => new(r.Min.X, r.Min.Y, r.Width, r.Height);
+	private static NetCoreEx.Geometry.Rectangle ToWinR(this R r) => new((int)r.Min.X, (int)r.Min.Y, (int)r.Width, (int)r.Height);
 
 	public static void SetColor(Color c) => Console.Write($"{EscChar}[38;2;{c.R};{c.G};{c.B}m");
 

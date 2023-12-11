@@ -10,6 +10,7 @@ using LinqVec.Utils;
 using LinqVec.Tools;
 using LinqVec.Tools.Events;
 using UILib;
+using LinqVec.Tools.Events.Utils;
 
 namespace LinqVec;
 
@@ -35,7 +36,7 @@ public partial class VecEditor : UserControl
 		var curTool = Var.Make<ITool>(null!).D(this);
 		var ctrl = new Ctrl(drawPanel);
 
-		var editorEvt = EvtUtils.MakeForControl(drawPanel, curTool.ToUnit());
+		var editorEvt = EvtMaker.MakeForControl(drawPanel, curTool.ToUnit());
 		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform).D(this);
 
 		Env = new ToolEnv(

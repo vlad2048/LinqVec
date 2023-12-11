@@ -1,7 +1,7 @@
 ﻿using System.Reactive.Linq;
+using Geom;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
-using LinqVec.Utils;
 using LinqVec.Utils.WinForms_;
 using PowBasics.MathCode;
 using PowRxVar;
@@ -11,7 +11,7 @@ namespace LinqVec.Logic;
 static class PanZoomer
 {
 	public static (IRoVar<bool>, IDisposable) Setup(
-		IObservable<IEvtGen<PtInt>> evt,
+		IObservable<IEvt> evt,
 		Ctrl ctrl,
 		IRwVar<Transform> transform
 	)
@@ -39,13 +39,13 @@ static class PanZoomer
 
 
 	private static (IRoVar<bool>, IDisposable) SetupPanning(
-		IObservable<IEvtGen<PtInt>> evt,
+		IObservable<IEvt> evt,
 		IRwVar<Transform> transform,
 		Ctrl ctrl
 	)
 	{
 		var d = new Disp();
-		var lastMousePt = PtInt.Zero;
+		var lastMousePt = Pt.Zero;
 		var isPanning = Var.Make(false).D(d);
 
 		evt.WhenMouseDown()
@@ -61,7 +61,7 @@ static class PanZoomer
 			.Subscribe(_ =>
 			{
 				isPanning.V = false;
-				lastMousePt = PtInt.Zero;
+				lastMousePt = Pt.Zero;
 			}).D(d);
 
 		evt.WhenMouseMove()
@@ -69,7 +69,7 @@ static class PanZoomer
 			.Subscribe(e =>
 			{
 				var delta = -lastMousePt + (lastMousePt = e);
-				var centerNext = transform.V.Center + delta.ToFloat();
+				var centerNext = transform.V.Center + delta;
 				transform.V = (transform.V with { Center = centerNext }).Cap(ctrl);
 			}).D(d);
 		return (isPanning, d);
@@ -77,7 +77,7 @@ static class PanZoomer
 
 
 	private static IDisposable SetupZooming(
-		IObservable<IEvtGen<PtInt>> evt,
+		IObservable<IEvt> evt,
 		IRwVar<Transform> transform,
 		Ctrl ctrl
 	)
@@ -89,7 +89,7 @@ static class PanZoomer
 			var zoomIndexPrev = transform.V.ZoomIndex;
 			var zoomIndexNext = MathUtils.Cap(zoomIndexPrev + e.Delta, 0, C.ZoomLevels.Length - 1);
 			if (zoomIndexNext == zoomIndexPrev) return;
-			var p = e.Pos.ToFloat();
+			var p = e.Pos;
 			var zoomPrev = transform.V.ZoomBase * C.ZoomLevels[zoomIndexPrev];
 			var zoomNext = transform.V.ZoomBase * C.ZoomLevels[zoomIndexNext];
 			var centerPrev = transform.V.Center;
@@ -110,7 +110,7 @@ file static class PanZoomerExts
 		var bbox = C.Grid.BBox().ToPixel(t);
 		var (vMin, vMax) = (
 			new Pt(0, 0),
-			ctrl.Sz.ToFloat()
+			ctrl.Sz
 		);
 		var adj = new Pt(
 			bbox.Width <= ctrl.Sz.X ? 0 : (bbox.Width - ctrl.Sz.X) / 2f,

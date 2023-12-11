@@ -57,7 +57,7 @@ file static class DrawPanelUtils
 {
 	public static Gfx InitTransformAndMakeGfx(Control ctrl, PaintEventArgs evt, Res res, IRwVar<Transform> transform)
 	{
-		var clientSz = ctrl.ClientSize.ToPtInt();
+		var clientSz = ctrl.ClientSize.ToPt();
 		if (transform.V == Transform.Id)
 			transform.V = Transform.MakeInitial(clientSz);
 		return new Gfx(evt.Graphics, clientSz, transform.V, res);

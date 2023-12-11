@@ -3,6 +3,7 @@ using Box2D.NetStandard.Collision.Shapes;
 using Box2D.NetStandard.Dynamics.Bodies;
 using Box2D.NetStandard.Dynamics.Fixtures;
 using Box2D.NetStandard.Dynamics.World;
+using Geom;
 
 namespace PhysicsEditor.Physics_;
 

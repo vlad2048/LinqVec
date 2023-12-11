@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Geom;
 
 namespace LinqVec.Utils.WinForms_;
 
@@ -7,16 +8,16 @@ public static class ConUtils
 	public static void Init()
 	{
 		AllocConsole();
-		SetRect(MkR(-1400, 10, 800, 400));
+		SetRect(R.Make(-1400, 10, 800, 400));
 	}
 
 	[DllImport("kernel32.dll", SetLastError = true)]
 	[return: MarshalAs(UnmanagedType.Bool)]
 	private static extern bool AllocConsole();
 
-	private static void SetRect(RInt r)
+	private static void SetRect(R r)
 	{
-		SetWindowPos(GetConsoleWindow(), IntPtr.Zero, r.Min.X, r.Min.Y, r.Width, r.Height, SwpNozorder | SwpNoactivate);
+		SetWindowPos(GetConsoleWindow(), IntPtr.Zero, (int)r.Min.X, (int)r.Min.Y, (int)r.Width, (int)r.Height, SwpNozorder | SwpNoactivate);
 	}
 
 

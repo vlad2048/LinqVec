@@ -1,5 +1,6 @@
 ﻿using System.Reactive;
 using System.Reactive.Disposables;
+using Geom;
 using PowRxVar;
 
 namespace LinqVec.Utils.WinForms_;
@@ -20,7 +21,7 @@ public class Ctrl(Control ctrl) : ICurs
 
 	public IObservable<Unit> WhenSizeChanged => ctrl.Events().ClientSizeChanged.ToUnit();
 
-	public PtInt Sz => new(ctrl.Width, ctrl.Height);
+	public Pt Sz => ctrl.ClientSize.ToPt();
 
 	public IDisposable SetToolCurs(Cursor curs)
 	{

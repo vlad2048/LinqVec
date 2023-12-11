@@ -120,7 +120,7 @@ public class ModelMan<M> : IModelMan<M>, IDisposable
 
 	public ModelMan(
 		M init,
-		IObservable<IEvtGen<PtInt>> whenEvt
+		IObservable<IEvt> whenEvt
 	)
 	{
 		model = new Undoer<M>(init, whenEvt).D(d);

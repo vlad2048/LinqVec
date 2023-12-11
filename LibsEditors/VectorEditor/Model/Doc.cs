@@ -1,10 +1,7 @@
-﻿using System.Security.Cryptography;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Geom;
 using LinqVec.Structs;
-using PowBasics.CollectionsExt;
 using VectorEditor.Model.Structs;
-using VectorEditor.Tools.Curve_.Mods;
 
 namespace VectorEditor.Model;
 
@@ -16,11 +13,12 @@ public sealed record Doc(
 ) : IDoc
 {
 	public static readonly Doc Empty = new(new[] { Layer.Empty() });
+
+	[JsonIgnore]
 	public IId[] AllObjects => Layers.OfType<IId>().Concat(Layers.SelectMany(e => e.Objects)).ToArray();
 }
 
 
-//public sealed record LayerId(Guid Id) : IObjId;
 public sealed record Layer(
 	Guid Id,
 	IVisualObjSer[] Objects
@@ -29,7 +27,6 @@ public sealed record Layer(
 	public static Layer Empty() => new(Guid.NewGuid(), Array.Empty<IVisualObjSer>());
 }
 
-//public sealed record CurveId(Guid Id, Guid LayerId) : IObjId;
 public sealed record Curve(
 	Guid Id,
 	CurvePt[] Pts

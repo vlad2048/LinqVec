@@ -77,10 +77,25 @@ public static class WinFormsUtils
 	    return con;
     }
 
+    private const string MainThreadName = "Main Thread";
+    private static SynchronizationContext? syncCtx;
+
 	public static IObservable<T> ObserveOnUI<T>(this IObservable<T> obs)
 	{
-        //L.WriteLine($"ThreadCtx: {SynchronizationContext.Current != null}");
-        //if (SynchronizationContext.Current == null) return obs;
+		var threadName = Thread.CurrentThread.Name;
+		if (threadName == MainThreadName && syncCtx == null)
+			syncCtx = SynchronizationContext.Current;
+
+		if (SynchronizationContext.Current == null)
+		{
+			if (threadName == MainThreadName)
+				throw new ArgumentException();
+			if (syncCtx == null)
+				throw new ArgumentException();
+			SynchronizationContext.SetSynchronizationContext(syncCtx);
+		}
+
+		var ctx = SynchronizationContext.Current;
 		return obs.ObserveOn(SynchronizationContext.Current!);
 	}
 }

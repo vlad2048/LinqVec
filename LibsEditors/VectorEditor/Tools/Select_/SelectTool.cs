@@ -1,15 +1,19 @@
-﻿using LinqVec;
+﻿using Geom;
+using LinqVec;
 using LinqVec.Logic;
 using LinqVec.Structs;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
 using LinqVec.Tools.Enums;
 using LinqVec.Tools.Events;
+using LinqVec.Tools.Events.Utils;
+using LinqVec.Utils.Rx;
 using PowMaybe;
 using PowRxVar;
 using VectorEditor.Model;
 
 namespace VectorEditor.Tools.Select_;
+
 
 
 sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
@@ -22,11 +26,14 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		var evt = Env.GetEvtForTool(this)
 			.ToGrid(Env.Transform)
-			.TrackPos(out var mousePos, d)
+			.SnapToGrid()
+			.RestrictToGrid()
+			.TrackMouse(out var mousePos, d)
 			.MakeHot(d)
 			.ToEvt(e => Env.Curs.Cursor = e);
 
-		var sel = VarMay.Make<IVisualObjSer>().D(d);
+		var maySel = new SerMay<IModder<IVisualObjSer>>().D(d);
+		IModder<IVisualObjSer> MkMod(IVisualObjSer obj) => Mod.Doc(Entities.Visual(Doc, obj), mousePos);
 
 		Act.Loop(
 				Act.Amb(
@@ -37,8 +44,12 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 						Trigger.Down,
 						null,
 						onHover: mayObj => Env.Curs.Cursor = mayObj.IsSome() ? CBase.Cursors.BlackArrowHold : CBase.Cursors.BlackArrow,
-						onTrigger: obj => sel.V = May.Some(obj)
-					),
+						onTrigger: curve =>
+						{
+							var mod = MkMod(curve);
+							maySel.V = May.Some(mod);
+							//mod.Mod
+						}),
 
 					Act.Make(
 						"Deselect",
@@ -46,7 +57,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 						Trigger.Down,
 						null,
 						onHover: null,
-						onTrigger: _ => sel.V = May.None<IVisualObjSer>()
+						onTrigger: _ => maySel.V = May.None<IModder<IVisualObjSer>>()
 					)
 
 				)
@@ -55,13 +66,13 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		Env.WhenPaint.Subscribe(gfx =>
 		{
-			if (sel.V.IsSome(out var obj))
+			if (maySel.V.IsSome(out var mod))
 			{
-				SelectPainter.DrawSelRect(gfx, obj);
+				SelectPainter.DrawSelRect(gfx, mod.V);
 			}
 		}).D(d);
 
-		sel.Subscribe(_ =>
+		maySel.WhenChanged.Subscribe(_ =>
 		{
 			Env.Invalidate();
 		}).D(d);
@@ -75,5 +86,6 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 static class Hotspots
 {
 	public static Func<Pt, Maybe<Pt>> Anywhere => May.Some;
+	//public static Func<Pt, Maybe<IVisualObjSer>> Object(Model<Doc> mm) => pt => mm.V.GetObjectAt(pt).IsSome(out var obj) && obj is Curve curve ? May.Some(curve) : May.None<Curve>();
 	public static Func<Pt, Maybe<IVisualObjSer>> Object(Model<Doc> mm) => mm.V.GetObjectAt;
 }

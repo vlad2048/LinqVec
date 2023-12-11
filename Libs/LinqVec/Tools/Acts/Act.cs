@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using Geom;
 using LinqVec.Tools.Acts.Events;
 using LinqVec.Tools.Acts.Logic;
 using LinqVec.Tools.Acts.Structs;
@@ -8,6 +9,7 @@ using LinqVec.Utils;
 using PowBasics.CollectionsExt;
 using PowMaybe;
 using PowRxVar;
+using UILib;
 
 namespace LinqVec.Tools.Acts;
 
@@ -92,6 +94,7 @@ public static class ActRunner
 
     private static IDisposable RunActions(this IObservable<ISeqEvt> seq, Evt evt) =>
 	    seq
+		    .ObserveOnUI()
 		    .Subscribe(e =>
 		    {
 			    switch (e)
@@ -121,7 +124,9 @@ public static class ActRunner
 	    2 => Seq(seqs[0], seqs[1]),
 		_ => Seq(seqs[0], Seq(seqs.SkipToArray(1)))
     };
+
     private static IObservable<ISeqEvt> Seq(IObservable<ISeqEvt> seq0, IObservable<ISeqEvt> seq1) => Seq(seq0, () => seq1);
+
 	private static IObservable<ISeqEvt> Seq(IObservable<ISeqEvt> seq0, Func<IObservable<ISeqEvt>> seq1Fun) =>
 	    seq0
 		    .Select(e => e switch

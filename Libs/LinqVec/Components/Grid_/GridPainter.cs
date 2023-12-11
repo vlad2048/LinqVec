@@ -1,4 +1,5 @@
-﻿using LinqVec.Drawing;
+﻿using Geom;
+using LinqVec.Drawing;
 using LinqVec.Structs;
 using LinqVec.Utils;
 using PowBasics.CollectionsExt;

@@ -1,6 +1,7 @@
 ﻿using LinqVec.Structs;
 using LinqVec.Utils;
 using System.Drawing.Drawing2D;
+using Geom;
 using PowBasics.CollectionsExt;
 
 namespace LinqVec.Drawing;

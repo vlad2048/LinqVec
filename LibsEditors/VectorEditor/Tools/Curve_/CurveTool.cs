@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using Geom;
 using LinqVec;
 using PowRxVar;
 using LinqVec.Logic;
@@ -10,7 +11,7 @@ using PowMaybe;
 using VectorEditor.Tools.Curve_.Mods;
 using VectorEditor.Tools.Curve_.Structs;
 using LinqVec.Tools.Enums;
-using LinqVec.Utils;
+using LinqVec.Tools.Events.Utils;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -25,13 +26,12 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		var evt = Env.GetEvtForTool(this)
 			.ToGrid(Env.Transform)
-			.SnapToGrid(Env.Transform)
-			.TrackPos(out var mousePos, d)
+			.SnapToGrid()
 			.RestrictToGrid()
-			.MakeHot(d)
+			.TrackMouse(out var mousePos, d)
 			.ToEvt(e => Env.Curs.Cursor = e);
 
-		var curve = Mod.Make(Curve.Empty(), mousePos).D(d);
+		var curve = Mod.Mem(Curve.Empty(), mousePos).D(d);
 
 		curve.WhenChanged
 			.SkipWhile(_ => curve.V.Pts.Length == 0)
@@ -98,6 +98,7 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 							},
 							onTrigger: startPt =>
 							{
+								L.WriteLine("Trigger -> Down");
 								curve.Mod = CurveMods.AddPoint(startPt);
 							}),
 						Act.Make(
@@ -108,6 +109,7 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 							onHover: SetState<Pt>(CurveGfxState.DragHandle),
 							onTrigger: _ =>
 							{
+								L.WriteLine("Trigger -> Up");
 								curve.Apply();
 							})
 					)

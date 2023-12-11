@@ -12,7 +12,7 @@ public sealed class ToolEnv(
         IRoVar<ITool> curTool,
         IRoVar<bool> isPanZoom,
         IRoVar<Transform> transform,
-        IObservable<IEvtGen<PtInt>> editorEvt
+        IObservable<IEvt> editorEvt
 	)
 {
     public ICurs Curs { get; } = curs;
@@ -20,6 +20,6 @@ public sealed class ToolEnv(
     public void Invalidate() => drawPanel.Invalidate();
     public IObservable<Gfx> WhenPaint { get; } = drawPanel.WhenPaint;
 
-    public IObservable<IEvtGen<PtInt>> EditorEvt => editorEvt;
-    public IObservable<IEvtGen<PtInt>> GetEvtForTool(ITool tool) => editorEvt.RestrictToTool(tool, curTool, isPanZoom);
+    public IObservable<IEvt> EditorEvt => editorEvt;
+    public IObservable<IEvt> GetEvtForTool(ITool tool) => editorEvt.RestrictToTool(tool, curTool, isPanZoom);
 }

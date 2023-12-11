@@ -1,4 +1,5 @@
-﻿using LinqVec.Tools.Acts.Structs;
+﻿using Geom;
+using LinqVec.Tools.Acts.Structs;
 using LinqVec.Utils;
 using PowBasics.CollectionsExt;
 using PowMaybe;

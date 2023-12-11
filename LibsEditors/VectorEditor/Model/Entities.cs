@@ -1,12 +1,42 @@
-﻿using LinqVec.Structs;
+﻿using System.Reactive.Linq;
+using LinqVec.Structs;
 using LinqVec.Utils;
-using System.Security.Cryptography;
+using LinqVec.Logic;
 
 namespace VectorEditor.Model;
 
 
 static class Entities
 {
+	public static Lens<IVisualObjSer> Visual(Model<Doc> doc, IVisualObjSer obj) => obj switch
+	{
+		Curve e => Curve(doc, e).Cast<Curve, IVisualObjSer>(),
+		_ => throw new ArgumentException()
+	};
+
+	private static Lens<U> Cast<T, U>(this Lens<T> lens) where T : U where U : IId => new(
+		() => lens.Get(),
+		objNext => lens.Set((T)objNext),
+		lens.WhenDisappear
+	);
+
+
+	public static Lens<Curve> Curve(Model<Doc> doc, Curve obj) => new(
+		() => doc.V.Layers.SelectMany(e => e.Objects).OfType<Curve>().Single(e => e.Id == obj.Id),
+		objNext =>
+		{
+			if (objNext.Id != obj.Id) throw new ArgumentException();
+			var layer = doc.V.Layers.Single(e => e.Objects.Any(f => f.Id == obj.Id));
+			doc.V = doc.V.WithLayers(doc.V.Layers.ChangeId(layer.Id, layer_ => layer_.WithObjects(layer_.Objects.SetId(objNext))));
+		},
+		doc.WhenChanged.Where(_ => doc.V.Layers.SelectMany(e => e.Objects).OfType<Curve>().All(e => e.Id != obj.Id))
+	);
+
+	private static Doc WithLayers(this Doc m, Layer[] xs) => m with { Layers = xs };
+	private static Layer WithObjects(this Layer m, IVisualObjSer[] xs) => m with { Objects = xs };
+
+
+
 	/*
 	public static Curve CreateAndAddCurve(this LinqVec.Logic.Model<Doc> doc, Guid layerId)
 	{

@@ -1,6 +1,4 @@
-﻿using Pt = Geom.PtGen<float>;
-
-namespace Geom;
+﻿namespace Geom;
 
 public static class BezierAlgos
 {

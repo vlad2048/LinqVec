@@ -1,4 +1,5 @@
-﻿using VectorEditor.Model.Structs;
+﻿using Geom;
+using VectorEditor.Model.Structs;
 
 namespace VectorEditor.Tools.Curve_.Structs;
 

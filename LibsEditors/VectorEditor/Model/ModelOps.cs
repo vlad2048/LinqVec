@@ -1,4 +1,5 @@
-﻿using LinqVec.Structs;
+﻿using Geom;
+using LinqVec.Structs;
 using LinqVec.Utils;
 using PowMaybe;
 using VectorEditor.Model.Structs;

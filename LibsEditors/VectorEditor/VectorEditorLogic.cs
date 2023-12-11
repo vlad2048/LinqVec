@@ -2,6 +2,7 @@
 using LinqVec.Logic;
 using LinqVec.Tools;
 using LinqVec.Tools.Events;
+using LinqVec.Tools.Events.Utils;
 using PowRxVar;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
@@ -20,8 +21,9 @@ public static class VectorEditorLogic
 
 		var evt = env.EditorEvt
 			.ToGrid(env.Transform)
-			.SnapToGrid(env.Transform)
-			.TrackPos(out var mousePos, d)
+			.SnapToGrid()
+			.RestrictToGrid()
+			.TrackMouse(out var mousePos, d)
 			.MakeHot(d);
 
 		vecEditor.Init(

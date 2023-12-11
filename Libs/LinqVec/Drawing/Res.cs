@@ -1,4 +1,5 @@
-﻿using LinqVec.Structs;
+﻿using System.Drawing.Drawing2D;
+using LinqVec.Structs;
 using PowBasics.CollectionsExt;
 using PowRxVar;
 
@@ -20,10 +21,10 @@ public class Res : IDisposable
     }
 
     public Brush Brush(Color color) => brushMap.GetOrCreate(color, () => new SolidBrush(color));
-    public Pen Pen(Color color, float thickness) => penMap.GetOrCreate(new PenNfo(color, thickness, 1), () => new Pen(color, thickness));
-    public Pen Pen(Color color, float thickness, float transformZoom) => penMap.GetOrCreate(new PenNfo(color, thickness, 1 / transformZoom), () =>
+    public Pen Pen(Color color, float thickness, DashStyle dashStyle) => penMap.GetOrCreate(new PenNfo(color, thickness, 1), () => new Pen(color, thickness) { DashStyle = dashStyle });
+    public Pen Pen(Color color, float thickness, DashStyle dashStyle, float transformZoom) => penMap.GetOrCreate(new PenNfo(color, thickness, 1 / transformZoom), () =>
     {
-        var pen = new Pen(color, thickness);
+	    var pen = new Pen(color, thickness) { DashStyle = dashStyle };
         pen.Transform = new Transform(1 / transformZoom, C.ZoomLevelOne, Pt.Zero).Matrix;
         return pen;
     });

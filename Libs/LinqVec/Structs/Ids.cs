@@ -1,260 +1,76 @@
-﻿using System.Reactive;
-using System.Reactive.Disposables;
-using LinqVec.Logic;
-using PowMaybe;
+﻿using PowMaybe;
 using PowRxVar;
-using PowRxVar.Utils;
 
 namespace LinqVec.Structs;
 
-public interface IId
+
+public interface IId { Guid Id { get; } }
+public interface IVisualObj : IId
 {
-	Guid Id { get; }
-}
-
-/*public interface IGfxState
-public interface IGfxMod<E> where E : IId
-{
-	E Apply(E entity);
-}*/
-
-
-
-
-public enum EntityState
-{
-	Uncommited,
-	Commited,
-	Invalid
-}
-
-public interface IEntity
-{
-	IObservable<Unit> WhenChanged { get; }
-	EntityState State { get; }
-	bool IsValid();
-	void Commit();
-	void Delete();
-	void Invalidate();
-}
-
-public interface IEntityM<M> : IEntity
-{
-	IId GetV();
-	M GfxCommit(M m, IRoMayVar<Pt> mousePos);
-}
-
-public interface IEntity<E> : IEntity, IRwDispBase
-{
-	E V { get; set; }
-	void ModSet(Func<E, Maybe<Pt>, E> mod);
-	void ModApply(Maybe<Pt> mousePos);
-	E ModGfxApply(Maybe<Pt> mousePos);
-}
-
-public interface IEntity<M, E> : IEntityM<M>, IEntity<E> where E : IId
-{
-}
-
-public sealed class Entity<M, E> : IEntity<M, E> where E : IId
-{
-	private readonly Disp d = new();
-	public void Dispose() => d.Dispose();
-	public IObservable<Unit> WhenDisposed => d.WhenDisposed;
-	public bool IsDisposed => d.IsDisposed;
-
-	private readonly IModelMan<M> mm;
-	private readonly Func<M, bool, bool> isValid;
-	private readonly Func<M, E, M> add;
-	private readonly Func<M, M> delete;
-	private readonly Func<M, E> get;
-	private readonly Func<M, E, M> set;
-	private readonly Action<Unit> sigChanged;
-
-	private Maybe<E> uncommitedV;
-
-	public IObservable<Unit> WhenChanged { get; }
-	private Func<E, Maybe<Pt>, E> mod = (e, _) => e;
-
-	public Entity(
-		IModelMan<M> mm,
-		E init,
-		Func<M, bool, bool> isValid,
-		Func<M, E, M> add,
-		Func<M, M> delete,
-		Func<M, E> get,
-		Func<M, E, M> set
-	)
-	{
-		this.mm = mm;
-		this.isValid = isValid;
-		this.add = add;
-		this.delete = delete;
-		this.get = get;
-		this.set = set;
-		uncommitedV = May.Some(init);
-		(sigChanged, WhenChanged) = RxEventMaker.Make<Unit>().D(d);
-	}
-
-	public IId GetV() => V;
-
-	public void ModSet(Func<E, Maybe<Pt>, E> mod_)
-	{
-		mod = mod_;
-		sigChanged(Unit.Default);
-	}
-
-	public void ModApply(Maybe<Pt> mousePos)
-	{
-		V = mod(V, mousePos);
-		mod = (e, _) => e;
-	}
-
-	public E ModGfxApply(Maybe<Pt> mousePos) => mod(V, mousePos);
-
-
-	public M GfxCommit(M m, IRoMayVar<Pt> mousePos) => State switch
-	{
-		EntityState.Uncommited => add(m, mod(V, mousePos.V)),
-		EntityState.Commited => set(m, mod(V, mousePos.V)),
-		EntityState.Invalid => throw new ArgumentException("Invalid entity"),
-		_ => throw new ArgumentException()
-	};
-
-	public EntityState State { get; private set; }
-
-	public E V
-	{
-		get => State switch
-		{
-			EntityState.Uncommited => uncommitedV.Ensure(),
-			EntityState.Commited => get(mm.V),
-			EntityState.Invalid => throw new ArgumentException("Invalid entity"),
-			_ => throw new ArgumentException()
-		};
-		set
-		{
-			switch (State)
-			{
-				case EntityState.Uncommited:
-					if (uncommitedV.IsNone()) throw new ArgumentException();
-					uncommitedV = May.Some(value);
-					break;
-				case EntityState.Commited:
-					if (uncommitedV.IsSome()) throw new ArgumentException();
-					mm.V = set(mm.V, value);
-					break;
-				case EntityState.Invalid:
-					throw new ArgumentException("Invalid entity");
-				default:
-					throw new ArgumentException();
-			}
-			sigChanged(Unit.Default);
-		}
-	}
-
-	public bool IsValid()
-	{
-		if (State == EntityState.Invalid) throw new ArgumentException("Invalid entity");
-		return isValid(mm.V, State == EntityState.Commited);
-	}
-
-	public void Commit()
-	{
-		if (State != EntityState.Uncommited) throw new ArgumentException($"Cannot Commit() when State={State}");
-		if (uncommitedV.IsNone(out var val)) throw new ArgumentException();
-		mm.V = add(mm.V, val);
-		uncommitedV = May.None<E>();
-		State = EntityState.Commited;
-	}
-
-	public void Delete()
-	{
-		switch (State)
-		{
-			case EntityState.Uncommited:
-				break;
-			case EntityState.Commited:
-				mm.V = delete(mm.V);
-				break;
-			case EntityState.Invalid:
-				throw new ArgumentException("Invalid entity");
-			default:
-				throw new ArgumentException();
-		}
-		Invalidate();
-	}
-
-	public void Invalidate()
-	{
-		if (State == EntityState.Invalid) throw new ArgumentException("Cannot Invalidate() an Invalid entity");
-		State = EntityState.Invalid;
-	}
-}
-
-public static class EntityExt
-{
-	public static void ModApply<E>(this IEntity<E> entity, IRoMayVar<Pt> mousePos) =>
-		entity.ModApply(mousePos.V);
-
-	public static void ModApply<E>(this IEntity<E> entity, Pt mousePos) =>
-		entity.ModApply(May.Some(mousePos));
+	R BoundingBox { get; }
+	double DistanceToPoint(Pt pt);
 }
 
 
+public interface IDoc
+{
+	IId[] AllObjects { get; }
+}
+
+
+public interface IObj;
+public interface IObj<O> : IObj where O : IId
+{
+	O V { get; set; }
+}
+
+
+
+/*public record TrkGet<D, O>(
+	Func<D, O> Get,
+	Func<D, O, D> Set,
+	Func<D, D> Delete
+) where D : IDoc where O : IId;
+
+public sealed record TrkCreate<D, O>(
+	Func<D, (D, O)> Create,
+	Func<D, O> Get,
+	Func<D, O, D> Set,
+	Func<D, D> Delete
+) : TrkGet<D, O>(Get, Set, Delete) where D : IDoc where O : IId;*/
+
+//public interface IObjId;
+//public sealed record EmptyId : IObjId;
 
 
 /*
-// - Can uniquely identify any entity in the model (model independent)
-// - Can tell if the entity is in the model
-public interface ISmartId : IEquatable<ISmartId>
+public sealed record EntityNfo<D, O>(
+	Func<D, O, D> Add,
+	Func<D, Guid, D> Del,
+	Func<D, Guid, O> Get,
+	Func<D, Guid, O, D> Set
+)
+	where D : IDoc
+	where O : IId;
+*/
+
+
+/*
+public interface IPtr
 {
 	Guid Id { get; }
-	bool Exists { get; }
+}
+
+public interface IPtr<O> : IPtr where O : IId
+{
+	O V { get; set; }
+	Func<O, Maybe<Pt>, O> Mod { get; set; }
 }
 
 
-// Can retrieve, set and delete the entity from the model
-public interface ISmartId<E> : ISmartId
+
+public static class PtrExt
 {
-	E V { get; set; }
-	void Delete();
-}
-
-public sealed class SmartId<M, E>(
-	Guid id,
-	IModelMan<M> mm,
-	Func<M, Maybe<E>> find,
-	Func<M, E, M> set,
-	Action<M> delete
-) : ISmartId<E>
-{
-	public Guid Id { get; } = id;
-
-	public bool Exists => find(mm.V).IsSome();
-	public E V
-	{
-		get => find(mm.V).Ensure();
-		set => mm.V = set(mm.V, value);
-	}
-	public void Delete() => delete(mm.V);
-
-	private bool Equals(SmartId<M, E> other) => other.Id == Id;
-	public bool Equals(ISmartId? obj) => ReferenceEquals(this, obj) || obj is SmartId<M, E> other && Equals(other);
-	public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is SmartId<M, E> other && Equals(other);
-	public override int GetHashCode() => Id.GetHashCode();
-
-	public static bool operator ==(SmartId<M, E>? left, SmartId<M, E>? right) => Equals(left, right);
-	public static bool operator !=(SmartId<M, E>? left, SmartId<M, E>? right) => !Equals(left, right);
-
-	public static bool operator ==(SmartId<M, E>? left, ISmartId<E>? right) => Equals(left, right);
-	public static bool operator !=(SmartId<M, E>? left, ISmartId<E>? right) => !Equals(left, right);
-	public static bool operator ==(SmartId<M, E>? left, ISmartId? right) => Equals(left, right);
-	public static bool operator !=(SmartId<M, E>? left, ISmartId? right) => !Equals(left, right);
-
-	public static bool operator ==(ISmartId<E>? left, SmartId<M, E>? right) => Equals(left, right);
-	public static bool operator !=(ISmartId<E>? left, SmartId<M, E>? right) => !Equals(left, right);
-	public static bool operator ==(ISmartId? left, SmartId<M, E>? right) => Equals(left, right);
-	public static bool operator !=(ISmartId? left, SmartId<M, E>? right) => !Equals(left, right);
+	public static void ApplyMod<O>(this IPtr<O> ptr, Pt mousePt) where O : IId => ptr.V = ptr.Mod(ptr.V, May.Some(mousePt));
 }
 */

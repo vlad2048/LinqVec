@@ -16,6 +16,7 @@ static class Program
 		// see https://aka.ms/applicationconfiguration.
 		ApplicationConfiguration.Initialize();
 		ConUtils.Init();
+
 		Application.Run(new MainWin().Track());
 
 		VarDbg.CheckForUndisposedDisps(true);

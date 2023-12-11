@@ -6,7 +6,7 @@ public static class BezierAlgos
 {
 	private const int SubDivs = 100;
 
-	public static double DistanceToPoint(Pt p, Pt[] bezier) => Sample(bezier).Min(e => (p - e).Length);
+	public static double DistanceToPoint(this Pt[] bezier, Pt p) => Sample(bezier).Min(e => (p - e).Length);
 
 	private static Pt[] Sample(Pt[] pts)
 	{

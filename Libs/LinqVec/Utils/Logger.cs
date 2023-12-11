@@ -19,6 +19,12 @@ public static class Logger
 		return obs;
 	}
 
+	public static void Log(this IRoDispBase d, string name)
+	{
+		WriteLine($"[{name}].new()");
+		Disposable.Create(() => WriteLine($"[{name}].Dispose()")).D(d);
+	}
+
 	public static IDisposable AddLabel<T>(this StatusStrip strip, string label, IObservable<T> obs)
 	{
 		var d = new Disp();

@@ -54,10 +54,10 @@ static class DocLogic
 			select file
 		).Subscribe(SetTitle).D(d);
 
-
+		
 		DocPane OpenFile(string file)
 		{
-			var m = VecJsoner.Default.Load<DocModel>(file);
+			var m = VecJsoner.Default.Load<Doc>(file);
 			var doc = new DocPane((m, file));
 			win.LastLoadedFile = file;
 			return doc;
@@ -94,7 +94,7 @@ static class DocLogic
 		void Save(bool saveAs)
 		{
 			var doc = activeDoc.V.Ensure();
-			var m = doc.ModelMan.V;
+			var m = doc.Doc.V;
 
 			if (saveAs || doc.Filename.V.IsNone(out var filename))
 			{

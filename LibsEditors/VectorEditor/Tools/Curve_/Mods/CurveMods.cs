@@ -9,14 +9,14 @@ namespace VectorEditor.Tools.Curve_.Mods;
 
 static class CurveMods
 {
-	public static Func<CurveModel, Maybe<Pt>, CurveModel> AddPoint() => (e, mp) => e.ApplyMod(new AddPointCurveMod(null), mp);
-	public static Func<CurveModel, Maybe<Pt>, CurveModel> AddPoint(Maybe<Pt> mayStartPt) => mayStartPt.IsSome(out var startPt) switch
+	public static Func<Curve, Maybe<Pt>, Curve> AddPoint() => (e, mp) => e.ApplyMod(new AddPointCurveMod(null), mp);
+	public static Func<Curve, Maybe<Pt>, Curve> AddPoint(Maybe<Pt> mayStartPt) => mayStartPt.IsSome(out var startPt) switch
 	{
 		false => (e, _) => e,
 		true => (e, mp) => e.ApplyMod(new AddPointCurveMod(startPt), mp)
 	};
-	public static Func<CurveModel, Maybe<Pt>, CurveModel> AddPoint(Pt startPt) => AddPoint(May.Some(startPt));
-	public static Func<CurveModel, Maybe<Pt>, CurveModel> MovePoint(PointId id) => (e, mp) => e.ApplyMod(new MovePointCurveMod(id), mp);
+	public static Func<Curve, Maybe<Pt>, Curve> AddPoint(Pt startPt) => AddPoint(May.Some(startPt));
+	public static Func<Curve, Maybe<Pt>, Curve> MovePoint(PointId id) => (e, mp) => e.ApplyMod(new MovePointCurveMod(id), mp);
 
 
 
@@ -26,7 +26,7 @@ static class CurveMods
 	private sealed record RemovePointCurveMod(int Idx) : ICurveMod;
 
 
-	private static CurveModel ApplyMod(this CurveModel model, ICurveMod mod, Maybe<Pt> mp) =>
+	private static Curve ApplyMod(this Curve model, ICurveMod mod, Maybe<Pt> mp) =>
 		mod switch
 		{
 			AddPointCurveMod { StartPos: var startPos } => mp.IsSome(out var p) switch

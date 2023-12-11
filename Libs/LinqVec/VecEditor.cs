@@ -54,20 +54,31 @@ public partial class VecEditor : UserControl
 			drawPanel.Init(new DrawPanelInitNfo(transform, res));
 			if (DesignMode) return;
 
-			var tools = init.Tools;
+			var (docUndoer, tools) = init;
+			var undoMan = new UndoMan(docUndoer).D(d);
 
 			editorEvt.WhenKeyDown(Keys.D1).Subscribe(_ => Cursor = Cursors.Default).D(d);
 			editorEvt.WhenKeyDown(Keys.D2).Subscribe(_ => Cursor = CBase.Cursors.Pen).D(d);
 			editorEvt.WhenKeyDown(Keys.D3).Subscribe(_ => Cursor = CBase.Cursors.BlackArrowSmall).D(d);
 
-			Env.RunTools(tools, curTool).D(d);
+			Env.RunTools(tools, curTool, undoMan).D(d);
+
+			editorEvt.WhenKeyRepeat(Keys.Z, true).Subscribe(_ => undoMan.Undo()).D(d);
+			editorEvt.WhenKeyRepeat(Keys.Y, true).Subscribe(_ => undoMan.Redo()).D(d);
 
 			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
 			statusStrip.AddLabel("zoom", transform.Select(e => $"{C.ZoomLevels[e.ZoomIndex]:P}")).D(d);
 			statusStrip.AddLabel("center", transform.Select(e => e.Center)).D(d);
-			statusStrip.AddLabel("tool", Var.Expr(() => $"{curTool.V.Name}")).D(this);
+			statusStrip.AddLabel("tool", Var.Expr(() => $"{GetToolName(curTool.V)}")).D(d);
+
+			undoMan.WhenChanged.Subscribe(_ =>
+			{
+				Env.Invalidate();
+			}).D(d);
 		});
 	}
+
+	private static string GetToolName(ITool tool) => tool.GetType().Name[..^4];
 }
 
 
@@ -75,7 +86,7 @@ public partial class VecEditor : UserControl
 
 file static class VecEditorUtils
 {
-	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool)
+	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool, UndoMan undoMan)
 	{
 		var d = new Disp();
 
@@ -94,7 +105,8 @@ file static class VecEditorUtils
 				{
 					resetD.Value = null;
 					resetD.Value = new Disp();
-					tool.Run(Reset).D(resetD.Value);
+					var toolUndoer = tool.Run(Reset).D(resetD.Value);
+					undoMan.SetToolUndoer(toolUndoer);
 				}
 				Reset();
 			}).D(d);

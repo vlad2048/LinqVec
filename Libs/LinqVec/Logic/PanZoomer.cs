@@ -107,7 +107,7 @@ file static class PanZoomerExts
 {
 	public static Transform Cap(this Transform t, Ctrl ctrl)
 	{
-		var bbox = C.Grid.BBox().Grid2Scr(t);
+		var bbox = C.Grid.BBox().ToPixel(t);
 		var (vMin, vMax) = (
 			new Pt(0, 0),
 			ctrl.Sz.ToFloat()

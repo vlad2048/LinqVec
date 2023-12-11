@@ -10,7 +10,8 @@ using VectorEditor.Model;
 
 namespace VectorEditor.Panes.ModelTree_;
 
-static class ModelTrackedLogic
+
+/*static class ModelTrackedLogic
 {
 	public static IDisposable Setup(ObjectListView list, ModelMan<DocModel> mm)
 	{
@@ -24,30 +25,30 @@ static class ModelTrackedLogic
 			.ObserveOnUI()
 			.Subscribe(_ =>
 			{
-				var tracked = mm.GetTracked().SelectToArray(e => Nod.Make(new ModelNode(e)));
+				var tracked = mm.GetTracked().SelectToArray(e => Nod.Make(new DocNode(e)));
 				list.SetObjects(tracked);
 			}).D(d);
 
 		return d;
 	}
-}
+}*/
 
 
 static class ModelTreeLogic
 {
-	public static IDisposable Setup(TreeListView tree, ModelMan<DocModel> mm)
+	public static IDisposable Setup(TreeListView tree, Model<Doc> doc)
 	{
 		var d = new Disp();
 
-		tree.SetNodGeneric<ModelNode>();
+		tree.SetNodGeneric<DocNode>();
 
 		tree.SetupColumns();
 
-		mm.WhenChanged
+		doc.WhenChanged
 			.ObserveOnUI()
 			.Subscribe(_ =>
 			{
-				var roots = mm.V.ToTree();
+				var roots = doc.V.ToTree();
 				tree.SetObjects(roots);
 				tree.ExpandAll();
 			}).D(d);
@@ -61,20 +62,20 @@ file static class CommonLogic
 {
 	public static void SetupColumns(this ObjectListView list)
 	{
-		list.AddTextColumn<TNod<ModelNode>>("name", null, nod => nod.V.Obj switch
+		list.AddTextColumn<TNod<DocNode>>("name", null, nod => nod.V.Obj switch
 		{
-			LayerModel => "layer",
-			CurveModel => "curve",
+			Layer => "layer",
+			Curve => "curve",
 			_ => "unknown"
 		});
 
-		list.AddTextColumn<TNod<ModelNode>>("info", null, nod => nod.V.Obj switch
+		list.AddTextColumn<TNod<DocNode>>("info", null, nod => nod.V.Obj switch
 		{
-			LayerModel e => $"kids:{e.Objects.Length}",
-			CurveModel e => $"points:{e.Pts.Length}",
+			Layer e => $"kids:{e.Objects.Length}",
+			Curve e => $"points:{e.Pts.Length}",
 			_ => "unknown"
 		});
 
-		list.AddTextColumn<TNod<ModelNode>>("id", 70, nod => $"{nod.V.Obj.Id}");
+		list.AddTextColumn<TNod<DocNode>>("id", 70, nod => $"{nod.V.Obj.Id}");
 	}
 }

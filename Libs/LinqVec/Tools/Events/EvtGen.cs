@@ -49,18 +49,13 @@ public sealed record KeyEvtGen<T>(UpDown UpDown, Keys Key) : IEvtGen<T>
 
 
 
-public class Evt
+public class Evt(
+	IObservable<IEvtGen<Pt>> whenEvt,
+	Action<Cursor> setCursor
+)
 {
-	private readonly Action<Cursor> setCursor;
-
-	public IObservable<IEvtGen<Pt>> WhenEvt { get; }
+	public IObservable<IEvtGen<Pt>> WhenEvt { get; } = whenEvt;
 	public void SetCursor(Cursor cursor) => setCursor(cursor);
-
-	public Evt(IObservable<IEvtGen<Pt>> whenEvt, Action<Cursor> setCursor)
-	{
-		WhenEvt = whenEvt;
-		this.setCursor = setCursor;
-	}
 }
 
 

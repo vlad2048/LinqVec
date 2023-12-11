@@ -16,20 +16,13 @@ enum CurveGfxState
 
 static class CurvePainter
 {
-	public const int MarkerRadius = 6;
-	public static readonly GPen Pen = new(0x5B94F1, 1, true);
-	public static readonly GPen PenProgress = new(0xFF9B9B, 1, true);
-
-	private enum MarkerType
-    {
-	    CurvePoint,
-	    CurvePointProgress,
-	    CurveHandle
-    }
+	private const int MarkerRadius = 6;
+	private static readonly GPen Pen = new(0x5B94F1, 1, true);
+	private static readonly GPen PenProgress = new(0xFF9B9B, 1, true);
 
 	public static void Draw(
         Gfx gfx,
-        CurveModel model,
+        Curve model,
         CurveGfxState state
 
 	)
@@ -42,15 +35,7 @@ static class CurvePainter
         // ============
         gfx.DrawBezier(
             Pen,
-            pts
-                .SelectMany(p => new[]
-                {
-                    p.HLeft,
-                    p.P,
-                    p.HRight
-                })
-                .Skip(1)
-                .SkipLast(1)
+            model.GetDrawPoints()
         );
 
 

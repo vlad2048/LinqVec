@@ -37,16 +37,14 @@ static class Act2Seq
 		select cur;
 
 	private static IObservable<IHotEvt> ToEvt(this Act act, Evt evt) =>
-		evt.WhenEvt
-			.Select(e => e.GetMayMousePos())
-			.Select(mp =>
-				from m in mp
-				from h in act.Hotspot(m)
-				select h
-			)
-			.DistinctUntilChanged()
-			.Select(e => (IHotEvt)new OverHotEvt(e)).Merge(
-				evt.WhenEvt
+		Observable.Merge(
+			evt.WhenEvt
+					.Select(e => e.GetMayMousePos())
+					.WhenSome()
+					.Select(act.Hotspot)
+					.DistinctUntilChanged()
+					.Select(e => (IHotEvt)new OverHotEvt(e)),
+			evt.WhenEvt
 					.Where(e => e.ToTrigger().IsSomeAndEqualTo(act.Trigger))
 					.Select(e => e.GetMayMousePos())
 					.WhenSome()

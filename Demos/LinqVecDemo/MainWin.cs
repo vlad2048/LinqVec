@@ -33,7 +33,7 @@ partial class MainWin : Form
 
 			var modelTreePane = new ModelTreePane();
 			modelTreePane.Show(dockPanel, DockState.DockRight);
-			modelTreePane.Init(doc.Select(md => md.Select(f => f.ModelMan)));
+			modelTreePane.Init(doc.Select(md => md.Select(f => f.Doc)));
 		});
 	}
 }

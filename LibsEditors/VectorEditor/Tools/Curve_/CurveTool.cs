@@ -1,7 +1,7 @@
-﻿using LinqVec;
+﻿using System.Reactive.Linq;
+using LinqVec;
 using PowRxVar;
 using LinqVec.Logic;
-using LinqVec.Structs;
 using VectorEditor.Model;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
@@ -10,15 +10,16 @@ using PowMaybe;
 using VectorEditor.Tools.Curve_.Mods;
 using VectorEditor.Tools.Curve_.Structs;
 using LinqVec.Tools.Enums;
+using LinqVec.Utils;
 
 namespace VectorEditor.Tools.Curve_;
 
 
-sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env, mm)
+sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 {
-	public override Keys Shortcut => Keys.P;
+	public Keys Shortcut => Keys.P;
 
-	public override IDisposable Run(Action reset)
+	public (IUndoer, IDisposable) Run(Action reset)
 	{
 		var d = new Disp();
 
@@ -30,7 +31,18 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 			.MakeHot(d)
 			.ToEvt(e => Env.Curs.Cursor = e);
 
-		var curve = mm.Create(Entities.Curve(mm.V.Layers[0].Id)).D(d);
+		var curve = Mod.Make(Curve.Empty(), mousePos).D(d);
+
+		curve.WhenChanged
+			.SkipWhile(_ => curve.V.Pts.Length == 0)
+			.Where(_ => curve.V.Pts.Length == 0)
+			.Take(1)
+			.Subscribe(_ =>
+			{
+				reset();
+			}).D(d);
+
+
 		var gfxState = CurveGfxState.None;
 
 		Action<Maybe<T>> SetState<T>(CurveGfxState state) => mp =>
@@ -46,7 +58,7 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 
 		evt.WhenKeyDown(Keys.Enter).Subscribe(_ =>
 		{
-			curve.Commit();
+			Doc.V = Doc.V.AddCurve(curve.V);
 			reset();
 		}).D(d);
 
@@ -57,11 +69,11 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 					Act.Seq(
 						Act.Make(
 							"Move point",
-							Hotspots.CurvePoint(curve),
+							Hotspots.CurvePoint(curve.V),
 							Trigger.Down,
 							CBase.Cursors.BlackArrowSmall,
-							onHover: SetState<PointId>(CurveGfxState.None),
-							onTrigger: pointId => curve.ModSet(CurveMods.MovePoint(pointId))
+							onHover: SetState<PointId>(CurveGfxState.Edit),
+							onTrigger: pointId => curve.Mod = CurveMods.MovePoint(pointId)
 						),
 						Act.Make(
 							"Move point (finish)",
@@ -69,7 +81,7 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 							Trigger.Up,
 							CBase.Cursors.BlackArrowSmall,
 							onHover: null,
-							onTrigger: m => curve.ModApply(m)
+							onTrigger: _ => curve.Apply()
 						)
 					),
 
@@ -82,30 +94,34 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 							onHover: mp =>
 							{
 								SetState<Pt>(CurveGfxState.AddPoint)(mp);
-								curve.ModSet(CurveMods.AddPoint(mp));
+								curve.Mod = CurveMods.AddPoint(mp);
 							},
-							onTrigger: startPt => curve.ModSet(CurveMods.AddPoint(startPt))
-						),
+							onTrigger: startPt =>
+							{
+								curve.Mod = CurveMods.AddPoint(startPt);
+							}),
 						Act.Make(
 							"Add point (finish)",
 							Hotspots.Anywhere,
 							Trigger.Up,
 							CBase.Cursors.Pen,
 							onHover: SetState<Pt>(CurveGfxState.DragHandle),
-							onTrigger: curve.ModApply
-						)
+							onTrigger: _ =>
+							{
+								curve.Apply();
+							})
 					)
 
 				)
 			)
 			.Run(evt).D(d);
 
-		env.WhenPaint.Subscribe(gfx =>
+		Env.WhenPaint.Subscribe(gfx =>
 		{
-			CurvePainter.Draw(gfx, curve.ModGfxApply(mousePos.V), gfxState);
+			CurvePainter.Draw(gfx, curve.VModded, gfxState);
 		}).D(d);
 
-		return d;
+		return (curve, d);
 	}
 }
 
@@ -113,5 +129,5 @@ sealed class CurveTool(ToolEnv env, ModelMan<DocModel> mm) : Tool<DocModel>(env,
 static class Hotspots
 {
 	public static Func<Pt, Maybe<Pt>> Anywhere => May.Some;
-	public static Func<Pt, Maybe<PointId>> CurvePoint(IEntity<CurveModel> curve) => m => curve.V.GetClosestPointTo(m, C.ActivateMoveMouseDistance);
+	public static Func<Pt, Maybe<PointId>> CurvePoint(Curve curve) => m => curve.GetClosestPointTo(m, C.ActivateMoveMouseDistance);
 }

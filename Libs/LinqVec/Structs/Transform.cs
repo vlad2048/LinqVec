@@ -50,7 +50,7 @@ public readonly record struct Transform(
     public override string ToString() => $"Zoom:{Zoom:F3}  Center:{Center}";
 }
 
-static class TransformExt
+public static class TransformExt
 {
 	public static Maybe<Pt> SnapToGrid(this Pt ptSrc, Transform t)
 	{
@@ -67,8 +67,12 @@ static class TransformExt
 		};
 	}
 
-    public static PtInt Grid2Scr(this Pt p, Transform t) => (p * t.Zoom + t.Center).ToInt();
-    public static RInt Grid2Scr(this R r, Transform t) => new(r.Min.Grid2Scr(t), r.Max.Grid2Scr(t));
-    public static Pt Scr2Grid(this PtInt p, Transform t) => (p.ToFloat() - t.Center) * (1.0f / t.Zoom);
+	public static Pt ToPixel(this Pt p, Transform t) => p * t.Zoom + t.Center;
+	public static R ToPixel(this R r, Transform t) => new(r.Min.ToPixel(t), r.Max.ToPixel(t));
+
+
+	//public static PtInt Grid2Scr(this Pt p, Transform t) => (p * t.Zoom + t.Center).ToInt();
+	//public static RInt Grid2Scr(this R r, Transform t) => new(r.Min.Grid2Scr(t), r.Max.Grid2Scr(t));
+	public static Pt Scr2Grid(this PtInt p, Transform t) => (p.ToFloat() - t.Center) * (1.0f / t.Zoom);
     public static R Scr2Grid(this RInt r, Transform t) => new(r.Min.Scr2Grid(t), r.Max.Scr2Grid(t));
 }

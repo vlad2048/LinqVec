@@ -1,10 +1,8 @@
-﻿using System.Reactive;
-using LinqVec;
+﻿using LinqVec;
 using LinqVec.Logic;
 using LinqVec.Tools;
 using LinqVec.Tools.Events;
 using PowRxVar;
-using PowRxVar.Utils;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
 using VectorEditor.Tools.Select_;
@@ -13,15 +11,12 @@ namespace VectorEditor;
 
 public static class VectorEditorLogic
 {
-	public static (ModelMan<DocModel> , IDisposable) InitVectorEditor(this VecEditor vecEditor, DocModel? initModel = null)
+	public static (Model<Doc> , IDisposable) InitVectorEditor(this VecEditor vecEditor, Doc? initModel = null)
 	{
 		var d = new Disp();
 
 		var env = vecEditor.Env;
-		var mm = new ModelMan<DocModel>(
-			initModel ?? DocModel.Empty,
-			env.EditorEvt
-		).D(d);
+		var doc = new Model<Doc>(initModel ?? Doc.Empty).D(d);
 
 		var evt = env.EditorEvt
 			.ToGrid(env.Transform)
@@ -31,10 +26,11 @@ public static class VectorEditorLogic
 
 		vecEditor.Init(
 			new VecEditorInitNfo(
+				doc,
 				new ITool[]
 				{
-					new CurveTool(env, mm),
-					new SelectTool(env, mm),
+					new CurveTool(env, doc),
+					new SelectTool(env, doc),
 				}
 			)
 		);
@@ -42,14 +38,13 @@ public static class VectorEditorLogic
 		env.WhenPaint
 			.Subscribe(gfx =>
 			{
-				var m = mm.GetGfxModel(mousePos);
+				var m = doc.V;
 				foreach (var layer in m.Layers)
 				foreach (var obj in layer.Objects)
 				{
-					if (mm.IsTracked(obj)) continue;
 					switch (obj)
 					{
-						case CurveModel curve:
+						case Curve curve:
 							CurvePainter.Draw(gfx, curve, CurveGfxState.None);
 							break;
 					}
@@ -57,7 +52,7 @@ public static class VectorEditorLogic
 			}).D(d);
 
 		Obs.Merge(
-				mm.WhenChanged,
+				//doc.WhenChanged.ToUnit(),
 				mousePos.ToUnit()
 			)
 			.Subscribe(_ =>
@@ -65,6 +60,8 @@ public static class VectorEditorLogic
 				env.Invalidate();
 			}).D(d);
 
-		return (mm, d);
+		return (doc, d);
 	}
+
+	private static readonly Brush brush = new SolidBrush(Color.DodgerBlue);
 }

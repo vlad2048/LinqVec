@@ -32,3 +32,11 @@ public readonly record struct RGen<T> where T : struct, INumber<T>
         new PtGen<T>(center.X + radius, center.Y + radius)
     );
 }
+
+public static class RExt
+{
+	public static RGen<T> Enlarge<T>(this RGen<T> r, T radius) where T : struct, INumber<T> => new(
+        new PtGen<T>(r.Min.X - radius, r.Min.Y - radius),
+        new PtGen<T>(r.Max.X + radius, r.Max.Y + radius)
+	);
+}

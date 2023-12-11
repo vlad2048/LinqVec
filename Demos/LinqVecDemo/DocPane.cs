@@ -1,11 +1,9 @@
 using System.Reactive.Linq;
 using LinqVec.Logic;
-using LinqVec.Utils.WinForms_;
 using PowMaybe;
 using VectorEditor.Model;
 using PowRxVar;
 using UILib;
-using UILib.Logging;
 using VectorEditor;
 using WeifenLuo.WinFormsUI.Docking;
 
@@ -15,9 +13,9 @@ sealed partial class DocPane : DockContent
 {
 	public IRwMayVar<string> Filename { get; }
 
-	public ModelMan<DocModel> ModelMan { get; private set; } = null!;
+	public Model<Doc> Doc { get; private set; } = null!;
 
-	public DocPane((DocModel model, string filename)? load = null)
+	public DocPane((Doc model, string filename)? load = null)
 	{
 		InitializeComponent();
 		KeyPreview = true;
@@ -29,7 +27,7 @@ sealed partial class DocPane : DockContent
 
 		this.InitRX(d =>
 		{
-			ModelMan = vecEditor.InitVectorEditor(load?.model).D(d);
+			Doc = vecEditor.InitVectorEditor(load?.model).D(d);
 
 			Filename.Subscribe(filename => Text = filename.Select(Path.GetFileNameWithoutExtension).FailWith("Untitled")).D(d);
 

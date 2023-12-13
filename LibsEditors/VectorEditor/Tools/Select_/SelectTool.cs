@@ -22,16 +22,10 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 	{
 		var d = new Disp();
 
-		var evt = Env.GetEvtForTool(this)
-			.ToGrid(Env.Transform)
-			.SnapToGrid()
-			.RestrictToGrid()
-			.TrackMouse(out var mousePos, d)
-			.MakeHot(d)
-			.ToEvt(e => Env.Curs.Cursor = e);
+		var evt = Env.GetEvtForTool(this, true, d);
 
 		var maySel = new SerMay<IModder<IVisualObjSer>>().D(d);
-		IModder<IVisualObjSer> MkMod(IVisualObjSer obj) => Mod.Doc(Entities.Visual(Doc, obj), mousePos);
+		IModder<IVisualObjSer> MkMod(IVisualObjSer obj) => Mod.Doc(Entities.Visual(Doc, obj), evt.MousePos);
 
 		Act.Loop(
 				Act.Amb(

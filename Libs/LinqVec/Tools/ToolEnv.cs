@@ -1,6 +1,7 @@
 ﻿using LinqVec.Controls;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
+using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.WinForms_;
 using PowRxVar;
 
@@ -21,5 +22,18 @@ public sealed class ToolEnv(
     public IObservable<Gfx> WhenPaint { get; } = drawPanel.WhenPaint;
 
     public IObservable<IEvt> EditorEvt => editorEvt;
-    public IObservable<IEvt> GetEvtForTool(ITool tool) => editorEvt.RestrictToTool(tool, curTool, isPanZoom);
+    public Evt GetEvtForTool(ITool tool, bool snap, IRoDispBase d) =>
+	    snap switch
+	    {
+            false => editorEvt
+	            .RestrictToTool(tool, curTool, isPanZoom)
+	            .ToGrid(Transform)
+	            .ToEvt(e => Curs.Cursor = e, d),
+            true => editorEvt
+	            .RestrictToTool(tool, curTool, isPanZoom)
+	            .ToGrid(Transform)
+	            .SnapToGrid()
+	            .RestrictToGrid()
+	            .ToEvt(e => Curs.Cursor = e, d),
+		};
 }

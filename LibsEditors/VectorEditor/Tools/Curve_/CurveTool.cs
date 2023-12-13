@@ -25,14 +25,9 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		Doc.EnableRedrawOnMouseMove(d);
 
-		var evt = Env.GetEvtForTool(this)
-			.ToGrid(Env.Transform)
-			.SnapToGrid()
-			.RestrictToGrid()
-			.TrackMouse(out var mousePos, d)
-			.ToEvt(e => Env.Curs.Cursor = e);
+		var evt = Env.GetEvtForTool(this, true, d);
 
-		var curve = Mod.Mem(Curve.Empty(), mousePos).D(d);
+		var curve = Mod.Mem(Curve.Empty(), evt.MousePos).D(d);
 
 		curve.WhenChanged
 			.SkipWhile(_ => curve.V.Pts.Length == 0)

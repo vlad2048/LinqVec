@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Geom;
+using LinqVec.Tools.Events.Utils;
 using PowRxVar;
 
 namespace LinqVec.Tools.Events;
@@ -49,20 +50,33 @@ public sealed record KeyEvt(UpDown UpDown, Keys Key) : IEvt
 
 
 
-public class Evt(
-	IObservable<IEvt> whenEvt,
-	Action<Cursor> setCursor
-)
+public class Evt : IDisposable
 {
-	public IObservable<IEvt> WhenEvt { get; } = whenEvt;
+	private readonly Disp d = new();
+	public void Dispose() => d.Dispose();
+
+	private readonly Action<Cursor> setCursor;
+
+	public IObservable<IEvt> WhenEvt { get; }
 	public void SetCursor(Cursor cursor) => setCursor(cursor);
+	public IRoVar<Option<Pt>> MousePos { get; }
+
+	public Evt(
+		IObservable<IEvt> whenEvt,
+		Action<Cursor> setCursor
+	)
+	{
+		WhenEvt = whenEvt.MakeHot(d);
+		this.setCursor = setCursor;
+		MousePos = WhenEvt.TrackMouse().D(d);
+	}
 }
 
 
 
 public static class EvtUtils
 {
-	public static Evt ToEvt(this IObservable<IEvt> src, Action<Cursor> setCursor) => new(src, setCursor);
+	public static Evt ToEvt(this IObservable<IEvt> src, Action<Cursor> setCursor, IRoDispBase d) => new Evt(src, setCursor).D(d);
 
 	public static IObservable<Pt> WhereSelectMousePos(this IObservable<IEvt> src) =>
 		src

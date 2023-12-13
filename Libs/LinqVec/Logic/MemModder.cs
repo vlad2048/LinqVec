@@ -1,32 +1,30 @@
-﻿using System.Reactive;
-using Geom;
+﻿using Geom;
 using LinqVec.Structs;
-using PowMaybe;
 using PowRxVar;
 
 namespace LinqVec.Logic;
 
 public static class Mod
 {
-    public static IModder<O> Mem<O>(O init, IRoVar<Maybe<Pt>> mousePos) where O : IId => new MemModder<O>(init, mousePos);
-    public static IModder<O> Doc<O>(Lens<O> lens, IRoVar<Maybe<Pt>> mousePos) where O : IId => new DocModder<O>(lens, mousePos);
+    public static IModder<O> Mem<O>(O init, IRoVar<Option<Pt>> mousePos) where O : IId => new MemModder<O>(init, mousePos);
+    public static IModder<O> Doc<O>(Lens<O> lens, IRoVar<Option<Pt>> mousePos) where O : IId => new DocModder<O>(lens, mousePos);
 }
 
 public interface IModder<O> : IUndoer where O : IId
 {
 	O V { get; }
-	Func<O, Maybe<Pt>, O> Mod { get; set; }
+	Func<O, Option<Pt>, O> Mod { get; set; }
 	O VModded { get; }
 	void Apply();
 }
 
 public sealed class MemModder<O> : IModder<O> where O : IId
 {
-    private static readonly Func<O, Maybe<Pt>, O> identity = (o, _) => o;
+    private static readonly Func<O, Option<Pt>, O> identity = (o, _) => o;
     private readonly Disp d = new();
     public void Dispose() => d.Dispose();
 
-    private readonly IRoVar<Maybe<Pt>> mousePos;
+    private readonly IRoVar<Option<Pt>> mousePos;
     private readonly Undoer<O> undoer;
 
 	// IModder
@@ -36,7 +34,7 @@ public sealed class MemModder<O> : IModder<O> where O : IId
         get => undoer.V;
         private set => undoer.V = value;
     }
-    public Func<O, Maybe<Pt>, O> Mod { get; set; } = identity;
+    public Func<O, Option<Pt>, O> Mod { get; set; } = identity;
     public O VModded => Mod(V, mousePos.V);
     public void Apply()
     {
@@ -52,9 +50,9 @@ public sealed class MemModder<O> : IModder<O> where O : IId
     public bool Redo() => undoer.Redo();
     public void InvalidateRedos() => undoer.InvalidateRedos();
 
-    internal MemModder(O init, IRoVar<Maybe<Pt>> mousePos)
+    internal MemModder(O init, IRoVar<Option<Pt>> mousePos)
     {
-	    undoer = new Undoer<O>(init, "Mod").D(d);
+	    undoer = new Undoer<O>(init).D(d);
         this.mousePos = mousePos;
     }
 }
@@ -71,12 +69,12 @@ public delegate Lens<O> LensGetter<D, O>(Model<D> doc, O obj) where D : IDoc whe
 
 public sealed class DocModder<O> : IModder<O> where O : IId
 {
-	private static readonly Func<O, Maybe<Pt>, O> identity = (o, _) => o;
+	private static readonly Func<O, Option<Pt>, O> identity = (o, _) => o;
 	private readonly Disp d = new();
 	public void Dispose() => d.Dispose();
 
 	private readonly Lens<O> lens;
-    private readonly IRoVar<Maybe<Pt>> mousePos;
+    private readonly IRoVar<Option<Pt>> mousePos;
 	private readonly Undoer<O> undoer;
 
 	public IObservable<Unit> WhenDisappear => lens.WhenDisappear;
@@ -92,7 +90,7 @@ public sealed class DocModder<O> : IModder<O> where O : IId
 			undoer.V = value;
 		}
 	}
-	public Func<O, Maybe<Pt>, O> Mod { get; set; } = identity;
+	public Func<O, Option<Pt>, O> Mod { get; set; } = identity;
 	public O VModded => Mod(V, mousePos.V);
 	public void Apply()
 	{
@@ -108,10 +106,10 @@ public sealed class DocModder<O> : IModder<O> where O : IId
 	public bool Redo() => undoer.Redo();
 	public void InvalidateRedos() => undoer.InvalidateRedos();
 
-	internal DocModder(Lens<O> lens, IRoVar<Maybe<Pt>> mousePos)
+	internal DocModder(Lens<O> lens, IRoVar<Option<Pt>> mousePos)
 	{
         this.mousePos = mousePos;
         this.lens = lens;
-	    undoer = new Undoer<O>(lens.Get(), "DocMod").D(d);
+	    undoer = new Undoer<O>(lens.Get()).D(d);
 	}
 }

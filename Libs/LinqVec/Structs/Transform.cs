@@ -1,6 +1,5 @@
 ﻿using System.Drawing.Drawing2D;
 using Geom;
-using PowMaybe;
 
 namespace LinqVec.Structs;
 

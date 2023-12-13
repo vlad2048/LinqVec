@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using PowRxVar;
 using System.Windows.Forms;
 using Box2D.NetStandard.Dynamics.Bodies;
 using Box2D.NetStandard.Dynamics.World;

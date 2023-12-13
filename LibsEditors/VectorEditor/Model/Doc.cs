@@ -24,7 +24,7 @@ public sealed record Layer(
 	IVisualObjSer[] Objects
 ) : IId
 {
-	public static Layer Empty() => new(Guid.NewGuid(), Array.Empty<IVisualObjSer>());
+	public static Layer Empty() => new(Guid.NewGuid(), System.Array.Empty<IVisualObjSer>());
 }
 
 public sealed record Curve(
@@ -34,7 +34,7 @@ public sealed record Curve(
 {
 	public static Curve Empty() => new(
 		Guid.NewGuid(),
-		Array.Empty<CurvePt>()
+		System.Array.Empty<CurvePt>()
 	);
 
 	public R BoundingBox => this.GetDrawPoints().GetBBox();

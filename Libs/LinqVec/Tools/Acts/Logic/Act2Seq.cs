@@ -2,7 +2,6 @@
 using LinqVec.Tools.Acts.Events;
 using LinqVec.Tools.Enums;
 using LinqVec.Tools.Events;
-using PowMaybe;
 using PowRxVar;
 
 namespace LinqVec.Tools.Acts.Logic;
@@ -31,9 +30,15 @@ static class Act2Seq
 			return d;
 		});
 
-	private static Maybe<Cursor> GetCursor(this Act act, Maybe<object> mh) =>
+	private static Option<T> ToOption<T>(this T? obj) where T : class => obj switch
+	{
+		null => Option<T>.None,
+		not null => obj
+	};
+
+	private static Option<Cursor> GetCursor(this Act act, Option<object> mh) =>
 		from _ in mh
-		from cur in act.Cursor.ToMaybe()
+		from cur in act.Cursor.ToOption()
 		select cur;
 
 	private static IObservable<IHotEvt> ToEvt(this Act act, Evt evt) =>
@@ -44,21 +49,22 @@ static class Act2Seq
 					.DistinctUntilChanged()
 					.Select(e => (IHotEvt)new OverHotEvt(e)),
 			evt.WhenEvt
-					.Where(e => e.ToTrigger().IsSomeAndEqualTo(act.Trigger))
+					.Where(e => e.ToTrigger().Equals(act.Trigger))
 					.WhereSelectMousePos()
 					.Select(act.Hotspot)
-					.WhenSome()
+					.Where(e => e.IsSome)
+					.Select(e => e.IfNone(() => throw new ArgumentException()))
 					.Take(1)
 					.Select(e => (IHotEvt)new TriggerHotEvt(e))
 			);
 
-	private static Maybe<Trigger> ToTrigger(this IEvt evt) =>
+	private static Option<Trigger> ToTrigger(this IEvt evt) =>
 		evt switch
 		{
-			MouseBtnEvt { UpDown: UpDown.Down, Btn: MouseBtn.Left } => May.Some(Trigger.Down),
-			MouseBtnEvt { UpDown: UpDown.Up, Btn: MouseBtn.Left } => May.Some(Trigger.Up),
-			MouseBtnEvt { UpDown: UpDown.Down, Btn: MouseBtn.Right } => May.Some(Trigger.DownRight),
-			MouseClickEvt { Btn: MouseBtn.Left } => May.Some(Trigger.Click),
-			_ => May.None<Trigger>()
+			MouseBtnEvt { UpDown: UpDown.Down, Btn: MouseBtn.Left } => Trigger.Down,
+			MouseBtnEvt { UpDown: UpDown.Up, Btn: MouseBtn.Left } => Trigger.Up,
+			MouseBtnEvt { UpDown: UpDown.Down, Btn: MouseBtn.Right } => Trigger.DownRight,
+			MouseClickEvt { Btn: MouseBtn.Left } => Trigger.Click,
+			_ => None
 		};
 }

@@ -1,12 +1,12 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using PowRxVar;
-using LinqVec.Utils.WinForms_;
 using LinqVec.Components.Grid_;
 using LinqVec.Structs;
 using LinqVec.Utils;
 using LinqVec.Drawing;
+using LinqVec.Utils.Rx;
 using UILib;
+using PowRxVar;
 
 namespace LinqVec.Controls;
 
@@ -39,7 +39,7 @@ public sealed partial class DrawPanel : UserControl
 			if (DrawPanelUtils.SetupForDesignMode(DesignMode, d, this, res, transform)) return;
 
 			Obs.Merge(
-					transform.ToUnit()
+					transform.ToUnitExt()
 				)
 				.Subscribe(_ => Invalidate()).D(d);
 

@@ -35,10 +35,7 @@ public static class WinFormsUtils
 		var d = new Disp().D(ctrl);
 		ctrl.Events().HandleCreated.Subscribe(_ =>
 		{
-            whenInit.Subscribe(init =>
-            {
-	            initAction(init, d);
-            }).D(d);
+			whenInit.Subscribe(init => { initAction(init, d); }).D(d);
 		}).D(d);
 	}
 

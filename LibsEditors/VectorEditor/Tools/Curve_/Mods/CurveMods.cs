@@ -1,6 +1,5 @@
 ﻿using Geom;
 using LinqVec.Utils;
-using PowMaybe;
 using VectorEditor.Model.Structs;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_.Structs;
@@ -10,14 +9,14 @@ namespace VectorEditor.Tools.Curve_.Mods;
 
 static class CurveMods
 {
-	public static Func<Curve, Maybe<Pt>, Curve> AddPoint() => (e, mp) => e.ApplyMod(new AddPointCurveMod(null), mp);
-	public static Func<Curve, Maybe<Pt>, Curve> AddPoint(Maybe<Pt> mayStartPt) => mayStartPt.IsSome(out var startPt) switch
-	{
-		false => (e, _) => e,
-		true => (e, mp) => e.ApplyMod(new AddPointCurveMod(startPt), mp)
-	};
-	public static Func<Curve, Maybe<Pt>, Curve> AddPoint(Pt startPt) => AddPoint(May.Some(startPt));
-	public static Func<Curve, Maybe<Pt>, Curve> MovePoint(PointId id) => (e, mp) => e.ApplyMod(new MovePointCurveMod(id), mp);
+	public static Func<Curve, Option<Pt>, Curve> AddPoint() => (e, mp) => e.ApplyMod(new AddPointCurveMod(null), mp);
+
+	public static Func<Curve, Option<Pt>, Curve> AddPoint(Option<Pt> mayStartPt) => mayStartPt.Match<Func<Curve, Option<Pt>, Curve>>(
+		startPt => (e, mp) => e.ApplyMod(new AddPointCurveMod(startPt), mp),
+		() => (e, _) => e
+	);
+	public static Func<Curve, Option<Pt>, Curve> AddPoint(Pt startPt) => AddPoint(Some(startPt));
+	public static Func<Curve, Option<Pt>, Curve> MovePoint(PointId id) => (e, mp) => e.ApplyMod(new MovePointCurveMod(id), mp);
 
 
 
@@ -27,19 +26,17 @@ static class CurveMods
 	private sealed record RemovePointCurveMod(int Idx) : ICurveMod;
 
 
-	private static Curve ApplyMod(this Curve model, ICurveMod mod, Maybe<Pt> mp) =>
-		mod switch
-		{
-			AddPointCurveMod { StartPos: var startPos } => mp.IsSome(out var p) switch
-			{
-				false => model,
-				true => model with { Pts = model.Pts.Add(CurvePt.Make(startPos, p)) },
-			},
-			MovePointCurveMod { Id: var id } => mp.IsSome(out var p) switch
-			{
-				false => model,
-				true => model with { Pts = model.Pts.ChangeIdx(id.Idx, e => e.Move(id.Type, p)) },
-			},
+	private static Curve ApplyMod(this Curve model, ICurveMod mod, Option<Pt> mp) =>
+	mod switch
+	{
+			AddPointCurveMod { StartPos: var startPos } => mp.Match(
+				p => model with { Pts = model.Pts.Add(CurvePt.Make(startPos, p)) },
+				() => model
+			),
+			MovePointCurveMod { Id: var id } => mp.Match(
+				p => model with { Pts = model.Pts.ChangeIdx(id.Idx, e => e.Move(id.Type, p)) },
+				() => model
+			),
 			RemovePointCurveMod { Idx: var idx }
 				=> model with { Pts = model.Pts.RemoveIdx(idx) },
 			_ => throw new ArgumentException()

@@ -1,5 +1,4 @@
-﻿using PowRxVar;
-
+﻿/*
 namespace UILib.Logging;
 
 public static class KeyLogger
@@ -15,3 +14,4 @@ public static class KeyLogger
 
 	private static void L(string s) => Console.WriteLine(s);
 }
+*/

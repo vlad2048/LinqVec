@@ -1,4 +1,5 @@
-﻿using PowRxVar.Utils;
+﻿/*
+using PowRxVar.Utils;
 using PowRxVar;
 using System.Reactive;
 using System;
@@ -98,13 +99,14 @@ public static class EvtClickSynthesizer
 					new MouseBtnEvt(pos, UpDown.Up, btn),
 				}.ToObservable(),
 
-				/*MouseClickEvt { Btn: var btn, Pos: var pos } =>
-					Obs.Return(new MouseBtnEvt(pos, UpDown.Down, btn)).Concat(
-						//Obs.Return(new MouseBtnEvt(pos, UpDown.Up, btn)).Delay(TimeSpan.FromMilliseconds(100), new SynchronizationContextScheduler(SynchronizationContext.Current!))
-						Obs.Return(new MouseBtnEvt(pos, UpDown.Up, btn)).Delay(TimeSpan.FromMilliseconds(100))
-					),*/
+				//MouseClickEvt { Btn: var btn, Pos: var pos } =>
+				//	Obs.Return(new MouseBtnEvt(pos, UpDown.Down, btn)).Concat(
+				//		//Obs.Return(new MouseBtnEvt(pos, UpDown.Up, btn)).Delay(TimeSpan.FromMilliseconds(100), new SynchronizationContextScheduler(SynchronizationContext.Current!))
+				//		Obs.Return(new MouseBtnEvt(pos, UpDown.Up, btn)).Delay(TimeSpan.FromMilliseconds(100))
+				//	),
 
 				_ => Obs.Return(e)
 			})
 			.Merge();
 }
+*/

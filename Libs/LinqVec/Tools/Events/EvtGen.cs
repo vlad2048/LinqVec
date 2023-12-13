@@ -1,14 +1,6 @@
-﻿using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using Geom;
-using LinqVec.Structs;
-using LinqVec.Utils;
 using PowRxVar;
-using LinqVec.Utils.WinForms_;
-using PowMaybe;
-using PowRxVar.Utils;
-using UILib;
 
 namespace LinqVec.Tools.Events;
 

@@ -1,6 +1,6 @@
-﻿using System.Reactive.Linq;
+﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using PowRxVar;
 using LinqVec.Controls;
 using LinqVec.Drawing;
 using LinqVec.Structs;
@@ -11,6 +11,8 @@ using LinqVec.Tools;
 using LinqVec.Tools.Events;
 using UILib;
 using LinqVec.Tools.Events.Utils;
+using LinqVec.Utils.Rx;
+using PowRxVar;
 
 namespace LinqVec;
 
@@ -36,7 +38,7 @@ public partial class VecEditor : UserControl
 		var curTool = Var.Make<ITool>(null!).D(this);
 		var ctrl = new Ctrl(drawPanel);
 
-		var editorEvt = EvtMaker.MakeForControl(drawPanel, curTool.ToUnit());
+		var editorEvt = EvtMaker.MakeForControl(drawPanel, curTool.ToUnitExt());
 		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform).D(this);
 
 		Env = new ToolEnv(
@@ -70,7 +72,7 @@ public partial class VecEditor : UserControl
 			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
 			statusStrip.AddLabel("zoom", transform.Select(e => $"{C.ZoomLevels[e.ZoomIndex]:P}")).D(d);
 			statusStrip.AddLabel("center", transform.Select(e => e.Center)).D(d);
-			statusStrip.AddLabel("tool", Var.Expr(() => $"{GetToolName(curTool.V)}")).D(d);
+			statusStrip.AddLabel("tool", curTool.Select(GetToolName)).D(d);
 
 			undoMan.WhenChanged.Subscribe(_ =>
 			{

@@ -1,8 +1,8 @@
-﻿using PowRxVar;
-using System.Reactive.Linq;
-using System.Reactive;
+﻿using System.Reactive.Linq;
 using Geom;
 using LinqVec.Utils.WinForms_;
+using LinqVec.Utils.Rx;
+using PowRxVar;
 
 namespace LinqVec.Tools.Events;
 
@@ -33,12 +33,12 @@ public static class EvtExt
 	// Mouse Enter
 	// ===========
 	public static bool IsMouseEnter(this IEvt evt) => evt is MouseEnter;
-	public static IObservable<Unit> WhenMouseEnter(this IObservable<IEvt> src) => src.OfType<MouseEnter>().ToUnit();
+	public static IObservable<Unit> WhenMouseEnter(this IObservable<IEvt> src) => src.OfType<MouseEnter>().ToUnitExt();
 
 	// Mouse Leave
 	// ===========
 	public static bool IsMouseLeave(this IEvt evt) => evt is MouseLeave;
-	public static IObservable<Unit> WhenMouseLeave(this IObservable<IEvt> src) => src.OfType<MouseLeave>().ToUnit();
+	public static IObservable<Unit> WhenMouseLeave(this IObservable<IEvt> src) => src.OfType<MouseLeave>().ToUnitExt();
 
 	// Mouse Down
 	// ==========
@@ -101,7 +101,7 @@ public static class EvtExt
 		src
 			.OfType<KeyEvt>()
 			.Where(e => e.UpDown == UpDown.Down && e.Key == key)
-			.ToUnit();
+			.ToUnitExt();
 	public static IObservable<Unit> WhenKeyDown(this Evt src, Keys key) => src.WhenEvt.WhenKeyDown(key);
 
 	// Key Up
@@ -111,26 +111,28 @@ public static class EvtExt
 		src
 			.OfType<KeyEvt>()
 			.Where(e => e.UpDown == UpDown.Up && e.Key == key)
-			.ToUnit();
+			.ToUnitExt();
 	public static IObservable<Unit> WhenKeyUp(this Evt src, Keys key) => src.WhenEvt.WhenKeyUp(key);
 
 	// Is Key Down
 	// ===========
-	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key, IRoDispBase d) =>
-		Var.Make(
-			false,
-			Observable.Merge(
+	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key, IRoDispBase d)
+	{
+		var isDown = Var.Make(false).D(d);
+		Observable.Merge(
 				src.WhenKeyDown(key).Select(_ => true),
 				src.WhenKeyUp(key).Select(_ => false)
 			)
-		).D(d);
+			.Subscribe(v => isDown.V = v).D(d);
+		return isDown;
+	}
 
 	// Key Repeat
 	// ==========
 	public static IObservable<Unit> WhenKeyRepeat(this IObservable<IEvt> src, Keys key, bool ctrl)
 	{
-		var whenStart = src.WhenKeyDown(key).Where(_ => !ctrl || KeyUtils.IsCtrlPressed).ToUnit();
-		var whenStop = src.OfType<KeyEvt>().ToUnit();
+		var whenStart = src.WhenKeyDown(key).Where(_ => !ctrl || KeyUtils.IsCtrlPressed).ToUnitExt();
+		var whenStop = src.OfType<KeyEvt>().ToUnitExt();
 		return
 			from _ in whenStart
 			from evt in Obs.Timer(KeyDelayStart, KeyDelayRepeat).Prepend(0).Select(_ => Unit.Default).TakeUntil(whenStop)

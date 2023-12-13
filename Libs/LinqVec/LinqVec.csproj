@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
+    <PackageReference Include="PowRxVar" Version="0.0.47" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\LibsBase\Geom\Geom.csproj" />
     <ProjectReference Include="..\..\LibsBase\UILib\UILib.csproj" />
     <ProjectReference Include="..\..\LibsBase\WinAPI\WinAPI.csproj" />

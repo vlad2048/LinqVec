@@ -1,5 +1,4 @@
 ﻿using LinqVec.Structs;
-using PowMaybe;
 
 namespace LinqVec.Utils;
 
@@ -9,12 +8,13 @@ public static class EnumExt
 
 	public static bool ContainsId<T>(this T[] arr, Guid id) where T : IId => arr.Count(e => e.Id == id) == 1;
 
-	public static bool ContainsIdAndIsOfType<T, U>(this T[] arr, Guid id) where T : IId where U : T
+	/*public static bool ContainsIdAndIsOfType<T, U>(this T[] arr, Guid id) where T : IId where U : T
 	{
 		var mayElt = arr.GetMayId(id);
-		if (mayElt.IsNone(out var elt)) return false;
-		return elt is U;
-	}
+		if (mayElt.IsNone) return false;
+		var mayElt.I
+		return elt is U;*
+	}*/
 
 	public static T[] Add<T>(this T[] arr, T e) => arr.ToList().Append(e).ToArray();
 	public static T[] Remove<T>(this T[] arr, T e)
@@ -32,7 +32,15 @@ public static class EnumExt
 
 	public static T GetId<T>(this T[] arr, Guid id) where T : IId => arr.Single(e => e.Id == id);
 
-	public static Maybe<T> GetMayId<T>(this T[] arr, Guid id) where T : IId => arr.SingleOrMaybe(e => e.Id == id);
+	public static Option<T> GetMayId<T>(this T[] arr, Guid id) where T : IId
+	{
+		var cnt = arr.Count(e => e.Id == id);
+		return cnt switch
+		{
+			1 => Some(arr.Single(e => e.Id == id)),
+			_ => None
+		};
+	}
 
 	public static T[] SetId<T>(this T[] arr, T e) where T : IId
 	{

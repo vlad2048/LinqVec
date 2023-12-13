@@ -1,21 +1,20 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LinqVec.Logic;
-using PowMaybe;
 using VectorEditor.Model;
 using WeifenLuo.WinFormsUI.Docking;
-using PowRxVar;
 using UILib;
 using VectorEditor.Panes.ModelTree_;
+using PowRxVar;
 
 namespace VectorEditor.Panes;
 
 public partial class ModelTreePane : DockContent
 {
-	private readonly ISubject<IObservable<Maybe<Model<Doc>>>> whenInit;
-	private IObservable<IObservable<Maybe<Model<Doc>>>> WhenInit => whenInit.AsObservable();
+	private readonly ISubject<IObservable<Option<Model<Doc>>>> whenInit;
+	private IObservable<IObservable<Option<Model<Doc>>>> WhenInit => whenInit.AsObservable();
 
-	public void Init(IObservable<Maybe<Model<Doc>>> modelMan)
+	public void Init(IObservable<Option<Model<Doc>>> modelMan)
 	{
 		whenInit.OnNext(modelMan);
 		whenInit.OnCompleted();
@@ -24,7 +23,7 @@ public partial class ModelTreePane : DockContent
 	public ModelTreePane()
 	{
 		InitializeComponent();
-		whenInit = new AsyncSubject<IObservable<Maybe<Model<Doc>>>>().D(this);
+		whenInit = new AsyncSubject<IObservable<Option<Model<Doc>>>>().D(this);
 
 		this.InitRX(d =>
 		{
@@ -34,8 +33,9 @@ public partial class ModelTreePane : DockContent
 				{
 					modelTree.Clear();
 					trackedList.Clear();
-					if (mayDoc.IsSome(out var doc))
+					if (mayDoc.IsSome)
 					{
+						var doc = mayDoc.IfNone(() => throw new ArgumentException());
 						ModelTreeLogic.Setup(modelTree, doc).D(docD);
 						//ModelTrackedLogic.Setup(trackedList, doc).D(docD);
 					}

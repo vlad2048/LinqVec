@@ -1,6 +1,4 @@
-﻿using PowMaybe;
-using PowRxVar;
-using System.Reactive.Subjects;
+﻿using System.Reactive.Subjects;
 using System.Reactive;
 using System.Reactive.Linq;
 using LinqVec.Structs;

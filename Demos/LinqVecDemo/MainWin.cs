@@ -1,9 +1,10 @@
 ﻿using System.Reactive.Linq;
+using LinqVec.Utils.Rx;
 using LinqVecDemo.Logic;
-using PowRxVar;
 using UILib;
 using VectorEditor.Panes;
 using WeifenLuo.WinFormsUI.Docking;
+using PowRxVar;
 
 namespace LinqVecDemo;
 
@@ -27,7 +28,7 @@ partial class MainWin : Form
 	{
 		InitializeComponent();
 
-		this.InitRX(this.Events().Load.ToUnit(), (_, d) =>
+		this.InitRX(this.Events().Load.ToUnitExt(), (_, d) =>
 		{
 			var doc = this.InitDocLogic().D(d);
 

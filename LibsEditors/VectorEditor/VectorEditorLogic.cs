@@ -1,8 +1,7 @@
 ﻿using LinqVec;
 using LinqVec.Logic;
-using LinqVec.Tools;
 using LinqVec.Tools.Events;
-using LinqVec.Tools.Events.Utils;
+using LinqVec.Utils.Rx;
 using PowRxVar;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
@@ -17,25 +16,19 @@ public static class VectorEditorLogic
 		var d = new Disp();
 
 		var env = vecEditor.Env;
-		var doc = new Model<Doc>(initModel ?? Doc.Empty).D(d);
-
-		var evt = env.EditorEvt
-			.ToGrid(env.Transform)
-			.SnapToGrid()
-			.RestrictToGrid()
-			.TrackMouse(out var mousePos, d)
-			.MakeHot(d);
+		var doc = new Model<Doc>(initModel ?? Doc.Empty, env.EditorEvt.WhenMouseMove().ToUnitExt()).D(d);
 
 		vecEditor.Init(
 			new VecEditorInitNfo(
 				doc,
-				new ITool[]
-				{
+				[
 					new CurveTool(env, doc),
 					new SelectTool(env, doc),
-				}
+				]
 			)
 		);
+
+		doc.WhenPaintNeeded.Subscribe(_ => env.Invalidate()).D(d);
 
 		env.WhenPaint
 			.Subscribe(gfx =>
@@ -53,17 +46,6 @@ public static class VectorEditorLogic
 				}
 			}).D(d);
 
-		Obs.Merge(
-				//doc.WhenChanged.ToUnit(),
-				mousePos.ToUnit()
-			)
-			.Subscribe(_ =>
-			{
-				env.Invalidate();
-			}).D(d);
-
 		return (doc, d);
 	}
-
-	private static readonly Brush brush = new SolidBrush(Color.DodgerBlue);
 }

@@ -1,8 +1,8 @@
 ﻿using System.Reactive;
 using System.Reactive.Linq;
 using LinqVec.Utils.Json;
+using LinqVec.Utils.Rx;
 using PowBasics.Json_;
-using PowMaybe;
 using PowRxVar;
 using UILib.Utils;
 using VectorEditor.Model;
@@ -12,7 +12,7 @@ namespace LinqVecDemo.Logic;
 
 static class DocLogic
 {
-	public static (IRoMayVar<DocPane>, IDisposable) InitDocLogic(this MainWin win)
+	public static (IRoVar<Option<DocPane>>, IDisposable) InitDocLogic(this MainWin win)
 	{
 		var d = new Disp();
 		var activeDoc = win.dockPanel.GetActiveDoc().D(d);
@@ -37,17 +37,20 @@ static class DocLogic
 				win.LastLoadedFile = null;
 			}
 		}
-		activeDoc.WhenNone().Subscribe(_ => win.LastLoadedFile = null).D(d);
+
+		activeDoc
+			.Where(e => e.IsNone)
+			.Subscribe(_ => win.LastLoadedFile = null).D(d);
+
 
 
 		activeDoc.Enables(win.menuFileSave, win.menuFileSaveAs).D(d);
 
 
-		void SetTitle(Maybe<string> mayFilename) => win.Text = mayFilename.IsSome(out var filename) switch
-		{
-			true => $"{baseName} - [{Path.GetFileNameWithoutExtension(filename)}]",
-			false => baseName
-		};
+		void SetTitle(Option<string> mayFilename) => win.Text = mayFilename.Match(
+			f => $"{baseName} - [{Path.GetFileNameWithoutExtension(f)}]",
+			baseName
+		);
 		activeDoc.Select(e =>
 			from doc in e
 			from file in doc.Filename.V
@@ -93,10 +96,10 @@ static class DocLogic
 
 		void Save(bool saveAs)
 		{
-			var doc = activeDoc.V.Ensure();
+			var doc = activeDoc.V.IfNone(() => throw new ArgumentException());
 			var m = doc.Doc.V;
 
-			if (saveAs || doc.Filename.V.IsNone(out var filename))
+			if (saveAs || doc.Filename.V.IsNone)
 			{
 				using var dlg = new SaveFileDialog
 				{
@@ -107,11 +110,12 @@ static class DocLogic
 				if (dlg.ShowDialog() == DialogResult.OK)
 				{
 					VecJsoner.Default.Save(dlg.FileName, m);
-					doc.Filename.V = May.Some(dlg.FileName);
+					doc.Filename.V = dlg.FileName;
 				}
 			}
 			else
 			{
+				var filename = doc.Filename.V.IfNone(() => throw new ArgumentException());
 				VecJsoner.Default.Save(filename, m);
 			}
 		}
@@ -121,15 +125,16 @@ static class DocLogic
 		return (activeDoc, d);
 	}
 
-	private static (IRoMayVar<DocPane>, IDisposable) GetActiveDoc(this DockPanel dockPanel)
+	private static (IRoVar<Option<DocPane>>, IDisposable) GetActiveDoc(this DockPanel dockPanel)
 	{
 		var d = new Disp();
-		var activeDoc = VarMay.Make<DocPane>(
-			dockPanel.WhenActiveDocChanged()
-				.Select(_ => (dockPanel.ActiveDocument as DocPane).ToMaybe())
-		).D(d);
+		var activeDoc = Var.Make(Option<DocPane>.None).D(d);
+		dockPanel.WhenActiveDocChanged().Subscribe(v =>
+		{
+			activeDoc.V = dockPanel.ActiveDocument as DocPane;
+		}).D(d);
 		return (activeDoc, d);
 	}
 
-	private static IObservable<Unit> WhenActiveDocChanged(this DockPanel dockPanel) => Obs.FromEventPattern(e => dockPanel.ActiveDocumentChanged += e, e => dockPanel.ActiveDocumentChanged -= e).ToUnit();
+	private static IObservable<Unit> WhenActiveDocChanged(this DockPanel dockPanel) => Obs.FromEventPattern(e => dockPanel.ActiveDocumentChanged += e, e => dockPanel.ActiveDocumentChanged -= e).ToUnitExt();
 }

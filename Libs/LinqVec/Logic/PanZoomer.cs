@@ -72,6 +72,7 @@ static class PanZoomer
 				var centerNext = transform.V.Center + delta;
 				transform.V = (transform.V with { Center = centerNext }).Cap(ctrl);
 			}).D(d);
+
 		return (isPanning, d);
 	}
 

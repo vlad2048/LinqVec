@@ -7,7 +7,6 @@ using LinqVec.Tools.Enums;
 using LinqVec.Tools.Events;
 using LinqVec.Utils;
 using PowBasics.CollectionsExt;
-using PowMaybe;
 using PowRxVar;
 using UILib;
 
@@ -16,10 +15,10 @@ namespace LinqVec.Tools.Acts;
 
 public sealed record Act(
 	string Name,
-	Func<Pt, Maybe<object>> Hotspot,
+	Func<Pt, Option<object>> Hotspot,
 	Trigger Trigger,
 	Cursor? Cursor,
-	Action<Maybe<object>>? OnHover,
+	Action<Option<object>>? OnHover,
 	Action<object>? OnTrigger
 )
 {
@@ -27,10 +26,10 @@ public sealed record Act(
 
 	public static IActExpr Make<H>(
 		string name,
-		Func<Pt, Maybe<H>> hotspot,
+		Func<Pt, Option<H>> hotspot,
 		Trigger trigger,
 		Cursor? cursor,
-		Action<Maybe<H>>? onHover,
+		Action<Option<H>>? onHover,
 		Action<H>? onTrigger
 	) where H : notnull => new BaseActExpr(
 		new(
@@ -45,10 +44,10 @@ public sealed record Act(
 
 	public static IActExpr Make(
 		string name,
-		Func<Pt, Maybe<Pt>> hotspot,
+		Func<Pt, Option<Pt>> hotspot,
 		Trigger trigger,
 		Cursor? cursor,
-		Action<Maybe<Pt>>? onHover,
+		Action<Option<Pt>>? onHover,
 		Action<Pt>? onTrigger
 	) => Make<Pt>(
 		name,
@@ -101,8 +100,11 @@ public static class ActRunner
 			    {
 				    case HoverActionSeqEvt { Cursor: var cursor, Action: var action }:
 					    action();
-					    if (cursor.IsSome(out var cur))
+					    if (cursor.IsSome)
+					    {
+						    var cur = cursor.IfNone(() => throw new ArgumentException());
 						    evt.SetCursor(cur);
+					    }
 					    break;
 				    case TriggerActionSeqEvt { Action: var action }:
 					    action();

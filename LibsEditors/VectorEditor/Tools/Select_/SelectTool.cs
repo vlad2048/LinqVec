@@ -1,14 +1,12 @@
 ﻿using Geom;
 using LinqVec;
 using LinqVec.Logic;
-using LinqVec.Structs;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
 using LinqVec.Tools.Enums;
 using LinqVec.Tools.Events;
 using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.Rx;
-using PowMaybe;
 using PowRxVar;
 using VectorEditor.Model;
 
@@ -43,11 +41,11 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 						Hotspots.Object(Doc),
 						Trigger.Down,
 						null,
-						onHover: mayObj => Env.Curs.Cursor = mayObj.IsSome() ? CBase.Cursors.BlackArrowHold : CBase.Cursors.BlackArrow,
+						onHover: mayObj => Env.Curs.Cursor = mayObj.IsSome ? CBase.Cursors.BlackArrowHold : CBase.Cursors.BlackArrow,
 						onTrigger: curve =>
 						{
 							var mod = MkMod(curve);
-							maySel.V = May.Some(mod);
+							maySel.V = Some(mod);
 							//mod.Mod
 						}),
 
@@ -57,7 +55,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 						Trigger.Down,
 						null,
 						onHover: null,
-						onTrigger: _ => maySel.V = May.None<IModder<IVisualObjSer>>()
+						onTrigger: _ => maySel.V = Option<IModder<IVisualObjSer>>.None
 					)
 
 				)
@@ -66,8 +64,9 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		Env.WhenPaint.Subscribe(gfx =>
 		{
-			if (maySel.V.IsSome(out var mod))
+			if (maySel.V.IsSome)
 			{
+				var mod = maySel.V.IfNone(() => throw new ArgumentException());
 				SelectPainter.DrawSelRect(gfx, mod.V);
 			}
 		}).D(d);
@@ -85,7 +84,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 static class Hotspots
 {
-	public static Func<Pt, Maybe<Pt>> Anywhere => May.Some;
+	public static Func<Pt, Option<Pt>> Anywhere => Option<Pt>.Some;
 	//public static Func<Pt, Maybe<IVisualObjSer>> Object(Model<Doc> mm) => pt => mm.V.GetObjectAt(pt).IsSome(out var obj) && obj is Curve curve ? May.Some(curve) : May.None<Curve>();
-	public static Func<Pt, Maybe<IVisualObjSer>> Object(Model<Doc> mm) => mm.V.GetObjectAt;
+	public static Func<Pt, Option<IVisualObjSer>> Object(Model<Doc> mm) => mm.V.GetObjectAt;
 }

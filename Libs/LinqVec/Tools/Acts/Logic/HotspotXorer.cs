@@ -2,7 +2,6 @@
 using LinqVec.Tools.Acts.Structs;
 using LinqVec.Utils;
 using PowBasics.CollectionsExt;
-using PowMaybe;
 
 namespace LinqVec.Tools.Acts.Logic;
 
@@ -32,15 +31,15 @@ static class HotspotXorer
 	{
 		var kids = GetAmbBaseKids(amb);
 		var hotspots = kids.SelectToArray(e => e.Act.Hotspot);
-		var hotspotsNext = new Func<Pt, Maybe<object>>[hotspots.Length];
+		var hotspotsNext = new Func<Pt, Option<object>>[hotspots.Length];
 		for (var i = 0; i < hotspots.Length; i++)
 		{
 			var capI = i;
 			hotspotsNext[i] = m =>
 			{
 				for (var j = 0; j < capI; j++)
-					if (hotspots[j](m).IsSome())
-						return May.None<object>();
+					if (hotspots[j](m).IsSome)
+						return Option<object>.None;
 				return hotspots[capI](m);
 			};
 		}

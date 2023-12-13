@@ -1,20 +1,21 @@
 ﻿using System.Reactive.Linq;
 using Geom;
-using PowMaybe;
 using PowRxVar;
 
 namespace LinqVec.Tools.Events.Utils;
 
 public static class EvtMouseTracker
 {
-	public static IObservable<IEvt> TrackMouse(this IObservable<IEvt> src, out IRoMayVar<Pt> mousePos, IRoDispBase d)
+	public static IObservable<IEvt> TrackMouse(this IObservable<IEvt> src, out IRoVar<Option<Pt>> mousePos, IRoDispBase d)
 	{
-		mousePos = VarMay.Make(
-			Obs.Merge(
-				src.WhenMouseMove().Select(May.Some),
-				src.WhenMouseLeave().Select(_ => May.None<Pt>())
+		var mousePosVar = Var.Make(Option<Pt>.None).D(d);
+		mousePos = mousePosVar.ToReadOnly();
+		Obs.Merge(
+				src.WhenMouseMove().Select(e => Some(e)),
+				src.WhenMouseLeave().Select(_ => Option<Pt>.None)
 			)
-		).D(d);
+			.Subscribe(v => mousePosVar.V = v).D(d);
+
 		return src;
 	}
 }

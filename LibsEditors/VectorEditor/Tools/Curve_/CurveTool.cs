@@ -1,17 +1,16 @@
 ﻿using System.Reactive.Linq;
 using Geom;
 using LinqVec;
-using PowRxVar;
 using LinqVec.Logic;
 using VectorEditor.Model;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
 using LinqVec.Tools.Events;
-using PowMaybe;
 using VectorEditor.Tools.Curve_.Mods;
 using VectorEditor.Tools.Curve_.Structs;
 using LinqVec.Tools.Enums;
 using LinqVec.Tools.Events.Utils;
+using PowRxVar;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -23,6 +22,8 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 	public (IUndoer, IDisposable) Run(Action reset)
 	{
 		var d = new Disp();
+
+		Doc.EnableRedrawOnMouseMove(d);
 
 		var evt = Env.GetEvtForTool(this)
 			.ToGrid(Env.Transform)
@@ -45,9 +46,9 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		var gfxState = CurveGfxState.None;
 
-		Action<Maybe<T>> SetState<T>(CurveGfxState state) => mp =>
+		Action<Option<T>> SetState<T>(CurveGfxState state) => mp =>
 		{
-			if (mp.IsSome())
+			if (mp.IsSome)
 				gfxState = state;
 		};
 
@@ -130,6 +131,6 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 static class Hotspots
 {
-	public static Func<Pt, Maybe<Pt>> Anywhere => May.Some;
-	public static Func<Pt, Maybe<PointId>> CurvePoint(Curve curve) => m => curve.GetClosestPointTo(m, C.ActivateMoveMouseDistance);
+	public static Func<Pt, Option<Pt>> Anywhere => Option<Pt>.Some;
+	public static Func<Pt, Option<PointId>> CurvePoint(Curve curve) => m => curve.GetClosestPointTo(m, C.ActivateMoveMouseDistance);
 }

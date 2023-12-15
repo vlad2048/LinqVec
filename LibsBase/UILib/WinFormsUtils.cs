@@ -74,6 +74,7 @@ public static class WinFormsUtils
 	    return con;
     }
 
+	/*
     private const string MainThreadName = "Main Thread";
     private static SynchronizationContext? syncCtx;
 
@@ -95,4 +96,5 @@ public static class WinFormsUtils
 		var ctx = SynchronizationContext.Current;
 		return obs.ObserveOn(SynchronizationContext.Current!);
 	}
+	*/
 }

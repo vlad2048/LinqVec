@@ -31,4 +31,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Tools\Acts\Events\" />
+  </ItemGroup>
+
 </Project>

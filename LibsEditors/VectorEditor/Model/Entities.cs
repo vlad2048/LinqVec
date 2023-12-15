@@ -8,6 +8,7 @@ namespace VectorEditor.Model;
 
 static class Entities
 {
+	/*
 	public static Lens<IVisualObjSer> Visual(Model<Doc> doc, IVisualObjSer obj) => obj switch
 	{
 		Curve e => Curve(doc, e).Cast<Curve, IVisualObjSer>(),
@@ -34,7 +35,7 @@ static class Entities
 
 	private static Doc WithLayers(this Doc m, Layer[] xs) => m with { Layers = xs };
 	private static Layer WithObjects(this Layer m, IVisualObjSer[] xs) => m with { Objects = xs };
-
+	*/
 
 
 	/*

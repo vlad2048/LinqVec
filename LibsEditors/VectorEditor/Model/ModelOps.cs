@@ -1,5 +1,4 @@
 ﻿using Geom;
-using LanguageExt;
 using LinqVec.Utils;
 using VectorEditor.Model.Structs;
 using VectorEditor.Tools.Curve_.Structs;
@@ -9,14 +8,6 @@ namespace VectorEditor.Model;
 
 static class CurveOps
 {
-	public static Doc AddCurve(this Doc doc, Curve curve) => doc.WithLayers(doc.Layers.ChangeId(doc.Layers[0].Id, layer => layer.WithObjects(layer.Objects.AddId(curve))));
-
-
-	private static Doc WithLayers(this Doc m, Layer[] xs) => m with { Layers = xs };
-	private static Layer WithObjects(this Layer m, IVisualObjSer[] xs) => m with { Objects = xs };
-
-
-
 	private sealed record PtNfo(PointId Id, double Distance);
 
 	public static Option<PointId> GetClosestPointTo(this Curve model, Pt pt, double threshold)

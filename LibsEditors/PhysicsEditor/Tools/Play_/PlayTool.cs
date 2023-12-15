@@ -51,7 +51,7 @@ public sealed class PlayTool : Tool<DocModel>
 			}).D(D);
 
 
-		Obs.Interval(TimeSpan.FromSeconds(1) / 60)
+		Obs.Interval(TimeSpan.FromSeconds(1) / 60, Rx.Sched)
 			.ObserveOnUI()
 			.Subscribe(_ =>
 			{

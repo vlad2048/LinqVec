@@ -1,4 +1,5 @@
-﻿namespace LinqVec.Tools.Enums;
+﻿/*
+namespace LinqVec.Tools.Enums;
 
 public enum Trigger
 {
@@ -7,3 +8,4 @@ public enum Trigger
     Click,
     DownRight,
 }
+*/

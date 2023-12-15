@@ -108,8 +108,12 @@ file static class VecEditorUtils
 				{
 					resetD.Value = null;
 					resetD.Value = new Disp();
-					var toolUndoer = tool.Run(Reset).D(resetD.Value);
-					undoMan.SetToolUndoer(toolUndoer);
+					var toolActions = new ToolActions(
+						Reset,
+						undoMan.SetToolUndoer,
+						Obs.Merge(undoMan.WhenUndo, undoMan.WhenRedo)
+					);
+					tool.Run(toolActions).D(resetD.Value);
 				}
 				Reset();
 			}).D(d);

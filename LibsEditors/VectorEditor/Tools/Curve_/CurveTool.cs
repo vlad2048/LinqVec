@@ -5,11 +5,12 @@ using LinqVec.Logic;
 using VectorEditor.Model;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
+using LinqVec.Tools.Acts.Enums;
 using LinqVec.Tools.Events;
 using VectorEditor.Tools.Curve_.Mods;
 using VectorEditor.Tools.Curve_.Structs;
-using LinqVec.Tools.Enums;
 using LinqVec.Tools.Events.Utils;
+using LinqVec.Utils;
 using PowRxVar;
 
 namespace VectorEditor.Tools.Curve_;
@@ -19,7 +20,7 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 {
 	public Keys Shortcut => Keys.P;
 
-	public (IUndoer, IDisposable) Run(Action reset)
+	public IDisposable Run(ToolActions toolActions)
 	{
 		var d = new Disp();
 
@@ -27,99 +28,50 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		var evt = Env.GetEvtForTool(this, true, d);
 
-		var curve = Mod.Mem(Curve.Empty(), evt.MousePos).D(d);
 
-		curve.WhenChanged
-			.SkipWhile(_ => curve.V.Pts.Length == 0)
-			.Where(_ => curve.V.Pts.Length == 0)
-			.Take(1)
-			.Subscribe(_ =>
-			{
-				reset();
-			}).D(d);
-
-
+		var curve = new MemModder<Curve>(Curve.Empty()).D(d);
+		toolActions.SetUndoer(curve);
 		var gfxState = CurveGfxState.None;
 
-		Action<Option<T>> SetState<T>(CurveGfxState state) => mp =>
-		{
-			if (mp.IsSome)
-				gfxState = state;
-		};
-
-		evt.WhenKeyDown(Keys.Escape).Subscribe(_ =>
-		{
-			reset();
-		}).D(d);
-
+		evt.WhenKeyDown(Keys.Escape).Subscribe(_ => toolActions.Reset()).D(d);
 		evt.WhenKeyDown(Keys.Enter).Subscribe(_ =>
 		{
-			Doc.V = Doc.V.AddCurve(curve.V);
-			reset();
+			if (curve.Get().Pts.Length > 0)
+				Doc.V = Doc.V.AddObject(curve.Get());
+			toolActions.Reset();
 		}).D(d);
 
 
-		Act.Loop(
-				Act.Amb(
+		ActRunner.Run(
+			evt,
+			toolActions.WhenUndoRedo,
 
-					Act.Seq(
-						Act.Make(
-							"Move point",
-							Hotspots.CurvePoint(curve.V),
-							Trigger.Down,
-							CBase.Cursors.BlackArrowSmall,
-							onHover: SetState<PointId>(CurveGfxState.Edit),
-							onTrigger: pointId => curve.Mod = CurveMods.MovePoint(pointId)
-						),
-						Act.Make(
-							"Move point (finish)",
-							Hotspots.Anywhere,
-							Trigger.Up,
-							CBase.Cursors.BlackArrowSmall,
-							onHover: null,
-							onTrigger: _ => curve.Apply()
-						)
-					),
+			[
+				Act.Make(
+					"Move point",
+					Hotspots.CurvePoint(curve),
+					Gesture.Drag,
+					CBase.Cursors.BlackArrowSmall,
+					Actions.Drag<Curve, PointId>(curve, CurveMods.MovePoint, () => gfxState = CurveGfxState.Edit, () => gfxState = CurveGfxState.Edit)
+				),
+				Act.Make(
+					"Add point",
+					Hotspots.Anywhere,
+					Gesture.Drag,
+					CBase.Cursors.Pen,
+					Actions.Drag<Curve, Pt>(curve, new Mod<Curve>(CurveMods.AddPoint), () => gfxState = CurveGfxState.AddPoint, () => gfxState = CurveGfxState.DragHandle)
+				),
+			]
 
-					Act.Seq(
-						Act.Make(
-							"Add point",
-							Hotspots.Anywhere,
-							Trigger.Down,
-							CBase.Cursors.Pen,
-							onHover: mp =>
-							{
-								SetState<Pt>(CurveGfxState.AddPoint)(mp);
-								curve.Mod = CurveMods.AddPoint(mp);
-							},
-							onTrigger: startPt =>
-							{
-								L.WriteLine("Trigger -> Down");
-								curve.Mod = CurveMods.AddPoint(startPt);
-							}),
-						Act.Make(
-							"Add point (finish)",
-							Hotspots.Anywhere,
-							Trigger.Up,
-							CBase.Cursors.Pen,
-							onHover: SetState<Pt>(CurveGfxState.DragHandle),
-							onTrigger: _ =>
-							{
-								L.WriteLine("Trigger -> Up");
-								curve.Apply();
-							})
-					)
+		).D(d);
 
-				)
-			)
-			.Run(evt).D(d);
 
 		Env.WhenPaint.Subscribe(gfx =>
 		{
-			CurvePainter.Draw(gfx, curve.VModded, gfxState);
+			CurvePainter.Draw(gfx, curve.ModGet(evt.MousePos.V), gfxState);
 		}).D(d);
 
-		return (curve, d);
+		return d;
 	}
 }
 
@@ -127,5 +79,26 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 static class Hotspots
 {
 	public static Func<Pt, Option<Pt>> Anywhere => Option<Pt>.Some;
-	public static Func<Pt, Option<PointId>> CurvePoint(Curve curve) => m => curve.GetClosestPointTo(m, C.ActivateMoveMouseDistance);
+	public static Func<Pt, Option<PointId>> CurvePoint(IModder<Curve> curve) => m => curve.Get().GetClosestPointTo(m, C.ActivateMoveMouseDistance);
 }
+
+
+
+/*
+// State:	Pts[0], ..., Pts[n-1]
+
+// - draw Marker @ MousePos
+// - draw RedLine @ (Pts[n-1].P, Pts[n-1].HRight) -> (MousePos, MousePos)
+// - draw Handles @ Pts[n-1]
+// - finish: MouseDown(DownPos <- MousePos)
+public sealed record AddPointPre_CurveModelEditState : ICurveModelEditState;
+
+// - draw Marker @ DownPos
+// - draw RedLine @ (Pts[n-1].P, Pts[n-1].HRight) -> (DownPos-(MousePos-DownPos), DownPos)
+// - draw Handles @ (DownPos-(MousePos-DownPos), DownPos, DownPos+(MousePos-DownPos))
+// - finish: MouseUp => Model.AddPoint(DownPos-(MousePos-DownPos), DownPos, DownPos+(MousePos-DownPos))
+public sealed record AddPointHandleDrag_CurveModelEditState(Pt DownPos) : ICurveModelEditState;
+
+// State:	Pts[0], ..., Pts[n-1], Pts[n]
+*/
+

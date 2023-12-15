@@ -2,8 +2,14 @@
 
 namespace LinqVec.Tools;
 
+public sealed record ToolActions(
+	Action Reset,
+	Action<IUndoer> SetUndoer,
+	IObservable<Unit> WhenUndoRedo
+);
+
 public interface ITool
 {
 	Keys Shortcut { get; }
-	(IUndoer, IDisposable) Run(Action reset);
+	IDisposable Run(ToolActions toolActions);
 }

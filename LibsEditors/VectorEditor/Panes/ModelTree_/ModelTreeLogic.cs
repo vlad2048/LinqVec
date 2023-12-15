@@ -22,7 +22,7 @@ namespace VectorEditor.Panes.ModelTree_;
 		var s = new SourceCache<int, int>(e => e);
 
 		mm.WhenChanged
-			.ObserveOnUI()
+			//.ObserveOnUI()
 			.Subscribe(_ =>
 			{
 				var tracked = mm.GetTracked().SelectToArray(e => Nod.Make(new DocNode(e)));
@@ -45,7 +45,7 @@ static class ModelTreeLogic
 		tree.SetupColumns();
 
 		doc.WhenChanged
-			.ObserveOnUI()
+			//.ObserveOnUI()
 			.Subscribe(_ =>
 			{
 				var roots = doc.V.ToTree();

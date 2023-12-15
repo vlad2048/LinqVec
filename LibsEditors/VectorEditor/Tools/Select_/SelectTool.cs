@@ -3,7 +3,6 @@ using LinqVec;
 using LinqVec.Logic;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
-using LinqVec.Tools.Enums;
 using LinqVec.Tools.Events;
 using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.Rx;
@@ -18,12 +17,15 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 {
 	public Keys Shortcut => Keys.Q;
 
-	public (IUndoer, IDisposable) Run(Action reset)
+	public IDisposable Run(ToolActions toolActions)
 	{
 		var d = new Disp();
 
 		var evt = Env.GetEvtForTool(this, true, d);
 
+
+
+		/*
 		var maySel = new SerMay<IModder<IVisualObjSer>>().D(d);
 		IModder<IVisualObjSer> MkMod(IVisualObjSer obj) => Mod.Doc(Entities.Visual(Doc, obj), evt.MousePos);
 
@@ -55,8 +57,10 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 				)
 			)
 			.Run(evt).D(d);
+		*/
 
-		Env.WhenPaint.Subscribe(gfx =>
+
+		/*Env.WhenPaint.Subscribe(gfx =>
 		{
 			if (maySel.V.IsSome)
 			{
@@ -68,9 +72,9 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		maySel.WhenChanged.Subscribe(_ =>
 		{
 			Env.Invalidate();
-		}).D(d);
+		}).D(d);*/
 
-		return (Undoer.Empty, d);
+		return d;
 	}
 }
 

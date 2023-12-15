@@ -1,6 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 using Geom;
 using LinqVec.Structs;
+using LinqVec.Utils;
+using PowBasics.CollectionsExt;
 using VectorEditor.Model.Structs;
 
 namespace VectorEditor.Model;
@@ -16,6 +18,8 @@ public sealed record Doc(
 
 	[JsonIgnore]
 	public IId[] AllObjects => Layers.OfType<IId>().Concat(Layers.SelectMany(e => e.Objects)).ToArray();
+
+	public override string ToString() => "[" + Layers.SelectMany(e => e.Objects).JoinText() + "]";
 }
 
 
@@ -40,7 +44,7 @@ public sealed record Curve(
 	public R BoundingBox => this.GetDrawPoints().GetBBox();
 	public double DistanceToPoint(Pt pt) => this.GetDrawPoints().DistanceToPoint(pt);
 
-	public override string ToString() => $"points:{Pts.Length}";
+	public override string ToString() => $"{Pts.Length}";
 }
 
 
@@ -51,23 +55,12 @@ public interface IVisualObjSer : IVisualObj;
 
 
 
+static class DocExt
+{
+	public static Doc AddObject(this Doc doc, IVisualObjSer obj) => doc.ChangeLayer(arr => arr.AddId(obj));
 
-
-/*
-// State:	Pts[0], ..., Pts[n-1]
-
-// - draw Marker @ MousePos
-// - draw RedLine @ (Pts[n-1].P, Pts[n-1].HRight) -> (MousePos, MousePos)
-// - draw Handles @ Pts[n-1]
-// - finish: MouseDown(DownPos <- MousePos)
-public sealed record AddPointPre_CurveModelEditState : ICurveModelEditState;
-
-// - draw Marker @ DownPos
-// - draw RedLine @ (Pts[n-1].P, Pts[n-1].HRight) -> (DownPos-(MousePos-DownPos), DownPos)
-// - draw Handles @ (DownPos-(MousePos-DownPos), DownPos, DownPos+(MousePos-DownPos))
-// - finish: MouseUp => Model.AddPoint(DownPos-(MousePos-DownPos), DownPos, DownPos+(MousePos-DownPos))
-public sealed record AddPointHandleDrag_CurveModelEditState(Pt DownPos) : ICurveModelEditState;
-
-// State:	Pts[0], ..., Pts[n-1], Pts[n]
-*/
+	private static Doc ChangeLayer(this Doc doc, Func<IVisualObjSer[], IVisualObjSer[]> fun) => doc.WithLayers(doc.Layers.ChangeId(doc.Layers[0].Id, layer => layer.WithObjects(fun(layer.Objects))));
+	private static Doc WithLayers(this Doc m, Layer[] xs) => m with { Layers = xs };
+	private static Layer WithObjects(this Layer m, IVisualObjSer[] xs) => m with { Objects = xs };
+}
 

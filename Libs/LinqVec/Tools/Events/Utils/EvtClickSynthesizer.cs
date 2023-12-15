@@ -29,9 +29,9 @@ public static class EvtClickSynthesizer
 			var timeD = new SerialDisp<IRwDispBase>().D(obsD);
 			timeD.Value = new Disp();
 
-			//void TimeoutSched() => Obs.Timer(ClickTime, new SynchronizationContextScheduler(SynchronizationContext.Current!)).Subscribe(_ => timeout(Unit.Default)).D(timeD.Value);
+			//void TimeoutSched() => Obs.Timer(ClickTime, Rx.Sched).Subscribe(_ => timeout(Unit.Default)).D(timeD.Value);
 
-			void TimeoutSched() => Obs.Timer(ClickTime).Subscribe(_ => timeout(Unit.Default)).D(timeD.Value);
+			void TimeoutSched() => Obs.Timer(ClickTime, Rx.Sched).Subscribe(_ => timeout(Unit.Default)).D(timeD.Value);
 
 			void TimeoutCancel()
 			{
@@ -40,7 +40,7 @@ public static class EvtClickSynthesizer
 			}
 
 			whenTimeout
-				.ObserveOnUI()
+				//.ObserveOnUI()
 				.Subscribe(_ =>
 				{
 					if (state.V is ClickSynth { Btn: var stateBtn, Pos: var statePos })

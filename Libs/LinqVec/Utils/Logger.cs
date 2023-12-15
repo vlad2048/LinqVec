@@ -39,7 +39,7 @@ public static class Logger
 			Margin = new Padding(-5, 0, 5, 0),
 		};
 		obs
-			.ObserveOnUI()
+			//.ObserveOnUI()
 			.Subscribe(v => labelValue.Text = $"{v}").D(d);
 		strip.Items.AddRange(new ToolStripItem[]
 		{

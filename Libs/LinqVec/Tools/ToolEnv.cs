@@ -7,19 +7,35 @@ using PowRxVar;
 
 namespace LinqVec.Tools;
 
-public sealed class ToolEnv(
-        DrawPanel drawPanel,
-        ICurs curs,
-        IRoVar<ITool> curTool,
-        IRoVar<bool> isPanZoom,
-        IRoVar<Transform> transform,
-        IObservable<IEvt> editorEvt
-	)
+public sealed class ToolEnv
 {
-    public ICurs Curs { get; } = curs;
-    public IRoVar<Transform> Transform { get; } = transform;
+	private readonly DrawPanel drawPanel;
+	private readonly IRoVar<ITool> curTool;
+	private readonly IRoVar<bool> isPanZoom;
+	private readonly IObservable<IEvt> editorEvt;
+
+	public ToolEnv(
+		DrawPanel drawPanel,
+		ICurs curs,
+		IRoVar<ITool> curTool,
+		IRoVar<bool> isPanZoom,
+		IRoVar<Transform> transform,
+		IObservable<IEvt> editorEvt
+	)
+	{
+		this.drawPanel = drawPanel;
+		this.curTool = curTool;
+		this.isPanZoom = isPanZoom;
+		this.editorEvt = editorEvt;
+		Curs = curs;
+		Transform = transform;
+		WhenPaint = drawPanel.WhenPaint;
+	}
+
+	public ICurs Curs { get; }
+    public IRoVar<Transform> Transform { get; }
     public void Invalidate() => drawPanel.Invalidate();
-    public IObservable<Gfx> WhenPaint { get; } = drawPanel.WhenPaint;
+    public IObservable<Gfx> WhenPaint { get; }
 
     public IObservable<IEvt> EditorEvt => editorEvt;
     public Evt GetEvtForTool(ITool tool, bool snap, IRoDispBase d) =>

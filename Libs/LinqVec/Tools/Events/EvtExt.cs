@@ -3,6 +3,7 @@ using Geom;
 using LinqVec.Utils.WinForms_;
 using LinqVec.Utils.Rx;
 using PowRxVar;
+using ReactiveUI;
 
 namespace LinqVec.Tools.Events;
 
@@ -135,7 +136,7 @@ public static class EvtExt
 		var whenStop = src.OfType<KeyEvt>().ToUnitExt();
 		return
 			from _ in whenStart
-			from evt in Obs.Timer(KeyDelayStart, KeyDelayRepeat).Prepend(0).Select(_ => Unit.Default).TakeUntil(whenStop)
+			from evt in Obs.Timer(KeyDelayStart, KeyDelayRepeat, Rx.Sched).Prepend(0).Select(_ => Unit.Default).TakeUntil(whenStop)
 			select evt;
 	}
 }

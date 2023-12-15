@@ -1,4 +1,5 @@
-﻿using Geom;
+﻿/*
+using Geom;
 using LinqVec.Tools.Acts.Structs;
 using LinqVec.Utils;
 using PowBasics.CollectionsExt;
@@ -71,3 +72,4 @@ static class HotspotXorer
 			_ => throw new ArgumentException()
 		};
 	}
+*/

@@ -16,7 +16,7 @@ public static class VectorEditorLogic
 		var d = new Disp();
 
 		var env = vecEditor.Env;
-		var doc = new Model<Doc>(initModel ?? Doc.Empty, env.EditorEvt.WhenMouseMove().ToUnitExt()).D(d);
+		var doc = new Model<Doc>(initModel ?? Doc.Empty, env.EditorEvt).D(d);
 
 		vecEditor.Init(
 			new VecEditorInitNfo(

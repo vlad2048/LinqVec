@@ -6,6 +6,7 @@ using LinqVec.Tools.Acts.Enums;
 using LinqVec.Tools.Acts.Events;
 using LinqVec.Tools.Events;
 using LinqVec.Utils;
+using LinqVec.Utils.Rx;
 using PowRxVar;
 using PowRxVar.Utils;
 using UILib;
@@ -88,7 +89,6 @@ public sealed record Actions(
 public sealed record Actions<H>(
 	Action<Option<H>>? OnHover,
 	Action<(Pt ptDragStart, H hot)>? OnDragStart,
-	//Action<(Pt ptDragStart, Pt ptDragEnd, H hot)>? OnDragEnd,
 	Action<Pt>? OnDragEnd,
 	Action<H>? OnClick
 )
@@ -236,7 +236,7 @@ public static class ActRunner
 				})).D(d);
 
 		hot
-			//.ObserveOnUI()
+			.ObserveOnUI()
 			.Subscribe(h =>
 			{
 				hotPrev.IfSome(a =>

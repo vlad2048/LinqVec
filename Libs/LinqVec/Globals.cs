@@ -9,3 +9,4 @@ global using L = LinqVec.Utils.Logger;
 using System.Runtime.CompilerServices;
 
 [assembly:InternalsVisibleTo("LINQPadQuery")]
+[assembly:InternalsVisibleTo("LinqVec.Tests")]

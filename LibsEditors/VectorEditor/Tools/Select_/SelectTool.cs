@@ -26,8 +26,8 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 
 		/*
-		var maySel = new SerMay<IModder<IVisualObjSer>>().D(d);
-		IModder<IVisualObjSer> MkMod(IVisualObjSer obj) => Mod.Doc(Entities.Visual(Doc, obj), evt.MousePos);
+		var maySel = new SerMay<IMouseModder<IVisualObjSer>>().D(d);
+		IMouseModder<IVisualObjSer> MkMod(IVisualObjSer obj) => Mod.Doc(Entities.Visual(Doc, obj), evt.MousePos);
 
 		Act.Loop(
 				Act.Amb(
@@ -51,7 +51,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 						Trigger.Down,
 						null,
 						onHover: null,
-						onTrigger: _ => maySel.V = Option<IModder<IVisualObjSer>>.None
+						onTrigger: _ => maySel.V = Option<IMouseModder<IVisualObjSer>>.None
 					)
 
 				)

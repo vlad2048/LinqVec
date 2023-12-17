@@ -60,9 +60,9 @@ static class ActEvtGenerator
 	private static IActEvt ToActEvt(this Gesture gesture, Pt pos, Pt lastPos) => gesture switch
 	{
 		Gesture.Drag => new DragStartActEvt(lastPos),
-		Gesture.Click => new ClickActEvt(pos),
-		Gesture.RightClick => new RightClickActEvt(pos),
-		Gesture.DoubleClick => new DoubleClickActEvt(pos),
+		Gesture.Click => new ConfirmActEvt(ConfirmType.Click, pos, pos),
+		Gesture.RightClick => new ConfirmActEvt(ConfirmType.RightClick, pos, pos),
+		Gesture.DoubleClick => new ConfirmActEvt(ConfirmType.DoubleClick, pos, pos),
 		_ => throw new ArgumentException()
 	};
 
@@ -164,7 +164,12 @@ static class ActEvtGenerator
 	}
 
 
-	public static IObservable<IActEvt> ToActEvt(this Evt evt, Gesture gestures, IRoDispBase d) => evt.WhenEvt.ToActEvt(gestures, Rx.Sched, d);
+	public static IObservable<IActEvt> ToActEvt(this Evt evt, IEnumerable<Gesture> gestures, IRoDispBase d) =>
+		evt.WhenEvt.ToActEvt(
+			gestures.Aggregate(Gesture.None, (a, e) => a | e),
+			Rx.Sched,
+			d
+		);
 
 
 	public static IObservable<IActEvt> ToActEvt(this IObservable<IEvt> evt, Gesture gestures, IScheduler scheduler, IRoDispBase d) =>
@@ -198,7 +203,7 @@ static class ActEvtGenerator
 					if (isDragging && e is MouseBtnEvt { Btn: MouseBtn.Left, UpDown: UpDown.Up, Pos: var dragEndPos })
 					{
 						isDragging = false;
-						Send(new DragEndActEvt(dragStartPos, dragEndPos));
+						Send(new ConfirmActEvt(ConfirmType.DragEnd, dragStartPos, dragEndPos));
 					}
 
 					usrEvtOpt.IfNone(() =>

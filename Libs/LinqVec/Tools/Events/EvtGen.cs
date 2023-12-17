@@ -58,17 +58,25 @@ public class Evt : IDisposable
 	private readonly Action<Cursor> setCursor;
 
 	public IObservable<IEvt> WhenEvt { get; }
-	public void SetCursor(Cursor cursor) => setCursor(cursor);
+	public void SetCursor(Cursor? cursor)
+	{
+		if (cursor != null)
+			setCursor(cursor);
+	}
+
 	public IRoVar<Option<Pt>> MousePos { get; }
+	public IObservable<Unit> WhenUndoRedo { get; }
 
 	public Evt(
 		IObservable<IEvt> whenEvt,
-		Action<Cursor> setCursor
+		Action<Cursor> setCursor,
+		IObservable<Unit> whenUndoRedo
 	)
 	{
 		WhenEvt = whenEvt.MakeHot(d);
 		this.setCursor = setCursor;
 		MousePos = WhenEvt.TrackMouse().D(d);
+		WhenUndoRedo = whenUndoRedo;
 	}
 }
 
@@ -76,7 +84,7 @@ public class Evt : IDisposable
 
 public static class EvtUtils
 {
-	public static Evt ToEvt(this IObservable<IEvt> src, Action<Cursor> setCursor, IRoDispBase d) => new Evt(src, setCursor).D(d);
+	public static Evt ToEvt(this IObservable<IEvt> src, Action<Cursor> setCursor, IObservable<Unit> whenUndoRedo, IRoDispBase d) => new Evt(src, setCursor, whenUndoRedo).D(d);
 
 	public static IObservable<Pt> WhereSelectMousePos(this IObservable<IEvt> src) =>
 		src

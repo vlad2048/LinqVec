@@ -50,7 +50,7 @@ sealed class UndoMan : IUndoer
 		toolUndoer = Var.Make(Undoer.Empty).D(d);
 		toolUndoer.Select(e => e.WhenDo).Switch().Subscribe(_ => docUndoer.InvalidateRedos()).D(d);
 		docUndoer.WhenUndo.Subscribe(_ => toolUndoer.V.InvalidateRedos()).D(d);
-		this.Log().D(d);
+		//this.Log().D(d);
 	}
 
 	public string GetLogStr()

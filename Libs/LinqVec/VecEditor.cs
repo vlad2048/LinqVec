@@ -48,7 +48,7 @@ public partial class VecEditor : UserControl
 			isPanZoom,
 			transform,
 			editorEvt
-		);
+		).D(this);
 
 
 		this.InitRX(WhenInit, (init, d) =>
@@ -59,6 +59,7 @@ public partial class VecEditor : UserControl
 
 			var (docUndoer, tools) = init;
 			var undoMan = new UndoMan(docUndoer).D(d);
+			Obs.Merge(undoMan.WhenUndo, undoMan.WhenRedo).Subscribe(_ => Env.SigUndoRedo()).D(d);
 
 			editorEvt.WhenKeyDown(Keys.D1).Subscribe(_ => Cursor = Cursors.Default).D(d);
 			editorEvt.WhenKeyDown(Keys.D2).Subscribe(_ => Cursor = CBase.Cursors.Pen).D(d);
@@ -110,8 +111,7 @@ file static class VecEditorUtils
 					resetD.Value = new Disp();
 					var toolActions = new ToolActions(
 						Reset,
-						undoMan.SetToolUndoer,
-						Obs.Merge(undoMan.WhenUndo, undoMan.WhenRedo)
+						undoMan.SetToolUndoer
 					);
 					tool.Run(toolActions).D(resetD.Value);
 				}

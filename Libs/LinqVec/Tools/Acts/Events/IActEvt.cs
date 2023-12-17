@@ -4,25 +4,21 @@ namespace LinqVec.Tools.Acts.Events;
 
 interface IActEvt;
 
+enum ConfirmType
+{
+	DragEnd,
+	Click,
+	RightClick,
+	DoubleClick,
+}
+
 sealed record DragStartActEvt(Pt PtStart) : IActEvt
 {
 	public override string ToString() => $"DragStart({PtStart})";
 }
-sealed record DragEndActEvt(Pt PtStart, Pt PtEnd) : IActEvt
+sealed record ConfirmActEvt(ConfirmType Type, Pt PtStart, Pt PtEnd) : IActEvt
 {
-	public override string ToString() => $"DragEnd({PtStart}, {PtEnd})";
-}
-sealed record ClickActEvt(Pt Pt) : IActEvt
-{
-	public override string ToString() => $"Click({Pt})";
-}
-sealed record RightClickActEvt(Pt Pt) : IActEvt
-{
-	public override string ToString() => $"RightClick({Pt})";
-}
-sealed record DoubleClickActEvt(Pt Pt) : IActEvt
-{
-	public override string ToString() => $"DoubleClick({Pt})";
+	public override string ToString() => $"Confirm({Type}, ({PtStart}), ({PtEnd}))";
 }
 sealed record KeyDownActEvt(Keys Key) : IActEvt
 {

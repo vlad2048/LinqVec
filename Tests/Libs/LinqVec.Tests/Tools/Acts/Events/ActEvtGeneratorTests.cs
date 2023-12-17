@@ -43,9 +43,9 @@ class ActEvtGeneratorTests
 
 		obs.Messages.AssertEqual([
 			OnNext(3, (IActEvt)new DragStartActEvt(new Pt(10, 5))),
-			OnNext(5, (IActEvt)new DragEndActEvt(new Pt(10, 5), new Pt(30, 5))),
+			OnNext(5, (IActEvt)new ConfirmActEvt(ConfirmType.DragEnd, new Pt(10, 5), new Pt(30, 5))),
 			OnNext(8, (IActEvt)new DragStartActEvt(new Pt(40, 5))),
-			OnNext(10, (IActEvt)new DragEndActEvt(new Pt(40, 5), new Pt(60, 5))),
+			OnNext(10, (IActEvt)new ConfirmActEvt(ConfirmType.DragEnd, new Pt(40, 5), new Pt(60, 5))),
 		]);
 	}
 
@@ -67,7 +67,7 @@ class ActEvtGeneratorTests
 		obs.LogMessages("ToActEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(2.2, (IActEvt)new ClickActEvt(new Pt(10, 5))),
+			OnNext(2.2, (IActEvt)new ConfirmActEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
 		]);
 	}
 
@@ -111,7 +111,7 @@ class ActEvtGeneratorTests
 		obs.LogMessages("ToActEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(2.7, (IActEvt)new ClickActEvt(new Pt(10, 5))),
+			OnNext(2.7, (IActEvt)new ConfirmActEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
 		]);
 	}
 
@@ -136,7 +136,7 @@ class ActEvtGeneratorTests
 		obs.LogMessages("ToActEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(3.0, (IActEvt)new DoubleClickActEvt(new Pt(10, 5))),
+			OnNext(3.0, (IActEvt)new ConfirmActEvt(ConfirmType.DoubleClick, new Pt(10, 5), new Pt(10, 5))),
 		]);
 	}
 
@@ -161,7 +161,7 @@ class ActEvtGeneratorTests
 
 		obs.Messages.AssertEqual([
 			OnNext(2.1, (IActEvt)new DragStartActEvt(new Pt(10, 5))),
-			OnNext(2.2, (IActEvt)new DragEndActEvt(new Pt(10, 5), new Pt(20, 5))),
+			OnNext(2.2, (IActEvt)new ConfirmActEvt(ConfirmType.DragEnd, new Pt(10, 5), new Pt(20, 5))),
 		]);
 	}
 
@@ -184,7 +184,7 @@ class ActEvtGeneratorTests
 		obs.LogMessages("ToActEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(2.7, (IActEvt)new ClickActEvt(new Pt(10, 5))),
+			OnNext(2.7, (IActEvt)new ConfirmActEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
 		]);
 	}
 

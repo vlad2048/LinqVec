@@ -9,3 +9,10 @@ public enum Gesture
 	RightClick = 4,
 	DoubleClick = 8,
 }
+
+public enum ClickGesture
+{
+	Click = 2,
+	RightClick = 4,
+	DoubleClick = 8,
+}

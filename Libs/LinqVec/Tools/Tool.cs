@@ -4,8 +4,7 @@ namespace LinqVec.Tools;
 
 public sealed record ToolActions(
 	Action Reset,
-	Action<IUndoer> SetUndoer,
-	IObservable<Unit> WhenUndoRedo
+	Action<IUndoer> SetUndoer
 );
 
 public interface ITool

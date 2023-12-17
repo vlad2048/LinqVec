@@ -14,8 +14,11 @@ namespace VectorEditor.Tools.Curve_.Mods;
 
 static class CurveMods
 {
-	public static Func<Curve, Pt, Curve> AddPoint(Option<Pt> startPt) => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt.IfNone(mouse), mouse)) };
-	public static Func<Curve, Pt, Curve> MovePoint(PointId pointId) => (obj, mouse) => obj with { Pts = obj.Pts.ChangeIdx(pointId.Idx, e => e.Move(pointId.Type, mouse)) };
+	//public static MouseMod<Curve> AddPoint(Option<Pt> startPt) => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt.IfNone(mouse), mouse)) };
+
+	public static MouseMod<Curve> AddPoint(Pt startPt) => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt, mouse)) };
+
+	public static MouseMod<Curve> MovePoint(Pt startPt, PointId pointId) => (obj, mouse) => obj with { Pts = obj.Pts.ChangeIdx(pointId.Idx, e => e.Move(pointId.Type, mouse)) };
 
 
 	private static CurvePt Move(this CurvePt pt, PointType type, Pt pos) => type switch

@@ -12,7 +12,6 @@
     <PackageReference Include="Jot" Version="2.1.17" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
     <PackageReference Include="PowObjectListView" Version="0.0.4" />
-    <PackageReference Include="PowRxVar" Version="0.0.47" />
     <PackageReference Include="PowTrees" Version="0.0.48" />
     <PackageReference Include="ReactiveUI.Events.Winforms" Version="15.1.1" />
     <PackageReference Include="PowBasics" Version="0.0.40" />
@@ -21,6 +20,10 @@
 
   <ItemGroup>
     <Folder Include="Logging\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReactiveVars\ReactiveVars.csproj" />
   </ItemGroup>
 
 </Project>

@@ -11,10 +11,9 @@ namespace LinqVecDemo.Logic;
 
 static class DocLogic
 {
-	public static (IRoVar<Option<DocPane>>, IDisposable) InitDocLogic(this MainWin win)
+	public static IRoVar<Option<DocPane>> InitDocLogic(this MainWin win, Disp d)
 	{
-		var d = new Disp();
-		var activeDoc = win.dockPanel.GetActiveDoc().D(d);
+		var activeDoc = win.dockPanel.GetActiveDoc(d);
 		var baseName = win.Text;
 
 
@@ -40,8 +39,7 @@ static class DocLogic
 		activeDoc
 			.Where(e => e.IsNone)
 			.Subscribe(_ => win.LastLoadedFile = null).D(d);
-
-
+		
 
 		activeDoc.Enables(win.menuFileSave, win.menuFileSaveAs).D(d);
 
@@ -121,18 +119,17 @@ static class DocLogic
 		
 
 
-		return (activeDoc, d);
+		return activeDoc;
 	}
 
-	private static (IRoVar<Option<DocPane>>, IDisposable) GetActiveDoc(this DockPanel dockPanel)
+	private static IRoVar<Option<DocPane>> GetActiveDoc(this DockPanel dockPanel, Disp d)
 	{
-		var d = new Disp();
 		var activeDoc = Var.Make(Option<DocPane>.None).D(d);
 		dockPanel.WhenActiveDocChanged().Subscribe(v =>
 		{
 			activeDoc.V = dockPanel.ActiveDocument as DocPane;
 		}).D(d);
-		return (activeDoc, d);
+		return activeDoc;
 	}
 
 	private static IObservable<Unit> WhenActiveDocChanged(this DockPanel dockPanel) => Obs.FromEventPattern(e => dockPanel.ActiveDocumentChanged += e, e => dockPanel.ActiveDocumentChanged -= e).ToUnitExt();

@@ -2,6 +2,7 @@
 using Geom;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
+using LinqVec.Utils.Rx;
 using LinqVec.Utils.WinForms_;
 using PowBasics.MathCode;
 using PowRxVar;
@@ -10,41 +11,43 @@ namespace LinqVec.Logic;
 
 static class PanZoomer
 {
-	public static (IRoVar<bool>, IDisposable) Setup(
+	public static IRoVar<bool> Setup(
 		IObservable<IEvt> evt,
 		Ctrl ctrl,
-		IRwVar<Transform> transform
+		IRwVar<Transform> transform,
+		Disp d
 	)
 	{
-		var d = new Disp();
-
 		var isOn = evt.IsKeyDown(C.KeyMap.PanZoom, d);
 
 		isOn.Subscribe(e => ctrl.Cursor = e ? CBase.Cursors.HandOpened : Cursors.Default).D(d);
 
+		var serDisp = new SerDisp().D(d);
+
 		isOn
-			.SubscribeWithDisp((on, onD) =>
+			.Subscribe(on =>
 			{
+				var serD = serDisp.GetNewD();
 				if (!on) return;
-				var isPanning = SetupPanning(evt, transform, ctrl).D(onD);
-				isPanning.Subscribe(panning => ctrl.Cursor = panning ? CBase.Cursors.HandClosed : CBase.Cursors.HandOpened).D(onD);
+				var isPanning = SetupPanning(evt, transform, ctrl, serD);
+				isPanning.Subscribe(panning => ctrl.Cursor = panning ? CBase.Cursors.HandClosed : CBase.Cursors.HandOpened).D(serD);
 			}).D(d);
 
 		SetupZooming(evt, transform, ctrl).D(d);
 
 		ctrl.WhenSizeChanged.Subscribe(_ => transform.V = transform.V.Cap(ctrl)).D(d);
 
-		return (isOn, d);
+		return isOn;
 	}
 
 
-	private static (IRoVar<bool>, IDisposable) SetupPanning(
+	private static IRoVar<bool> SetupPanning(
 		IObservable<IEvt> evt,
 		IRwVar<Transform> transform,
-		Ctrl ctrl
+		Ctrl ctrl,
+		Disp d
 	)
 	{
-		var d = new Disp();
 		var lastMousePt = Pt.Zero;
 		var isPanning = Var.Make(false).D(d);
 
@@ -73,7 +76,7 @@ static class PanZoomer
 				transform.V = (transform.V with { Center = centerNext }).Cap(ctrl);
 			}).D(d);
 
-		return (isPanning, d);
+		return isPanning;
 	}
 
 

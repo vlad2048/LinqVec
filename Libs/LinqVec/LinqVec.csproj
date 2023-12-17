@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
-    <PackageReference Include="PowRxVar" Version="0.0.47" />
   </ItemGroup>
 
   <ItemGroup>

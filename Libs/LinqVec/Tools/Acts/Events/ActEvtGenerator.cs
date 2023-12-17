@@ -145,7 +145,7 @@ static class ActEvtGenerator
 			}
 		}
 
-		public static Trk[] Build(IScheduler scheduler, Gesture gestures, IRoDispBase d)
+		public static Trk[] Build(IScheduler scheduler, Gesture gestures, Disp d)
 		{
 			var gests = Enum.GetValues<Gesture>().Where(e => e != Gesture.None).WhereToArray(e => gestures.HasFlag(e));
 			var arrs = gests.SelectToArray(e => e.ToActions());
@@ -164,7 +164,7 @@ static class ActEvtGenerator
 	}
 
 
-	public static IObservable<IActEvt> ToActEvt(this Evt evt, IEnumerable<Gesture> gestures, IRoDispBase d) =>
+	public static IObservable<IActEvt> ToActEvt(this Evt evt, IEnumerable<Gesture> gestures, Disp d) =>
 		evt.WhenEvt.ToActEvt(
 			gestures.Aggregate(Gesture.None, (a, e) => a | e),
 			Rx.Sched,
@@ -172,7 +172,7 @@ static class ActEvtGenerator
 		);
 
 
-	public static IObservable<IActEvt> ToActEvt(this IObservable<IEvt> evt, Gesture gestures, IScheduler scheduler, IRoDispBase d) =>
+	public static IObservable<IActEvt> ToActEvt(this IObservable<IEvt> evt, Gesture gestures, IScheduler scheduler, Disp d) =>
 		Obs.Create<IActEvt>(obs =>
 			{
 				var obsD = new Disp();

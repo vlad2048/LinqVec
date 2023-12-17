@@ -53,7 +53,7 @@ public sealed class Model<D> : IUndoer where D : IDoc
 		set => undoer.V = value;
 	}
 
-	public void EnableRedrawOnMouseMove(IRoDispBase enableD)
+	public void EnableRedrawOnMouseMove(Disp enableD)
 	{
 		enableRedrawOnMouseMove.V = true;
 		Disposable.Create(() =>

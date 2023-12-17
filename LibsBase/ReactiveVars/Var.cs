@@ -2,7 +2,7 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace ReactiveVars;
+namespace PowRxVar;
 
 public static class Var
 {
@@ -19,6 +19,14 @@ public static class Var
 		return srcConn;
 	}
 
+	public static IObservable<T> MakeHot<T>(this IObservable<T> src, Disp d)
+	{
+		var srcConn = src.Publish();
+		srcConn.Connect().D(d);
+		return srcConn;
+	}
+
+
 	private sealed class RwVar<T> : IRwVar<T>
 	{
 		public void Dispose() => Subj.Dispose();
@@ -31,6 +39,7 @@ public static class Var
 			get => Subj.Value;
 			set => Subj.OnNext(value);
 		}
+		public bool IsDisposed => Subj.IsDisposed;
 
 		public RwVar(T init)
 		{

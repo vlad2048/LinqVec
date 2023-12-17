@@ -117,7 +117,7 @@ public static class EvtExt
 
 	// Is Key Down
 	// ===========
-	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key, IRoDispBase d)
+	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key, Disp d)
 	{
 		var isDown = Var.Make(false).D(d);
 		Observable.Merge(

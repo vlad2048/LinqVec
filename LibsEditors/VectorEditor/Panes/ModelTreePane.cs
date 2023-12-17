@@ -29,15 +29,16 @@ public partial class ModelTreePane : DockContent
 		{
 			WhenInit.Subscribe(whenMayDoc =>
 			{
-				whenMayDoc.SubscribeWithDisp((mayDoc, docD) =>
+				var serDisp = new SerDisp().D(d);
+				whenMayDoc.Subscribe(mayDoc =>
 				{
+					var docD = serDisp.GetNewD();
 					modelTree.Clear();
 					trackedList.Clear();
 					if (mayDoc.IsSome)
 					{
 						var doc = mayDoc.IfNone(() => throw new ArgumentException());
 						ModelTreeLogic.Setup(modelTree, doc).D(docD);
-						//ModelTrackedLogic.Setup(trackedList, doc).D(docD);
 					}
 				}).D(d);
 			}).D(d);

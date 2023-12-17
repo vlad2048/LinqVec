@@ -10,14 +10,14 @@ public static class Logger
 	public static void WriteLine(string s) => Console.WriteLine(s);
 	public static void WriteLine() => Console.WriteLine();
 
-	public static IObservable<T> Log<T>(this IObservable<T> obs, IRoDispBase d, [CallerArgumentExpression(nameof(obs))] string? obsStr = null)
+	public static IObservable<T> Log<T>(this IObservable<T> obs, Disp d, [CallerArgumentExpression(nameof(obs))] string? obsStr = null)
 	{
 		Disposable.Create(() => WriteLine($"{obsStr} <- Dispose()")).D(d);
 		obs.Subscribe(v => WriteLine($"{obsStr} <- {v}")).D(d);
 		return obs;
 	}
 
-	public static void Log(this IRoDispBase d, string name)
+	public static void Log(this Disp d, string name)
 	{
 		WriteLine($"[{name}].new()");
 		Disposable.Create(() => WriteLine($"[{name}].Dispose()")).D(d);

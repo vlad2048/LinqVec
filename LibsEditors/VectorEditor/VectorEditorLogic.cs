@@ -1,7 +1,5 @@
 ﻿using LinqVec;
 using LinqVec.Logic;
-using LinqVec.Tools.Events;
-using LinqVec.Utils.Rx;
 using PowRxVar;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
@@ -11,10 +9,8 @@ namespace VectorEditor;
 
 public static class VectorEditorLogic
 {
-	public static (Model<Doc> , IDisposable) InitVectorEditor(this VecEditor vecEditor, Doc? initModel = null)
+	public static Model<Doc> InitVectorEditor(this VecEditor vecEditor, Doc? initModel, Disp d)
 	{
-		var d = new Disp();
-
 		var env = vecEditor.Env;
 		var doc = new Model<Doc>(initModel ?? Doc.Empty, env.EditorEvt).D(d);
 
@@ -46,6 +42,6 @@ public static class VectorEditorLogic
 				}
 			}).D(d);
 
-		return (doc, d);
+		return doc;
 	}
 }

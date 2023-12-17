@@ -1,7 +1,7 @@
 ﻿using System.Reactive.Linq;
 using PowBasics.Json_;
 
-namespace ReactiveVars;
+namespace PowRxVar;
 
 public static class RxCfg
 {

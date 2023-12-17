@@ -30,7 +30,7 @@ public static class WinFormsUtils
 		return obj;
 	}
 
-	public static void InitRX<T>(this Control ctrl, IObservable<T> whenInit, Action<T, IRoDispBase> initAction)
+	public static void InitRX<T>(this Control ctrl, IObservable<T> whenInit, Action<T, Disp> initAction)
 	{
 		var d = new Disp().D(ctrl);
 		ctrl.Events().HandleCreated.Subscribe(_ =>
@@ -39,7 +39,7 @@ public static class WinFormsUtils
 		}).D(d);
 	}
 
-	public static void InitRX(this Control ctrl, Action<IRoDispBase> initAction)
+	public static void InitRX(this Control ctrl, Action<Disp> initAction)
     {
         var d = new Disp().D(ctrl);
         ctrl.Events().HandleCreated.Subscribe(_ => initAction(d)).D(d);

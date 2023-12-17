@@ -4,7 +4,6 @@ using LinqVec.Tools.Acts.Enums;
 using LinqVec.Tools.Acts.Events;
 using LinqVec.Tools.Events;
 using Microsoft.Reactive.Testing;
-using PowRxVar;
 using TestLib;
 
 namespace LinqVec.Tests.Tools.Acts.Events;

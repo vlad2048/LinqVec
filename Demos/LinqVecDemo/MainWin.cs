@@ -4,7 +4,6 @@ using LinqVecDemo.Logic;
 using UILib;
 using VectorEditor.Panes;
 using WeifenLuo.WinFormsUI.Docking;
-using PowRxVar;
 
 namespace LinqVecDemo;
 
@@ -30,7 +29,7 @@ partial class MainWin : Form
 
 		this.InitRX(this.Events().Load.ToUnitExt(), (_, d) =>
 		{
-			var doc = this.InitDocLogic().D(d);
+			var doc = this.InitDocLogic(d);
 
 			var modelTreePane = new ModelTreePane();
 			modelTreePane.Show(dockPanel, DockState.DockRight);

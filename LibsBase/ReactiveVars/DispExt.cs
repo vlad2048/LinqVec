@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Disposables;
 
-namespace ReactiveVars;
+namespace PowRxVar;
 
 public static class DispExt
 {

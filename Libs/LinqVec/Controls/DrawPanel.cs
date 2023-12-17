@@ -63,7 +63,7 @@ file static class DrawPanelUtils
 		return new Gfx(evt.Graphics, clientSz, transform.V, res);
 	}
 
-	public static bool SetupForDesignMode(bool designMode, IRoDispBase d, Control ctrl, Res res, IRwVar<Transform> transform)
+	public static bool SetupForDesignMode(bool designMode, Disp d, Control ctrl, Res res, IRwVar<Transform> transform)
 	{
 		if (designMode)
 		{

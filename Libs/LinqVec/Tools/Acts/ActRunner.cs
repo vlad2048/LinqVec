@@ -20,10 +20,10 @@ public static class ActRunner
 	public static IObservable<ActGfxEvt> Run<E>(
 		this ActNfo[] actsInit,
 		Evt evt,
-		IRoDispBase d
+		Disp d
 	) where E : struct, Enum
 	{
-		var curActs = new BehaviorSubject<ActNfo[]>(actsInit).D();
+		var curActs = new BehaviorSubject<ActNfo[]>(actsInit).D(d);
 		evt.WhenUndoRedo.Subscribe(_ => curActs.OnNext(actsInit)).D(d);
 		void Reset() => curActs.OnNext(curActs.Value);
 		var whenGfxEvt = new Subject<ActGfxEvt>().D(d);

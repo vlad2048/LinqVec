@@ -26,7 +26,7 @@ sealed partial class DocPane : DockContent
 
 		this.InitRX(d =>
 		{
-			Doc = vecEditor.InitVectorEditor(load?.model).D(d);
+			Doc = vecEditor.InitVectorEditor(load?.model, d);
 
 			Filename
 				.Subscribe(filename => Text = filename.Select(Path.GetFileNameWithoutExtension).IfNone("Untitled")).D(d);

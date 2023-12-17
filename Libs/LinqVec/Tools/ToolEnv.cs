@@ -48,7 +48,7 @@ public sealed class ToolEnv : IDisposable
     public IObservable<Gfx> WhenPaint { get; }
 
     public IObservable<IEvt> EditorEvt => editorEvt;
-    public Evt GetEvtForTool(ITool tool, bool snap, IRoDispBase toolD) =>
+    public Evt GetEvtForTool(ITool tool, bool snap, Disp toolD) =>
 	    snap switch
 	    {
             false => editorEvt

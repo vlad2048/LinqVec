@@ -75,7 +75,7 @@ public class Evt : IDisposable
 	{
 		WhenEvt = whenEvt.MakeHot(d);
 		this.setCursor = setCursor;
-		MousePos = WhenEvt.TrackMouse().D(d);
+		MousePos = WhenEvt.TrackMouse(d);
 		WhenUndoRedo = whenUndoRedo;
 	}
 }
@@ -84,7 +84,7 @@ public class Evt : IDisposable
 
 public static class EvtUtils
 {
-	public static Evt ToEvt(this IObservable<IEvt> src, Action<Cursor> setCursor, IObservable<Unit> whenUndoRedo, IRoDispBase d) => new Evt(src, setCursor, whenUndoRedo).D(d);
+	public static Evt ToEvt(this IObservable<IEvt> src, Action<Cursor> setCursor, IObservable<Unit> whenUndoRedo, Disp d) => new Evt(src, setCursor, whenUndoRedo).D(d);
 
 	public static IObservable<Pt> WhereSelectMousePos(this IObservable<IEvt> src) =>
 		src
@@ -108,7 +108,7 @@ public static class EvtUtils
 		IRoVar<bool> isPanZoom
 	)
 	{
-		var isEvtOn = Var.Combine(curTool, isPanZoom, (cur, pan) => cur == tool && !pan);
+		var isEvtOn = Obs.CombineLatest(curTool, isPanZoom, (cur, pan) => cur == tool && !pan).ToVar();
 		var whenMouseMove = src.WhenMouseMoveEvt();
 		var whenMouseMoveRepeat = isEvtOn.WithLatestFrom(whenMouseMove).Select(e => e.Second);
 		return src.Merge(

@@ -39,7 +39,8 @@ public partial class VecEditor : UserControl
 		var ctrl = new Ctrl(drawPanel);
 
 		var editorEvt = EvtMaker.MakeForControl(drawPanel, curTool.ToUnitExt());
-		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform).D(this);
+		var tempD = new Disp().D(this);
+		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, tempD);
 
 		Env = new ToolEnv(
 			drawPanel,
@@ -94,26 +95,28 @@ file static class VecEditorUtils
 	{
 		var d = new Disp();
 
+		var serDisp = new SerDisp().D(d);
+
 		tools
 			.Select(tool =>
 				env.EditorEvt.WhenKeyDown(tool.Shortcut).Select(_ => tool)
 			)
 			.Merge()
 			.Prepend(tools[0])
-			.SubscribeWithDisp((tool, toolD) =>
+			.Subscribe(tool =>
 			{
+				var toolD = serDisp.GetNewD();
 				curTool.V = tool;
 
-				var resetD = new SerialDisp<IRwDispBase>().D(toolD);
+				var resetDisp = new SerDisp().D(toolD);
 				void Reset()
 				{
-					resetD.Value = null;
-					resetD.Value = new Disp();
+					var resetD = resetDisp.GetNewD();
 					var toolActions = new ToolActions(
 						Reset,
 						undoMan.SetToolUndoer
 					);
-					tool.Run(toolActions).D(resetD.Value);
+					tool.Run(toolActions).D(resetD);
 				}
 				Reset();
 			}).D(d);

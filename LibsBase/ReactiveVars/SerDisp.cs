@@ -1,15 +1,14 @@
 ﻿using System.Reactive.Disposables;
-using PowRxVar;
 
-namespace LinqVec.Utils.Rx;
+namespace PowRxVar;
 
-sealed class SerDisp : IDisposable
+public sealed class SerDisp : IDisposable
 {
 	public void Dispose() => serD.Dispose();
 
 	private readonly SerialDisposable serD = new();
 
-	public IRoDispBase GetNewD()
+	public Disp GetNewD()
 	{
 		serD.Disposable = null;
 		var d = new Disp();

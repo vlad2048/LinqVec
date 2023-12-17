@@ -1,4 +1,4 @@
-﻿namespace ReactiveVars;
+﻿namespace PowRxVar;
 
 public interface IRoVar<out T> : IObservable<T>
 {
@@ -8,4 +8,5 @@ public interface IRoVar<out T> : IObservable<T>
 public interface IRwVar<T> : IRoVar<T>, IDisposable
 {
 	new T V { get; set; }
+	bool IsDisposed { get; }
 }

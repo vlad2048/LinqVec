@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using PowBasics.Files;
 using PowBasics.Json_;
 
 namespace PowRxVar;
@@ -10,9 +11,9 @@ public static class RxCfg
 	public static IRoVar<C> Make<C>(string filename, C defaultValue, Jsoner jsoner, Disp d) =>
 		Obs.Create<C>(obs =>
 			{
-				var obsD = new Disp();
+				var obsD = new Disp(); // TODO
 
-				var init = jsoner.LoadOrCreateDefault(filename, defaultValue);
+				var init = jsoner.LoadOrCreateDefault(filename.MakeFolderForFileIFN(), defaultValue);
 				obs.OnNext(init);
 
 				var (folder, name) = filename.SplitFilename();

@@ -21,13 +21,13 @@ public static class EvtClickSynthesizer
 	public static IObservable<IEvt> SynthesizeClicks(this IObservable<IEvt> src, IRoDispBase d) =>
 		Obs.Create<IEvt>(obs =>
 		{
-			var obsD = new Disp();
+			var obsD = MkD();
 			void Send(IEvt evtDst) => obs.OnNext(evtDst);
 			var state = Var.Make<ISynth>(new NoneSynth()).D(obsD);
 
 			var (timeout, whenTimeout) = RxEventMaker.Make<Unit>().D(obsD);
 			var timeD = new SerialDisp<IRwDispBase>().D(obsD);
-			timeD.Value = new Disp();
+			timeD.Value = MkD();
 
 			//void TimeoutSched() => Obs.Timer(ClickTime, Rx.Sched).Subscribe(_ => timeout(Unit.Default)).D(timeD.Value);
 
@@ -36,7 +36,7 @@ public static class EvtClickSynthesizer
 			void TimeoutCancel()
 			{
 				timeD.Value = null;
-				timeD.Value = new Disp();
+				timeD.Value = MkD();
 			}
 
 			whenTimeout

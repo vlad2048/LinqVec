@@ -9,4 +9,10 @@ static class StringExt
 			.SplitInLines()
 			.Select(e => new string(' ', indent) + e)
 			.JoinLines();
+
+	public static string RemoveSuffixIFP(this string s, string suffix) => s.EndsWith(suffix) switch
+	{
+		true => s[..^suffix.Length],
+		false => s
+	};
 }

@@ -52,6 +52,6 @@
 
 		#endregion
 
-		private LinqVec.VecEditor vecEditor;
+		public LinqVec.VecEditor vecEditor;
 	}
 }

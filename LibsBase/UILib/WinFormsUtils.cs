@@ -32,7 +32,7 @@ public static class WinFormsUtils
 
 	public static void InitRX<T>(this Control ctrl, IObservable<T> whenInit, Action<T, Disp> initAction)
 	{
-		var d = new Disp().D(ctrl);
+		var d = MkD().D(ctrl);
 		ctrl.Events().HandleCreated.Subscribe(_ =>
 		{
 			whenInit.Subscribe(init => { initAction(init, d); }).D(d);
@@ -41,7 +41,7 @@ public static class WinFormsUtils
 
 	public static void InitRX(this Control ctrl, Action<Disp> initAction)
     {
-        var d = new Disp().D(ctrl);
+        var d = MkD().D(ctrl);
         ctrl.Events().HandleCreated.Subscribe(_ => initAction(d)).D(d);
     }
 

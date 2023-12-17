@@ -1,15 +1,13 @@
-﻿using Geom;
-using LinqVec;
+﻿using LinqVec;
 using LinqVec.Logic;
 using VectorEditor.Model;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
-using LinqVec.Tools.Acts.Enums;
 using LinqVec.Tools.Acts.Structs;
 using LinqVec.Tools.Events;
 using VectorEditor.Tools.Curve_.Mods;
-using VectorEditor.Tools.Curve_.Structs;
 using PowRxVar;
+using LinqVec.Tools.Acts.Delegates;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -20,14 +18,13 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 	public IDisposable Run(ToolActions toolActions)
 	{
-		var d = new Disp();
-
+		var d = MkD();
 		Doc.EnableRedrawOnMouseMove(d);
 
 		var evt = Env.GetEvtForTool(this, true, d);
 
 
-		var curve = new MouseModder<Curve>(Curve.Empty()).D(d);
+		var curve = new MemMouseModder<Curve>(Curve.Empty()).D(d);
 		toolActions.SetUndoer(curve.Undoer);
 		var gfxState = CurveGfxState.None;
 
@@ -40,26 +37,30 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		}).D(d);
 
 
-		ActNfo[] ModeNeutral(Unit _) => [
-			Act.DragMod(
-				CurveActIds.MovePoint,
-				Hotspots.CurvePoint(curve).WithCursor(CBase.Cursors.BlackArrowSmall),
-				curve,
-				CurveMods.MovePoint,
-				false
-			),
-			Act.DragMod(
-				CurveActIds.AddPoint,
-				Hotspots.Anywhere.WithCursor(CBase.Cursors.Pen),
-				curve,
-				CurveMods.AddPoint,
-				true
-			)
-		];
+		ActMaker ModeNeutral(Unit _) => _ => new(
+			"Neutral",
+			CBase.Cursors.Pen,
+			[
+				Act.DragMod(
+					CurveActIds.MovePoint,
+					Hotspots.CurvePoint(curve).WithCursor(CBase.Cursors.BlackArrowSmall),
+					curve,
+					CurveMods.MovePoint,
+					false
+				),
+				Act.DragMod(
+					CurveActIds.AddPoint,
+					Hotspots.Anywhere.WithCursor(CBase.Cursors.Pen),
+					curve,
+					CurveMods.AddPoint,
+					true
+				)
+			]
+		);
 
 
 		ModeNeutral(Unit.Default)
-			.Run<CurveGfxState>(evt, d)
+			.Run(evt, d)
 			.Subscribe(e =>
 			{
 				gfxState = e switch

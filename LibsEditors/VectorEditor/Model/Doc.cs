@@ -58,8 +58,8 @@ public interface IVisualObjSer : IVisualObj;
 static class DocExt
 {
 	public static Doc AddObject(this Doc doc, IVisualObjSer obj) => doc.ChangeLayer(arr => arr.AddId(obj));
+	public static Doc ChangeLayer(this Doc doc, Func<IVisualObjSer[], IVisualObjSer[]> fun) => doc.WithLayers(doc.Layers.ChangeId(doc.Layers[0].Id, layer => layer.WithObjects(fun(layer.Objects))));
 
-	private static Doc ChangeLayer(this Doc doc, Func<IVisualObjSer[], IVisualObjSer[]> fun) => doc.WithLayers(doc.Layers.ChangeId(doc.Layers[0].Id, layer => layer.WithObjects(fun(layer.Objects))));
 	private static Doc WithLayers(this Doc m, Layer[] xs) => m with { Layers = xs };
 	private static Layer WithObjects(this Layer m, IVisualObjSer[] xs) => m with { Objects = xs };
 }

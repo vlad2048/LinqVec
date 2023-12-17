@@ -1,6 +1,7 @@
 ﻿using Geom;
 using LinqVec.Logic;
 using LinqVec.Utils;
+using PowBasics.CollectionsExt;
 using VectorEditor.Model.Structs;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_.Structs;
@@ -8,17 +9,13 @@ using VectorEditor.Tools.Curve_.Structs;
 namespace VectorEditor.Tools.Curve_.Mods;
 
 
-
-//public delegate Func<Obj, Pt, Obj> Mod<Obj>(Option<Pt> ptStart);
-//public delegate Func<Obj, Pt, Obj> Mod<Obj, in Hot>(Hot hot);
-
 static class CurveMods
 {
-	//public static MouseMod<Curve> AddPoint(Option<Pt> startPt) => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt.IfNone(mouse), mouse)) };
-
 	public static MouseMod<Curve> AddPoint(Pt startPt) => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt, mouse)) };
 
 	public static MouseMod<Curve> MovePoint(Pt startPt, PointId pointId) => (obj, mouse) => obj with { Pts = obj.Pts.ChangeIdx(pointId.Idx, e => e.Move(pointId.Type, mouse)) };
+
+	public static MouseMod<Curve> MoveCurve(Pt startPt) => (obj, mouse) => obj with { Pts = obj.Pts.SelectToArray(e => e.MoveAll(mouse - startPt)) };
 
 
 	private static CurvePt Move(this CurvePt pt, PointType type, Pt pos) => type switch
@@ -45,6 +42,12 @@ static class CurveMods
 		var delta = pos - p.P;
 		return new CurvePt(p.P, p.P - delta, pos);
 	}
+
+	private static CurvePt MoveAll(this CurvePt p, Pt delta) => new(
+		p.P + delta,
+		p.HLeft + delta,
+		p.HRight + delta
+	);
 }
 
 

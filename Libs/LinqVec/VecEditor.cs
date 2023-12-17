@@ -80,6 +80,8 @@ public partial class VecEditor : UserControl
 			{
 				Env.Invalidate();
 			}).D(d);
+
+			G.Cfg.RunWhen(e => e.Log.Tools, curTool.Log).D(d);
 		});
 	}
 
@@ -93,7 +95,7 @@ file static class VecEditorUtils
 {
 	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool, UndoMan undoMan)
 	{
-		var d = new Disp();
+		var d = MkD();
 
 		var serDisp = new SerDisp().D(d);
 
@@ -123,4 +125,9 @@ file static class VecEditorUtils
 
 		return d;
 	}
+
+	public static IDisposable Log(this IRoVar<ITool> curTool) =>
+		curTool
+			.Select(e => $"Tool <- {e.GetType().Name.RemoveSuffixIFP("Tool")}")
+			.Subscribe(e => L.WriteLine(e, 0xfd5c5b));
 }

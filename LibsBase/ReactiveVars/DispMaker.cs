@@ -7,9 +7,9 @@ namespace PowRxVar;
 
 public static class DispMaker
 {
-	private sealed record DispNfo(string File, int Line, bool Disposed)
+	private sealed record DispNfo(Disp Disp, string File, int Line, bool Disposed)
 	{
-		public static DispNfo Make(string file, int line) => new(file, line, false);
+		public static DispNfo Make(Disp disp, string file, int line) => new(disp, file, line, false);
 
 		public override string ToString() => $"{File}:{Line}";
 
@@ -25,25 +25,24 @@ public static class DispMaker
 	public static Disp MkD([CallerFilePath] string srcFile = "", [CallerLineNumber] int srcLine = 0)
 	{
 		var d = new Disp();
-		map[d] = DispNfo.Make(srcFile, srcLine);
+		map[d] = DispNfo.Make(d, srcFile, srcLine);
 		Disposable.Create(() => map[d] = map[d].FlagDispose()).D(d);
 		return d;
 	}
 
 	public static void CheckForUndisposedDisps()
 	{
-		var ds = map.Values.WhereToArray(e => !e.Disposed);
-		if (ds.Length == 0)
+		var allDisps = map.Values.WhereToArray(e => !e.Disposed);
+		if (allDisps.Length == 0)
 		{
 			LTitle("All Disps released");
 		}
 		else
 		{
-			LTitle($"{ds.Length} unreleased Disps");
-			foreach (var d in ds)
-			{
+			var topDisps = allDisps.RemoveSubs();
+			LTitle($"{topDisps.Length} unreleased top level Disps (total: {allDisps.Length})");
+			foreach (var d in topDisps)
 				L($"  {d}");
-			}
 			L("");
 			Console.ReadKey();
 		}
@@ -55,4 +54,8 @@ public static class DispMaker
 		L(s);
 		L(new string('=', s.Length));
 	}
+
+	private static DispNfo[] RemoveSubs(this DispNfo[] ds) =>
+		ds
+			.WhereToArray(d => ds.Where(e => e != d).All(e => !e.Disp.Contains(d.Disp)));
 }

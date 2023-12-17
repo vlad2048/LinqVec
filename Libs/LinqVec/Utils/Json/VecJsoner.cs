@@ -9,6 +9,8 @@ public static class VecJsoner
 	private static readonly JsonSerializerOptions defaultJsonOpt = new()
 	{
 		WriteIndented = true,
+		AllowTrailingCommas = true,
+		ReadCommentHandling = JsonCommentHandling.Skip,
 	};
 
 	static VecJsoner()

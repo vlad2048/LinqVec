@@ -13,7 +13,7 @@ class ActEvtGeneratorTests
 	[Test]
 	public void _00_Drag()
 	{
-		var d = new Disp();
+		var d = MkD();
 		var sched = new TestScheduler();
 		var src = sched.CreateColdObservable([
 			Move(1, 10, 5),
@@ -51,7 +51,7 @@ class ActEvtGeneratorTests
 	[Test]
 	public void _01_Click()
 	{
-		var d = new Disp();
+		var d = MkD();
 		var sched = new TestScheduler();
 		var src = sched.CreateColdObservable([
 			LDown(2, 10, 5),
@@ -73,7 +73,7 @@ class ActEvtGeneratorTests
 	[Test]
 	public void _02_ClickTooSlow()
 	{
-		var d = new Disp();
+		var d = MkD();
 		var sched = new TestScheduler();
 		var src = sched.CreateColdObservable([
 			LDown(2, 10, 5),
@@ -95,7 +95,7 @@ class ActEvtGeneratorTests
 	[Test]
 	public void _03_ClickAndDoubleClick_DoClick()
 	{
-		var d = new Disp();
+		var d = MkD();
 		var sched = new TestScheduler();
 		var src = sched.CreateColdObservable([
 			LDown(2, 10, 5),
@@ -118,7 +118,7 @@ class ActEvtGeneratorTests
 	[Test]
 	public void _04_ClickAndDoubleClick_DoDoubleClick()
 	{
-		var d = new Disp();
+		var d = MkD();
 		var sched = new TestScheduler();
 		var src = sched.CreateColdObservable([
 			LDown(2, 10, 5),
@@ -143,7 +143,7 @@ class ActEvtGeneratorTests
 	[Test]
 	public void _05_DragAndClickAndDoubleClick_DoDrag()
 	{
-		var d = new Disp();
+		var d = MkD();
 		var sched = new TestScheduler();
 		var src = sched.CreateColdObservable([
 			LDown(2, 10, 5),
@@ -168,7 +168,7 @@ class ActEvtGeneratorTests
 	[Test]
 	public void _06_DragAndClickAndDoubleClick_DoClick()
 	{
-		var d = new Disp();
+		var d = MkD();
 		var sched = new TestScheduler();
 		var src = sched.CreateColdObservable([
 			LDown(2, 10, 5),

@@ -16,7 +16,7 @@ public static class EvtRestricter
 	public static IObservable<IEvt> RestrictTo(this IObservable<IEvt> src, Func<Pt, bool> predicate) =>
 		Obs.Create<IEvt>(obs =>
 		{
-			var d = new Disp();
+			var d = MkD();
 
 			bool? isIn = null;
 

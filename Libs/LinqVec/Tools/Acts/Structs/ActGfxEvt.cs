@@ -7,4 +7,11 @@ public enum ActGfxState
 	Confirm
 }
 
-public sealed record ActGfxEvt(string Id, ActGfxState State);
+public sealed record ActGfxEvt(
+	string ActSetId,
+	string Id,
+	ActGfxState State
+)
+{
+	public override string ToString() => $"[{ActSetId}].[{Id}].{State}";
+}

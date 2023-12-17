@@ -1,4 +1,6 @@
-﻿using System.Reactive.Linq;
+﻿using System.ComponentModel;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using LinqVec.Utils.Json;
 using LinqVec.Utils.Rx;
 using PowBasics.Json_;
@@ -23,18 +25,23 @@ static class DocLogic
 		win.menuFileSaveAs.Events().Click.Subscribe(_ => Save(true)).D(d);
 		win.menuFileExit.Events().Click.Subscribe(_ => win.Close()).D(d);
 
+		var hasOpened = false;
 		if (win.LastLoadedFile != null)
 		{
 			if (File.Exists(win.LastLoadedFile))
 			{
 				var doc = OpenFile(win.LastLoadedFile);
 				doc.Show(win.dockPanel, DockState.Document);
+				doc.Focus();
+				hasOpened = true;
 			}
 			else
 			{
 				win.LastLoadedFile = null;
 			}
 		}
+		if (!hasOpened)
+			Open(false);
 
 		activeDoc
 			.Where(e => e.IsNone)
@@ -88,6 +95,7 @@ static class DocLogic
 				doc = new DocPane();
 			}
 			doc.Show(win.dockPanel, DockState.Document);
+			Rx.Sched.Schedule(() => doc.vecEditor.Focus());
 		}
 
 

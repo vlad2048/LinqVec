@@ -7,8 +7,8 @@ public sealed record ActActions(
 	Action<object, Pt> HoverOn,
 	Action HoverOff,
 	Action<object, Pt> DragStart,
-	Action<object, Pt> Confirm,
-	ActMaker? ConfirmActs
+	Func<object, Pt, Option<ActMaker>> Confirm
+	//ActMaker? ConfirmActs
 );
 
 
@@ -16,8 +16,8 @@ public sealed record ActActions<H>(
 	Action<H, Pt> HoverOn,
 	Action HoverOff,
 	Action<H, Pt> DragStart,
-	Action<H, Pt> Confirm,
-	ActMaker<H>? ConfirmActs
+	Func<H, Pt, Option<ActMaker>> Confirm
+	//ActMaker<H>? ConfirmActs
 );
 
 
@@ -27,7 +27,7 @@ static class ActActionsExt
 		(h, p) => actions.HoverOn((H)h, p),
 		actions.HoverOff,
 		(h, p) => actions.DragStart((H)h, p),
-		(h, p) => actions.Confirm((H)h, p),
-		actions.ConfirmActs.ToNonGeneric()
+		(h, p) => actions.Confirm((H)h, p)
+		//actions.ConfirmActs.ToNonGeneric()
 	);
 }

@@ -18,7 +18,7 @@ sealed class EvtTimeout : IDisposable
 	public void Schedule()
 	{
 		serD.Value = null;
-		serD.Value = new Disp();
+		serD.Value = MkD();
 		Obs.Timer(Delay, Rx.Sched).Subscribe(_ => sendTimeout(Unit.Default)).D(serD.Value);
 	}
 	public void Cancel() => serD.Value = null;

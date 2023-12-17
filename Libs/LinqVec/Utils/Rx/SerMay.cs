@@ -23,7 +23,7 @@ public sealed class SerMay<T> : IDisposable where T : IDisposable
 			if (value.IsSome)
 			{
 				var val = value.IfNone(() => throw new ArgumentException());
-				var serDVal = new Disp();
+				var serDVal = MkD();
 				val.D(serDVal);
 				serD.Disposable = serDVal;
 			}

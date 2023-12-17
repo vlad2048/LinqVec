@@ -15,7 +15,7 @@ namespace VectorEditor.Panes.ModelTree_;
 {
 	public static IDisposable Setup(ObjectListView list, ModelMan<DocModel> mm)
 	{
-		var d = new Disp();
+		var d = MkD();
 
 		list.SetupColumns();
 
@@ -38,7 +38,7 @@ static class ModelTreeLogic
 {
 	public static IDisposable Setup(TreeListView tree, Model<Doc> doc)
 	{
-		var d = new Disp();
+		var d = MkD();
 
 		tree.SetNodGeneric<DocNode>();
 

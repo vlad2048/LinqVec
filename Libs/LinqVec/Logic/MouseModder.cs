@@ -16,7 +16,7 @@ public interface IMouseModder<O>
 }
 
 
-public sealed class MouseModder<O> : IMouseModder<O>, IDisposable
+public sealed class MemMouseModder<O> : IDisposable, IMouseModder<O>
 {
 	private static readonly MouseMod<O> identity = (o, _) => o;
 	private readonly Disp d = new();
@@ -25,7 +25,7 @@ public sealed class MouseModder<O> : IMouseModder<O>, IDisposable
     private readonly Undoer<O> undoer;
     private MouseMod<O> mod = identity;
 
-	public MouseModder(O init)
+	public MemMouseModder(O init)
     {
 	    undoer = new Undoer<O>(init).D(d);
     }
@@ -39,4 +39,34 @@ public sealed class MouseModder<O> : IMouseModder<O>, IDisposable
 	public void ModSet(MouseMod<O> modFun) => mod = modFun;
 	public void ModClear() => mod = identity;
 	public void ModApply(Pt mousePos) { undoer.V = GetModded(mousePos); mod = identity; }
+}
+
+
+public sealed class DocMouseModder<O> : IDisposable, IMouseModder<O>
+{
+	private static readonly MouseMod<O> identity = (o, _) => o;
+	private readonly Disp d = new();
+	public void Dispose() => d.Dispose();
+
+	private readonly Func<O> getFun;
+	private readonly Action<O> setFun;
+	private MouseMod<O> mod = identity;
+
+	public DocMouseModder(Func<O> getFun, Action<O> setFun)
+	{
+		this.getFun = getFun;
+		this.setFun = setFun;
+	}
+
+	public O GetModded(Option<Pt> mousePos) => mousePos.Map(m => mod(getFun(), m)).IfNone(getFun());
+	
+	public IUndoer Undoer => Logic.Undoer.Empty;
+	public O Get() => getFun();
+	public void ModSet(MouseMod<O> modFun) => mod = modFun;
+	public void ModClear() => mod = identity;
+	public void ModApply(Pt mousePos)
+	{
+		setFun(GetModded(mousePos));
+		mod = identity;
+	}
 }

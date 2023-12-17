@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using LinqVec.Tools.Acts.Delegates;
 using LinqVec.Tools.Acts.Events;
 using LinqVec.Tools.Acts.Structs;
 
@@ -8,6 +9,7 @@ static class ActionTriggerer
 {
 	public static IDisposable TriggerHoverActions(
 		this IObservable<Option<HotAct>> curHot,
+		string actSetId,
 		Action<ActGfxEvt> sigGfxEvt
 	) =>
 		curHot
@@ -24,20 +26,21 @@ static class ActionTriggerer
 				t.Next.IfSome(tNext =>
 				{
 					tNext.Act.Actions.HoverOn(tNext.Hot, tNext.MousePos);
-					sigGfxEvt(new ActGfxEvt(tNext.Act.Id, ActGfxState.Hover));
+					sigGfxEvt(new ActGfxEvt(actSetId, tNext.Act.Id, ActGfxState.Hover));
 				});
 				t.Next.IfNone(() =>
 				{
-					sigGfxEvt(new ActGfxEvt(BaseActIds.Empty, ActGfxState.Hover));
+					sigGfxEvt(new ActGfxEvt(actSetId, BaseActIds.Empty, ActGfxState.Hover));
 				});
 			});
 
 	public static IDisposable TriggerDragAndClickActions(
 		this IObservable<IActEvt> actEvt,
+		string actSetId,
 		IObservable<Option<HotAct>> curHot,
 		Action<bool> setIsHotLocked,
 		Action reset,
-		Action<ActNfo[]> setActs,
+		Action<ActMaker> setActs,
 		Action<ActGfxEvt> sigGfxEvt
 	) =>
 		actEvt
@@ -64,19 +67,15 @@ static class ActionTriggerer
 					case DragStartActEvt { PtStart: var ptStart }:
 						setIsHotLocked(true);
 						actions.DragStart(hot, ptStart);
-						sigGfxEvt(new ActGfxEvt(t.Hot.Act.Id, ActGfxState.DragStart));
+						sigGfxEvt(new ActGfxEvt(actSetId, t.Hot.Act.Id, ActGfxState.DragStart));
 						break;
 
 					case ConfirmActEvt { Type: var type, PtStart: var ptStart, PtEnd: var ptEnd }:
 						setIsHotLocked(false);
-						actions.Confirm(hot, ptEnd);
-						if (actions.ConfirmActs != null)
-						{
-							var acts = actions.ConfirmActs(hot);
-							setActs(acts);
-						}
-						sigGfxEvt(new ActGfxEvt(t.Hot.Act.Id, ActGfxState.Confirm));
-						reset();
+						var actMakerOpt = actions.Confirm(hot, ptEnd);
+						sigGfxEvt(new ActGfxEvt(actSetId, t.Hot.Act.Id, ActGfxState.Confirm));
+						actMakerOpt.IfSome(setActs);
+						actMakerOpt.IfNone(reset);
 						break;
 
 					case KeyDownActEvt { Key: var key }:

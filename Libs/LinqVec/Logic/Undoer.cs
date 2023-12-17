@@ -77,7 +77,7 @@ file static class UndoManLogUtils
 {
 	public static IDisposable Log(this IUndoer undoer)
 	{
-		var d = new Disp();
+		var d = MkD();
 		Obs.Merge(undoer.WhenChanged, undoer.WhenUndo, undoer.WhenRedo)
 			.Subscribe(_ =>
 			{

@@ -175,7 +175,7 @@ static class ActEvtGenerator
 	public static IObservable<IActEvt> ToActEvt(this IObservable<IEvt> evt, Gesture gestures, IScheduler scheduler, Disp d) =>
 		Obs.Create<IActEvt>(obs =>
 			{
-				var obsD = new Disp();
+				var obsD = new Disp(); // TODO
 				void Send(IActEvt evtDst) => obs.OnNext(evtDst);
 				var trks = Trk.Build(scheduler, gestures, obsD);
 				var lastTime = DateTimeOffset.MinValue;
@@ -217,7 +217,6 @@ static class ActEvtGenerator
 						foreach (var trk in trks)
 							trk.Process(usrEvt);
 					});
-
 				}).D(obsD);
 
 				return obsD;
@@ -239,7 +238,7 @@ static class ActEvtGenerator
 	public static IObservable<IActEvt> ToActEvt(this IObservable<IEvt> evt, Gesture gestures, IRoDispBase d) =>
 		Obs.Create<IActEvt>(obs =>
 			{
-				var obsD = new Disp();
+				var obsD = MkD();
 				void Send(IActEvt evtDst) => obs.OnNext(evtDst);
 				var state = Var.Make<IState>(new NoneState()).D(obsD);
 				//var timeout = new EvtTimeout().D(obsD);

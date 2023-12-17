@@ -8,6 +8,17 @@ namespace VectorEditor.Model;
 
 static class CurveOps
 {
+	public static (Func<Curve>, Action<Curve>) GetGetSet(this LinqVec.Logic.Model<Doc> doc, Curve curve)
+	{
+		var layerId = doc.V.Layers.Single(e => e.Objects.Any(f => f.Id == curve.Id)).Id;
+		var curveId = curve.Id;
+		return (
+			() => (Curve)doc.V.Layers.GetId(layerId).Objects.GetId(curveId),
+			o => doc.V = doc.V.ChangeLayer(objs => objs.SetId(o))
+		);
+	}
+
+
 	private sealed record PtNfo(PointId Id, double Distance);
 
 	public static Option<PointId> GetClosestPointTo(this Curve model, Pt pt, double threshold)

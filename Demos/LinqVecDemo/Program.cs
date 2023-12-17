@@ -1,3 +1,4 @@
+using System.Reactive.Linq;
 using LinqVec.Utils.WinForms_;
 using PowRxVar;
 using UILib;
@@ -17,8 +18,20 @@ static class Program
 		ApplicationConfiguration.Initialize();
 		ConUtils.Init();
 
+
 		Application.Run(new MainWin().Track());
 
 		CheckForUndisposedDisps();
+
+		/*var testD = new Disp();
+		AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+		{
+			testD.Dispose();
+		};
+
+		var obs = Obs.Interval(TimeSpan.FromMilliseconds(300));
+		var obsConn = obs.Replay(1);
+		obsConn.Connect().D(testD);
+		obsConn.Subscribe(e => Console.WriteLine($"e <- {e}"));*/
 	}
 }

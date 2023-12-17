@@ -13,8 +13,20 @@ public static class Act
 		string id,
 		ClickGesture gesture,
 		Hotspot<H> hotspot,
-		Action<H> confirm,
-		ActMaker<H> confirmActs
+		Func<H, ActMaker> confirm
+	) => Click(
+		id,
+		gesture,
+		hotspot,
+		h => Option<ActMaker>.Some(confirm(h))
+	);
+
+
+	public static ActNfo Click<H>(
+		string id,
+		ClickGesture gesture,
+		Hotspot<H> hotspot,
+		Func<H, Option<ActMaker>> confirm
 	) => new(
 		id,
 		(Gesture)gesture,
@@ -23,8 +35,8 @@ public static class Act
 			(_, _) => {},
 			() => {},
 			(_, _) => {},
-			(e, _) => confirm(e),
-			confirmActs
+			(e, _) => confirm(e)
+			//confirmActs
 		).ToNonGeneric()
 	);
 
@@ -50,8 +62,12 @@ public static class Act
 					modder.ModClear();
 			},
 			DragStart: (h, p) => modder.ModSet(mod(p, h)),
-			Confirm: (_, p) => modder.ModApply(p),
-			ConfirmActs: null
+			Confirm: (_, p) =>
+			{
+				modder.ModApply(p);
+				return Option<ActMaker>.None;
+			}
+			//ConfirmActs: null
 		).ToNonGeneric()
 	);
 
@@ -77,8 +93,12 @@ public static class Act
 					modder.ModClear();
 			},
 			DragStart: (_, p) => modder.ModSet(mod(p)),
-			Confirm: (_, p) => modder.ModApply(p),
-			ConfirmActs: null
+			Confirm: (_, p) =>
+			{
+				modder.ModApply(p);
+				return Option<ActMaker>.None;
+			}
+		//ConfirmActs: null
 		).ToNonGeneric()
 	);
 }

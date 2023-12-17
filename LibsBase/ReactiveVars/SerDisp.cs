@@ -11,7 +11,7 @@ public sealed class SerDisp : IDisposable
 	public Disp GetNewD()
 	{
 		serD.Disposable = null;
-		var d = new Disp();
+		var d = MkD();
 		serD.Disposable = d;
 		return d;
 	}

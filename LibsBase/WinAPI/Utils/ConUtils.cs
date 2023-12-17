@@ -9,7 +9,7 @@ public static class ConUtils
 {
 	private const char EscChar = (char)0x1B;
 	private const uint ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x04;
-
+	private static bool isInit;
 	
 	public static void Init(R r)
 	{
@@ -41,7 +41,15 @@ public static class ConUtils
 	}
 	private static NetCoreEx.Geometry.Rectangle ToWinR(this R r) => new((int)r.Min.X, (int)r.Min.Y, (int)r.Width, (int)r.Height);
 
-	public static void SetColor(Color c) => Console.Write($"{EscChar}[38;2;{c.R};{c.G};{c.B}m");
+	public static void SetColor(Color c)
+	{
+		if (!isInit)
+		{
+			isInit = true;
+			EnableVirtualTerminalProcessing();
+		}
+		Console.Write($"{EscChar}[38;2;{c.R};{c.G};{c.B}m");
+	}
 
 
 	private static bool EnableVirtualTerminalProcessing()

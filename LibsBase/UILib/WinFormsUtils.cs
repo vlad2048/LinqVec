@@ -55,18 +55,6 @@ public static class WinFormsUtils
         return dispDst;
     }
 
-    public static T D<T>(this (T, IDisposable) t, Control ctrl)
-    {
-	    t.Item2.D(ctrl);
-	    return t.Item1;
-	}
-
-    public static (T1, T2) D<T1, T2>(this (T1, T2, IDisposable) t, Control ctrl)
-    {
-	    t.Item3.D(ctrl);
-	    return (t.Item1, t.Item2);
-    }
-
     public static IObservable<T> MakeHot<T>(this IObservable<T> obs, Control ctrl)
     {
 	    var con = obs.Publish();

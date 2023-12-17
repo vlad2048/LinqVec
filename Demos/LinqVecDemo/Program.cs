@@ -19,6 +19,6 @@ static class Program
 
 		Application.Run(new MainWin().Track());
 
-		//VarDbg.CheckForUndisposedDisps(true);
+		CheckForUndisposedDisps();
 	}
 }

@@ -39,7 +39,7 @@ public partial class VecEditor : UserControl
 		var ctrl = new Ctrl(drawPanel);
 
 		var editorEvt = EvtMaker.MakeForControl(drawPanel, curTool.ToUnitExt());
-		var tempD = new Disp().D(this);
+		var tempD = MkD().D(this);
 		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, tempD);
 
 		Env = new ToolEnv(

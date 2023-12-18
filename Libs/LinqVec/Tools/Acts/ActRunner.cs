@@ -2,6 +2,7 @@
 using Geom;
 using LinqVec.Tools.Acts.Logic;
 using LinqVec.Tools.Events;
+using LinqVec.Utils;
 using LinqVec.Utils.Rx;
 using PowBasics.CollectionsExt;
 using PowBasics.ColorCode;
@@ -100,6 +101,7 @@ public static class ActRunner
 		var curActs = curActsMaker.Select(maker => maker(curActsSerDisp.GetNewD())).ToVar(d);
 		void Set(ActSetMaker maker) => curActsMaker.V = maker;
 		void Reset() => curActsMaker.V = curActsMaker.V;
+		//void Reset() => curActsMaker.V = actsMakerInit;
 		return (curActs, Set, Reset);
 	}
 

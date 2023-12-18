@@ -50,7 +50,7 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 			States.Neutral,
 			CBase.Cursors.Pen,
 			[
-				Hotspots.CurvePoint(curve)
+				Hotspots.CurvePointButLast(curve)
 					.Do(pointId => [
 						Act.Drag(
 							Acts.MovePoint,
@@ -83,9 +83,15 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 						curve.ModClear();
 						gfxState = CurveGfxState.None;
 						break;
+
 					case DragStartRunEvt { Act: Acts.AddPoint }:
 						gfxState = CurveGfxState.DragHandle;
 						break;
+					case ConfirmRunEvt { Act: Acts.AddPoint }:
+						curve.ModSet(CurveMods.AddPoint());
+						gfxState = CurveGfxState.AddPoint;
+						break;
+
 					case DragStartRunEvt { Act: Acts.MovePoint }:
 						gfxState = CurveGfxState.Edit;
 						break;

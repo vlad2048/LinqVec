@@ -40,6 +40,26 @@ static class CurveOps
 		);
 	}
 
+	public static Option<PointId> GetClosestPointToButLast(this Curve model, Pt pt, double threshold)
+	{
+		PtNfo Mk(CurvePt mp, int idx, PointType type) => new(new PointId(idx, type), (mp.GetPt(type) - pt).Length);
+
+		Option<PointId> For(PointType type) =>
+			model.Pts
+				.Select((e, i) => Mk(e, i, type))
+				.SkipLast(1)
+				.OrderByDescending(e => e.Distance)
+				.Where(e => e.Distance < threshold)
+				.Select(e => e.Id)
+				.FirstOrOption();
+
+		return OptionExt.AggregateArr(
+			For(PointType.Point),
+			For(PointType.LeftHandle),
+			For(PointType.RightHandle)
+		);
+	}
+
 	public static Pt[] GetDrawPoints(this Curve model) =>
 		model.Pts
 			.SelectMany(p => new[]

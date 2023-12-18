@@ -38,6 +38,12 @@ static class Hotspots
 		null
 	);
 
+	public static Hotspot<PointId> CurvePointButLast(IMouseModder<Curve> curve) => new(
+		nameof(CurvePointButLast),
+		p => curve.Get().GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
+		null
+	);
+
 
 	private static Option<U> OfType<T, U>(this Option<T> opt) where U : T =>
 		opt.BiBind(

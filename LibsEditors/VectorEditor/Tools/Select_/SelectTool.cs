@@ -16,6 +16,18 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 {
 	public Keys Shortcut => Keys.Q;
 
+	private static class States
+	{
+		public const string Neutral = nameof(Neutral);
+		public const string Selected = nameof(Selected);
+	}
+	private static class Acts
+	{
+		public const string SelectCurve = nameof(SelectCurve);
+		public const string UnselectCurve = nameof(UnselectCurve);
+		public const string MoveCurve = nameof(MoveCurve);
+	}
+
 	public IDisposable Run(ToolActions toolActions)
 	{
 		var d = MkD();
@@ -30,14 +42,14 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		{
 			curSel = None;
 			return new ActSet(
-				"Neutral",
+				States.Neutral,
 				CBase.Cursors.BlackArrow,
 				[
 					Hotspots.Curve(Doc)
 						.Do(curve =>
 						[
 							Act.Click(
-								"SelectCurve",
+								Acts.SelectCurve,
 								ClickGesture.Click,
 								() => ModeSelected(curve)
 							)
@@ -54,22 +66,21 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 			curSel = new DocMouseModder<Curve>(getF, setF).D(actD);
 
 			return new ActSet(
-				"Selected",
+				States.Selected,
 				CBase.Cursors.BlackArrow,
 				[
 					Hotspots.Curve(Doc)
 						.Do(hotCurve => (hotCurve == curve) switch {
 							true => [
 								Act.Drag(
-									"MoveCurve",
+									Acts.MoveCurve,
 									curSel.Ensure(),
 									CurveMods.MoveCurve
-									//false
 								)
 							],
 							false => [
 								Act.Click(
-									"SelectCurve",
+									Acts.SelectCurve,
 									ClickGesture.Click,
 									() => ModeSelected(hotCurve)
 								)
@@ -78,7 +89,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 					Hotspots.Anywhere
 						.Do(_ => [
 							Act.Click(
-								"UnselectCurve",
+								Acts.UnselectCurve,
 								ClickGesture.Click,
 								() => ModeNeutral(Unit.Default)
 							)
@@ -93,70 +104,6 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 
 
-
-		/*ActMaker ModeNeutral(Pt _) => _ =>
-		{
-			curSel = None;
-			return new(
-				"Neutral",
-				CBase.Cursors.BlackArrow,
-				[
-					Act.Click(
-						SelectActIds.SelectCurve,
-						ClickGesture.Click,
-						Hotspots.Curve(Doc),
-						ModeSelected
-					)
-				]
-			);
-		};
-
-		ActMaker ModeSelected(Curve curve) => actD =>
-		{
-			//curSel = curve;
-			var (getF, setF) = Doc.GetGetSet(curve);
-			curSel = new DocMouseModder<Curve>(getF, setF).D(actD);
-
-			return new(
-				"Selected",
-				CBase.Cursors.BlackArrow,
-				[
-					Act.Click(
-						SelectActIds.SelectCurve,
-						ClickGesture.Click,
-						Hotspots.CurveExcept(Doc, curve),
-						ModeSelected
-					),
-
-					Act.DragMod(
-						SelectActIds.MoveCurve,
-						Hotspots.CurveSpecific(Doc, curve).ToPt(),
-						curSel.IfNone(() => throw new ArgumentException()),
-						CurveMods.MoveCurve,
-						false
-					),
-
-					Act.Click(
-						SelectActIds.Noop,
-						ClickGesture.Click,
-						Hotspots.CurveSpecific(Doc, curve),
-						_ => None
-					),
-
-					Act.Click(
-						SelectActIds.UnselectCurve,
-						ClickGesture.Click,
-						Hotspots.Anywhere,
-						ModeNeutral
-					),
-				]
-			);
-		};
-
-		ModeNeutral(Pt.Zero)
-			.Run(evt, d);*/
-
-
 		Env.WhenPaint.Subscribe(gfx =>
 		{
 			curSel.IfSome(cur => SelectPainter.DrawSelRect(gfx, cur.GetModded(evt.MousePos.V)));
@@ -164,13 +111,4 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		return d;
 	}
-}
-
-
-static class SelectActIds
-{
-	public const string Noop = nameof(Noop);
-	public const string SelectCurve = nameof(SelectCurve);
-	public const string UnselectCurve = nameof(UnselectCurve);
-	public const string MoveCurve = nameof(MoveCurve);
 }

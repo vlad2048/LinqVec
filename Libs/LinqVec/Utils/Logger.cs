@@ -1,7 +1,7 @@
 ﻿using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using LinqVec.Utils.WinForms_;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Utils;
 
@@ -33,6 +33,9 @@ public static class Logger
 		obs.Subscribe(v => WriteLine($"{obsStr} <- {v}")).D(d);
 		return obs;
 	}
+
+	public static IDisposable LogD<T>(this IObservable<T> obs, [CallerArgumentExpression(nameof(obs))] string? obsStr = null) =>
+		obs.Subscribe(v => WriteLine($"{obsStr} <- {v}"));
 
 	public static void Log(this Disp d, string name)
 	{

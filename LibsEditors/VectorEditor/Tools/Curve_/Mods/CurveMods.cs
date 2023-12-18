@@ -11,9 +11,12 @@ namespace VectorEditor.Tools.Curve_.Mods;
 
 static class CurveMods
 {
-	public static MouseMod<Curve> AddPoint(Pt startPt) => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt, mouse)) };
+	//public static MouseMod<Curve> AddPoint(Pt startPt) => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt, mouse)) };
+	//public static MouseMod<Curve> MovePoint(Pt startPt, PointId pointId) => (obj, mouse) => obj with { Pts = obj.Pts.ChangeIdx(pointId.Idx, e => e.Move(pointId.Type, mouse)) };
 
-	public static MouseMod<Curve> MovePoint(Pt startPt, PointId pointId) => (obj, mouse) => obj with { Pts = obj.Pts.ChangeIdx(pointId.Idx, e => e.Move(pointId.Type, mouse)) };
+	public static MouseMod<Curve> AddPoint() => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(mouse, mouse)) };
+	public static Func<Pt, MouseMod<Curve>> AddPoint(Unit _) => startPt => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt, mouse)) };
+	public static Func<Pt, MouseMod<Curve>> MovePoint(PointId pointId) => startPt => (obj, mouse) => obj with { Pts = obj.Pts.ChangeIdx(pointId.Idx, e => e.Move(pointId.Type, mouse)) };
 
 	public static MouseMod<Curve> MoveCurve(Pt startPt) => (obj, mouse) => obj with { Pts = obj.Pts.SelectToArray(e => e.MoveAll(mouse - startPt)) };
 

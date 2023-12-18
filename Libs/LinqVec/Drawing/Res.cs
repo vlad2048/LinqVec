@@ -2,7 +2,7 @@
 using Geom;
 using LinqVec.Structs;
 using PowBasics.CollectionsExt;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Drawing;
 

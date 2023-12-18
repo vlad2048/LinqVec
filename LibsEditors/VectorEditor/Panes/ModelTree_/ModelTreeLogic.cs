@@ -3,7 +3,7 @@ using DynamicData;
 using LinqVec.Logic;
 using LinqVec.Utils.WinForms_;
 using PowBasics.CollectionsExt;
-using PowRxVar;
+using ReactiveVars;
 using UILib;
 using UILib.Utils;
 using VectorEditor.Model;

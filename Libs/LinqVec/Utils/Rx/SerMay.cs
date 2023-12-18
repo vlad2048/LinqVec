@@ -1,7 +1,7 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Utils.Rx;
 

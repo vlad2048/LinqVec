@@ -1,6 +1,5 @@
 using System.Reactive.Linq;
 using LinqVec.Utils.WinForms_;
-using PowRxVar;
 using UILib;
 
 namespace LinqVecDemo;

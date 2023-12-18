@@ -3,7 +3,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using LinqVec.Utils;
 using LinqVec.Utils.Rx;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Logic;
 
@@ -47,7 +47,7 @@ sealed class UndoMan : IUndoer
 	public UndoMan(IUndoer docUndoer)
 	{
 		this.docUndoer = docUndoer;
-		toolUndoer = Var.Make(Undoer.Empty).D(d);
+		toolUndoer = Var.Make(Undoer.Empty, d);
 		toolUndoer.Select(e => e.WhenDo).Switch().Subscribe(_ => docUndoer.InvalidateRedos()).D(d);
 		docUndoer.WhenUndo.Subscribe(_ => toolUndoer.V.InvalidateRedos()).D(d);
 		//this.Log().D(d);
@@ -154,7 +154,7 @@ sealed class Undoer<T> : IUndoer
 	    whenUndo = new Subject<Unit>().D(d);
 	    whenRedo = new Subject<Unit>().D(d);
 
-		cur = Var.Make(init).D(d);
+		cur = Var.Make(init, d);
 
 		WhenDoT.Subscribe(v =>
 		{

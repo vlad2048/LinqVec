@@ -5,8 +5,8 @@ using LinqVec.Structs;
 using LinqVec.Utils;
 using LinqVec.Drawing;
 using LinqVec.Utils.Rx;
+using ReactiveVars;
 using UILib;
-using PowRxVar;
 
 namespace LinqVec.Controls;
 
@@ -29,8 +29,9 @@ public sealed partial class DrawPanel : UserControl
 	public DrawPanel()
 	{
 		DoubleBuffered = true;
-		whenInit = new AsyncSubject<DrawPanelInitNfo>().D(this);
-		whenPaint = new Subject<Gfx>().D(this);
+		var ctrlD = this.GetD();
+		whenInit = new AsyncSubject<DrawPanelInitNfo>().D(ctrlD);
+		whenPaint = new Subject<Gfx>().D(ctrlD);
 		InitializeComponent();
 
 		this.InitRX(WhenInit, (init, d) =>

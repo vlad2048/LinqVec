@@ -1,6 +1,6 @@
 using System.Reactive.Linq;
 using LinqVec.Logic;
-using PowRxVar;
+using ReactiveVars;
 using VectorEditor.Model;
 using UILib;
 using VectorEditor;
@@ -19,7 +19,8 @@ sealed partial class DocPane : DockContent
 		InitializeComponent();
 		KeyPreview = true;
 
-		Filename = Var.Make(Option<string>.None).D(this);
+		var ctrlD = this.GetD();
+		Filename = Var.Make(Option<string>.None, ctrlD);
 
 		if (load?.filename != null)
 			Filename.V = load.Value.filename;

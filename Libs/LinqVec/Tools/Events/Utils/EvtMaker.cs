@@ -1,7 +1,6 @@
-﻿using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using LinqVec.Utils;
+using ReactiveVars;
 using UILib;
 
 namespace LinqVec.Tools.Events.Utils;
@@ -23,10 +22,9 @@ static class EvtMaker
 		var whenKeyUp = ctrl.Events().KeyUp.Select(e => new KeyEvt(UpDown.Up, e.KeyCode));
 
 		var whenMouseMoveRepeat = whenRepeatLastMouseMove
-			//.Delay(TimeSpan.Zero, new SynchronizationContextScheduler(SynchronizationContext.Current!))
 			.Delay(TimeSpan.Zero)
 			.WithLatestFrom(whenMouseMove).Select(e => e.Second);
-
+		var ctrlD = ctrl.GetD();
 		return
 			Obs.Merge<IEvt>(
 					whenMouseMove,
@@ -39,8 +37,7 @@ static class EvtMaker
 					whenKeyUp,
 					whenMouseMoveRepeat
 				)
-				//.SynthesizeClicks()
-				.MakeHot(ctrl);
+				.MakeHot(ctrlD);
 	}
 
 

@@ -1,12 +1,13 @@
-﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace PowRxVar;
+namespace ReactiveVars;
 
 public static class Var
 {
-	public static IRwVar<T> Make<T>(this T init) => new RwVar<T>(init);
+	public static IRwVar<T> Make<T>(this T init, Disp d) => new RwVar<T>(init).D(d);
+
+	public static IRoVar<T> MakeConst<T>(T val) => Obs.Return(val).ToVar();
 
 	public static IRoVar<T> ToVar<T>(this IObservable<T> obs) => new RoVar<T>(obs);
 
@@ -27,7 +28,7 @@ public static class Var
 	}
 
 
-	private sealed class RwVar<T> : IRwVar<T>
+	private sealed class RwVar<T> : IRwVar<T>, IDisposable
 	{
 		public void Dispose() => Subj.Dispose();
 		public IDisposable Subscribe(IObserver<T> observer) => Subj.Subscribe(observer);

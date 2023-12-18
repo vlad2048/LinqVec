@@ -3,7 +3,7 @@ using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using PowBasics.CollectionsExt;
 
-namespace PowRxVar;
+namespace ReactiveVars;
 
 public static class DispMaker
 {

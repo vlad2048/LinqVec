@@ -1,5 +1,5 @@
 ﻿using System.Reactive.Linq;
-using PowRxVar;
+using ReactiveVars;
 
 namespace UILib.Utils;
 

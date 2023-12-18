@@ -2,7 +2,7 @@
 using PowBasics.Files;
 using PowBasics.Json_;
 
-namespace PowRxVar;
+namespace ReactiveVars;
 
 public static class RxCfg
 {

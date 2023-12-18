@@ -2,10 +2,9 @@
 using Geom;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
-using LinqVec.Utils.Rx;
 using LinqVec.Utils.WinForms_;
 using PowBasics.MathCode;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Logic;
 
@@ -49,7 +48,7 @@ static class PanZoomer
 	)
 	{
 		var lastMousePt = Pt.Zero;
-		var isPanning = Var.Make(false).D(d);
+		var isPanning = Var.Make(false, d);
 
 		evt.WhenMouseDown()
 			.Where(_ => !isPanning.V)

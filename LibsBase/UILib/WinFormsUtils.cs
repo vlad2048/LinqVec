@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Jot;
-using PowRxVar;
+using ReactiveVars;
 using UILib.Utils;
 
 namespace UILib;
@@ -45,7 +45,12 @@ public static class WinFormsUtils
         ctrl.Events().HandleCreated.Subscribe(_ => initAction(d)).D(d);
     }
 
-    public static D D<D>(this D dispDst, Control ctrl) where D : IDisposable
+	public static Disp GetD(this Control ctrl) => MkD().D(ctrl);
+
+
+
+
+    private static D D<D>(this D dispDst, Control ctrl) where D : IDisposable
     {
         ctrl.Events().HandleDestroyed.Merge(
                 ctrl.Events().Disposed
@@ -55,34 +60,10 @@ public static class WinFormsUtils
         return dispDst;
     }
 
-    public static IObservable<T> MakeHot<T>(this IObservable<T> obs, Control ctrl)
+    /*public static IObservable<T> MakeHot<T>(this IObservable<T> obs, Control ctrl)
     {
 	    var con = obs.Publish();
 	    con.Connect().D(ctrl);
 	    return con;
-    }
-
-	/*
-    private const string MainThreadName = "Main Thread";
-    private static SynchronizationContext? syncCtx;
-
-	public static IObservable<T> ObserveOnUI<T>(this IObservable<T> obs)
-	{
-		var threadName = Thread.CurrentThread.Name;
-		if (threadName == MainThreadName && syncCtx == null)
-			syncCtx = SynchronizationContext.Current;
-
-		if (SynchronizationContext.Current == null)
-		{
-			if (threadName == MainThreadName)
-				throw new ArgumentException();
-			if (syncCtx == null)
-				throw new ArgumentException();
-			SynchronizationContext.SetSynchronizationContext(syncCtx);
-		}
-
-		var ctx = SynchronizationContext.Current;
-		return obs.ObserveOn(SynchronizationContext.Current!);
-	}
-	*/
+    }*/
 }

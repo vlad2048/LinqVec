@@ -33,7 +33,7 @@ static class CurveOps
 				.Select(e => e.Id)
 				.FirstOrOption();
 
-		return MaybeUtils.Aggregate(
+		return OptionExt.AggregateArr(
 			For(PointType.Point),
 			For(PointType.LeftHandle),
 			For(PointType.RightHandle)

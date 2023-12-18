@@ -1,7 +1,7 @@
 ﻿using System.Reactive.Linq;
 using Geom;
 using LinqVec.Tools.Events.Utils;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Tools.Events;
 

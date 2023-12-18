@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using LinqVec.Utils.Json;
 using LinqVec.Utils.Rx;
 using PowBasics.Json_;
-using PowRxVar;
+using ReactiveVars;
 using UILib.Utils;
 using VectorEditor.Model;
 using WeifenLuo.WinFormsUI.Docking;
@@ -132,7 +132,7 @@ static class DocLogic
 
 	private static IRoVar<Option<DocPane>> GetActiveDoc(this DockPanel dockPanel, Disp d)
 	{
-		var activeDoc = Var.Make(Option<DocPane>.None).D(d);
+		var activeDoc = Var.Make(Option<DocPane>.None, d);
 		dockPanel.WhenActiveDocChanged().Subscribe(v =>
 		{
 			activeDoc.V = dockPanel.ActiveDocument as DocPane;

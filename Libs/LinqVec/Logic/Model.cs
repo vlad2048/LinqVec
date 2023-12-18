@@ -3,7 +3,7 @@ using System.Reactive.Linq;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Utils.Rx;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Logic;
 
@@ -32,7 +32,7 @@ public sealed class Model<D> : IUndoer where D : IDoc
 	{
 		this.whenEvt = whenEvt;
 		undoer = new Undoer<D>(init).D(d);
-		enableRedrawOnMouseMove = Var.Make(false).D(d);
+		enableRedrawOnMouseMove = Var.Make(false, d);
 	}
 
 	public IObservable<Unit> WhenPaintNeeded => Obs.Merge(

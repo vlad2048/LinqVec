@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Disposables;
 
-namespace PowRxVar;
+namespace ReactiveVars;
 
 public sealed class SerDisp : IDisposable
 {

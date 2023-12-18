@@ -1,16 +1,10 @@
-﻿using Geom;
-using LinqVec;
+﻿using LinqVec;
 using LinqVec.Logic;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
-using LinqVec.Tools.Acts.Delegates;
 using LinqVec.Tools.Acts.Enums;
-using LinqVec.Tools.Acts.Structs;
-using LinqVec.Tools.Events;
-using LinqVec.Tools.Events.Utils;
-using LinqVec.Utils.Rx;
-using PowRxVar;
-using Splat.ModeDetection;
+using LinqVec.Utils;
+using ReactiveVars;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_.Mods;
 
@@ -30,7 +24,77 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		var evt = Env.GetEvtForTool(this, true, d);
 		var curSel = Option<DocMouseModder<Curve>>.None;
 
-		ActMaker ModeNeutral(Pt _) => _ =>
+
+
+		ActSetMaker ModeNeutral(Unit _) => _ =>
+		{
+			curSel = None;
+			return new ActSet(
+				"Neutral",
+				CBase.Cursors.BlackArrow,
+				[
+					Hotspots.Curve(Doc)
+						.Do(curve =>
+						[
+							Act.Click(
+								"SelectCurve",
+								ClickGesture.Click,
+								() => ModeSelected(curve)
+							)
+						])
+				]
+			);
+		};
+
+
+
+		ActSetMaker ModeSelected(Curve curve) => actD =>
+		{
+			var (getF, setF) = Doc.GetGetSet(curve);
+			curSel = new DocMouseModder<Curve>(getF, setF).D(actD);
+
+			return new ActSet(
+				"Selected",
+				CBase.Cursors.BlackArrow,
+				[
+					Hotspots.Curve(Doc)
+						.Do(hotCurve => (hotCurve == curve) switch {
+							true => [
+								Act.Drag(
+									"MoveCurve",
+									curSel.Ensure(),
+									CurveMods.MoveCurve
+									//false
+								)
+							],
+							false => [
+								Act.Click(
+									"SelectCurve",
+									ClickGesture.Click,
+									() => ModeSelected(hotCurve)
+								)
+							]
+						}),
+					Hotspots.Anywhere
+						.Do(_ => [
+							Act.Click(
+								"UnselectCurve",
+								ClickGesture.Click,
+								() => ModeNeutral(Unit.Default)
+							)
+						])
+				]
+			);
+		};
+
+
+		ModeNeutral(Unit.Default)
+			.Run(evt, d);
+
+
+
+
+		/*ActMaker ModeNeutral(Pt _) => _ =>
 		{
 			curSel = None;
 			return new(
@@ -90,7 +154,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		};
 
 		ModeNeutral(Pt.Zero)
-			.Run(evt, d);
+			.Run(evt, d);*/
 
 
 		Env.WhenPaint.Subscribe(gfx =>

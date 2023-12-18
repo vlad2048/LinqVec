@@ -5,7 +5,7 @@ global using Unit = LanguageExt.Unit;
 
 global using Obs = System.Reactive.Linq.Observable;
 global using Disp = System.Reactive.Disposables.CompositeDisposable;
-global using static PowRxVar.DispMaker;
+global using static ReactiveVars.DispMaker;
 
 global using static LinqVec.Utils.CommonMakers;
 global using L = LinqVec.Utils.Logger;
@@ -13,8 +13,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using LinqVec.Utils.Json;
-using PowRxVar;
 using ReactiveUI;
+using ReactiveVars;
 
 [assembly:InternalsVisibleTo("LINQPadQuery")]
 [assembly:InternalsVisibleTo("LinqVec.Tests")]
@@ -44,9 +44,8 @@ static class CfgExt
 {
 	public static IObservable<T> When<T>(this IObservable<Cfg> cfg, Func<Cfg, T> fun) => cfg.Select(fun).DistinctUntilChanged();
 
-	public static IDisposable RunWhen(this IObservable<Cfg> cfg, Func<Cfg, bool> fun, Func<IDisposable> action)
+	public static void RunWhen(this IObservable<Cfg> cfg, Func<Cfg, bool> fun, Disp d, params Func<IDisposable>[] actions)
 	{
-		var d = new Disp();
 		var serDisp = new SerDisp().D(d);
 
 		cfg.When(fun)
@@ -54,9 +53,10 @@ static class CfgExt
 			{
 				var serD = serDisp.GetNewD();
 				if (on)
-					action().D(serD);
+				{
+					foreach (var action in actions)
+						action().D(serD);
+				}
 			}).D(d);
-
-		return d;
 	}
 }

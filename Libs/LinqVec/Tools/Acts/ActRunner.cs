@@ -1,17 +1,193 @@
-﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using LinqVec.Tools.Acts.Delegates;
-using LinqVec.Tools.Acts.Events;
+﻿using System.Reactive.Linq;
+using Geom;
 using LinqVec.Tools.Acts.Logic;
-using LinqVec.Tools.Acts.Structs;
 using LinqVec.Tools.Events;
-using LinqVec.Utils;
 using LinqVec.Utils.Rx;
-using PowRxVar;
+using PowBasics.CollectionsExt;
+using PowBasics.ColorCode;
+using ReactiveVars;
 
 namespace LinqVec.Tools.Acts;
 
+
+public interface IRunEvt
+{
+	string State { get; }
+	string Hotspot { get; }
+}
+
+public sealed record HotspotHoverRunEvt(
+	string State,
+	string Hotspot,
+	bool On
+) : IRunEvt;
+
+public sealed record DragStartRunEvt(
+	string State,
+	string Hotspot,
+	string Act
+) : IRunEvt;
+
+public sealed record ConfirmRunEvt(
+	string State,
+	string Hotspot,
+	string Act
+) : IRunEvt;
+
+
+
+public static class ActRunner
+{
+	public static IObservable<IRunEvt> Run(
+		this ActSetMaker actsMakerInit,
+		Evt evt,
+		Disp d
+	)
+	{
+		var (curActs, curActsSet, curActsReset) = TrackActs(actsMakerInit, evt.WhenUndoRedo, d);
+		var curHotActs = curActs.TrackHotspot(evt.WhenEvt, Rx.Sched, d);
+		var actEvt = curHotActs.ToActEvt(evt.WhenEvt, Rx.Sched, d);
+
+		SetCursor(curActs, curHotActs, evt.SetCursor, d);
+		InvokeActions(actEvt, curActsSet, curActsReset, d);
+
+		var runEvents = GetRunEvents(curActs, curHotActs, evt.MousePos, actEvt);
+
+		G.Cfg.RunWhen(e => e.Log.Tools, d, [
+			() => Log(curActs, curHotActs),
+			//() => runEvents.LogD(),
+		]);
+
+		return runEvents;
+	}
+
+
+
+	private static IDisposable Log(IRoVar<ActSet> curActs, IRoVar<HotspotActsRun> curHotActs) =>
+		Obs.CombineLatest(
+				curActs,
+				curHotActs,
+				(acts, hotActs) => new {
+					ActSetName = acts.Name,
+					Hotspots = acts.HotspotActSets.SelectToArray(e => e.Hotspot.Name),
+					ActiveHotspot = hotActs.Hotspot.Name,
+					Actions = hotActs.Acts.SelectToArray(e => $"{e.Name}({e.Gesture})")
+				}
+			)
+			.DistinctUntilChanged()
+			.Subscribe(t =>
+			{
+				L.Write("    ", 0);
+				L.Write($"[{t.ActSetName}]".PadRight(20), 0xfff14b);
+				var hotspotsStr = t.Hotspots.Select(e => $"{e}  ").JoinText("");
+				foreach (var hotspot in t.Hotspots)
+					L.Write($"{hotspot}  ", hotspot == t.ActiveHotspot ? 0x58e856 : 0x1b6b1a);
+				L.Write(new string(' ', Math.Max(0, 35 - hotspotsStr.Length)));
+				L.WriteLine(t.Actions.JoinText("  "), 0x803299);
+			});
+
+
+
+	private static (IRoVar<ActSet>, Action<ActSetMaker>, Action) TrackActs(
+		ActSetMaker actsMakerInit,
+		IObservable<Unit> whenUndoRedo,
+		Disp d
+	)
+	{
+		var curActsMaker = Var.Make(actsMakerInit, d);
+		whenUndoRedo.Subscribe(_ => curActsMaker.V = actsMakerInit).D(d);
+		var curActsSerDisp = new SerDisp().D(d);
+		var curActs = curActsMaker.Select(maker => maker(curActsSerDisp.GetNewD())).ToVar(d);
+		void Set(ActSetMaker maker) => curActsMaker.V = maker;
+		void Reset() => curActsMaker.V = curActsMaker.V;
+		return (curActs, Set, Reset);
+	}
+
+
+	private static void SetCursor(
+		IRoVar<ActSet> curActs,
+		IRoVar<HotspotActsRun> curHotActs,
+		Action<Cursor?> setCursor,
+		Disp d
+	)
+	{
+		curActs.Subscribe(e => setCursor(e.Cursor)).D(d);
+		curHotActs.Subscribe(e => setCursor(e.Hotspot.Cursor)).D(d);
+	}
+
+	private static void InvokeActions(
+		IObservable<IActEvt> actEvt,
+		Action<ActSetMaker> curActSet,
+		Action curActReset,
+		Disp d
+	)
+	{
+		actEvt.Subscribe(e =>
+		{
+			switch (e)
+			{
+				case DragStartActEvt { HotspotAct: var act, PtStart: var ptStart }:
+					act.Actions.DragStart(ptStart);
+					break;
+
+				case ConfirmActEvt { HotspotAct: var act, Pt: var pt }:
+					act.Actions.Confirm(pt).Match(curActSet, curActReset);
+					break;
+			}
+		}).D(d);
+	}
+
+	private static IObservable<IRunEvt> GetRunEvents(
+		IRoVar<ActSet> curActs,
+		IRoVar<HotspotActsRun> curHotActs,
+		IRoVar<Option<Pt>> mouse,
+		IObservable<IActEvt> actEvt
+	) =>
+		Obs.Create<IRunEvt>(obs =>
+		{
+			var obsD = MkD();
+
+			curHotActs
+				.Buffer(2, 1)
+				.Select(e => new {
+					Prev = e[0],
+					Next = e[1]
+				})
+				.Where(_ => mouse.V.IsSome)
+				.Subscribe(t =>
+				{
+					obs.OnNext(new HotspotHoverRunEvt(curActs.V.Name, t.Prev.Hotspot.Name, false));
+					obs.OnNext(new HotspotHoverRunEvt(curActs.V.Name, t.Next.Hotspot.Name, true));
+				}).D(obsD);
+
+			actEvt
+				.Subscribe(e =>
+				{
+					switch (e)
+					{
+						case DragStartActEvt { HotspotAct: var act }:
+							obs.OnNext(new DragStartRunEvt(curActs.V.Name, curHotActs.V.Hotspot.Name, act.Name));
+							break;
+
+						case ConfirmActEvt { HotspotAct: var act }:
+							obs.OnNext(new ConfirmRunEvt(curActs.V.Name, curHotActs.V.Hotspot.Name, act.Name));
+							break;
+					}
+				}).D(obsD);
+
+			return obsD;
+		});
+
+
+
+	private static void Write(this TxtWriter w, string text, int color) => w.Write(text, MkCol(color));
+	private static void WriteLine(this TxtWriter w, string text, int color) => w.WriteLine(text, MkCol(color));
+}
+
+
+
+
+/*
 public static class BaseActIds
 {
 	public const string Empty = nameof(Empty);
@@ -110,3 +286,4 @@ public static class ActRunner
 	private sealed record Msg(int Priority, Action Action);
 
 }
+*/

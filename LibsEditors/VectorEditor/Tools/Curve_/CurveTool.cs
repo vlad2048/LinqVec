@@ -3,11 +3,9 @@ using LinqVec.Logic;
 using VectorEditor.Model;
 using LinqVec.Tools;
 using LinqVec.Tools.Acts;
-using LinqVec.Tools.Acts.Structs;
 using LinqVec.Tools.Events;
+using ReactiveVars;
 using VectorEditor.Tools.Curve_.Mods;
-using PowRxVar;
-using LinqVec.Tools.Acts.Delegates;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -15,6 +13,16 @@ namespace VectorEditor.Tools.Curve_;
 sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 {
 	public Keys Shortcut => Keys.P;
+
+	private static class States
+	{
+		public const string Neutral = nameof(Neutral);
+	}
+	private static class Acts
+	{
+		public const string MovePoint = nameof(MovePoint);
+		public const string AddPoint = nameof(AddPoint);
+	}
 
 	public IDisposable Run(ToolActions toolActions)
 	{
@@ -37,41 +45,52 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		}).D(d);
 
 
-		ActMaker ModeNeutral(Unit _) => _ => new(
-			"Neutral",
+
+		ActSetMaker ModeNeutral(Unit _) => _ => new ActSet(
+			States.Neutral,
 			CBase.Cursors.Pen,
 			[
-				Act.DragMod(
-					CurveActIds.MovePoint,
-					Hotspots.CurvePoint(curve).WithCursor(CBase.Cursors.BlackArrowSmall),
-					curve,
-					CurveMods.MovePoint,
-					false
-				),
-				Act.DragMod(
-					CurveActIds.AddPoint,
-					Hotspots.Anywhere.WithCursor(CBase.Cursors.Pen),
-					curve,
-					CurveMods.AddPoint,
-					true
-				)
+				Hotspots.CurvePoint(curve)
+					.Do(pointId => [
+						Act.Drag(
+							Acts.MovePoint,
+							curve,
+							CurveMods.MovePoint(pointId)
+						)
+					]),
+				Hotspots.Anywhere
+					.Do(_ => [
+						Act.Drag(
+							Acts.AddPoint,
+							curve,
+							CurveMods.AddPoint(Unit.Default)
+						)
+					]),
 			]
 		);
-
 
 		ModeNeutral(Unit.Default)
 			.Run(evt, d)
 			.Subscribe(e =>
 			{
-				gfxState = e switch
+				switch (e)
 				{
-					{ Id: CurveActIds.MovePoint, State: ActGfxState.Hover or ActGfxState.DragStart } => CurveGfxState.Edit,
-					{ Id: CurveActIds.AddPoint, State: ActGfxState.Hover } => CurveGfxState.AddPoint,
-					{ Id: CurveActIds.AddPoint, State: ActGfxState.DragStart } => CurveGfxState.DragHandle,
-					_ => CurveGfxState.None,
-				};
+					case HotspotHoverRunEvt { Hotspot: "Anywhere", On: true }:
+						curve.ModSet(CurveMods.AddPoint());
+						gfxState = CurveGfxState.AddPoint;
+						break;
+					case HotspotHoverRunEvt { Hotspot: "Anywhere", On: false }:
+						curve.ModClear();
+						gfxState = CurveGfxState.None;
+						break;
+					case DragStartRunEvt { Act: Acts.AddPoint }:
+						gfxState = CurveGfxState.DragHandle;
+						break;
+					case DragStartRunEvt { Act: Acts.MovePoint }:
+						gfxState = CurveGfxState.Edit;
+						break;
+				}
 			}).D(d);
-
 
 
 		Env.WhenPaint.Subscribe(gfx =>
@@ -82,67 +101,3 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		return d;
 	}
 }
-
-
-static class CurveActIds
-{
-	public const string MovePoint = nameof(MovePoint);
-	public const string AddPoint = nameof(AddPoint);
-}
-
-
-
-
-
-/*
-ActRunner.Run(
-	evt,
-	toolActions.WhenUndoRedo,
-
-	[
-		Act.Make(
-			"Move point",
-			Hotspots.CurvePoint(curve),
-			Gesture.Drag,
-			CBase.Cursors.BlackArrowSmall,
-			Actions.Drag<Curve, PointId>(curve, CurveMods.MovePoint, () => gfxState = CurveGfxState.Edit, () => gfxState = CurveGfxState.Edit)
-		),
-		Act.Make(
-			"Add point",
-			Hotspots.Anywhere,
-			Gesture.Drag,
-			CBase.Cursors.Pen,
-			Actions.Drag<Curve, Pt>(curve, new Mod<Curve>(CurveMods.AddPoint), () => gfxState = CurveGfxState.AddPoint, () => gfxState = CurveGfxState.DragHandle)
-		),
-	]
-
-).D(d);
-*/
-
-
-/*
-
-static class Hotspots
-{
-	public static Func<Pt, Option<Pt>> Anywhere => Option<Pt>.Some;
-	public static Func<Pt, Option<PointId>> CurvePoint(IMouseModder<Curve> curve) => m => curve.Get().GetClosestPointTo(m, C.ActivateMoveMouseDistance);
-}
-
-
-// State:	Pts[0], ..., Pts[n-1]
-
-// - draw Marker @ MousePos
-// - draw RedLine @ (Pts[n-1].P, Pts[n-1].HRight) -> (MousePos, MousePos)
-// - draw Handles @ Pts[n-1]
-// - finish: MouseDown(DownPos <- MousePos)
-public sealed record AddPointPre_CurveModelEditState : ICurveModelEditState;
-
-// - draw Marker @ DownPos
-// - draw RedLine @ (Pts[n-1].P, Pts[n-1].HRight) -> (DownPos-(MousePos-DownPos), DownPos)
-// - draw Handles @ (DownPos-(MousePos-DownPos), DownPos, DownPos+(MousePos-DownPos))
-// - finish: MouseUp => Model.AddPoint(DownPos-(MousePos-DownPos), DownPos, DownPos+(MousePos-DownPos))
-public sealed record AddPointHandleDrag_CurveModelEditState(Pt DownPos) : ICurveModelEditState;
-
-// State:	Pts[0], ..., Pts[n-1], Pts[n]
-*/
-

@@ -1,11 +1,11 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LinqVec.Logic;
+using ReactiveVars;
 using VectorEditor.Model;
 using WeifenLuo.WinFormsUI.Docking;
 using UILib;
 using VectorEditor.Panes.ModelTree_;
-using PowRxVar;
 
 namespace VectorEditor.Panes;
 
@@ -23,7 +23,8 @@ public partial class ModelTreePane : DockContent
 	public ModelTreePane()
 	{
 		InitializeComponent();
-		whenInit = new AsyncSubject<IObservable<Option<Model<Doc>>>>().D(this);
+		var ctrlD = this.GetD();
+		whenInit = new AsyncSubject<IObservable<Option<Model<Doc>>>>().D(ctrlD);
 
 		this.InitRX(d =>
 		{

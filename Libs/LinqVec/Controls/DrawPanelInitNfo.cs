@@ -1,6 +1,6 @@
 ﻿using LinqVec.Drawing;
 using LinqVec.Structs;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Controls;
 

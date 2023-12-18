@@ -1,6 +1,6 @@
 ﻿using LinqVec;
 using LinqVec.Logic;
-using PowRxVar;
+using ReactiveVars;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
 using VectorEditor.Tools.Select_;

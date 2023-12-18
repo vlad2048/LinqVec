@@ -5,7 +5,7 @@ using LinqVec.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.WinForms_;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec.Tools;
 
@@ -40,7 +40,7 @@ public sealed class ToolEnv : IDisposable
 		whenUndoRedo = new Subject<Unit>().D(d);
 	}
 
-	internal void SigUndoRedo() => whenUndoRedo.OnNext(Unit.Default);
+	internal void TriggerUndoRedo() => whenUndoRedo.OnNext(Unit.Default);
 
 	public ICurs Curs { get; }
     public IRoVar<Transform> Transform { get; }

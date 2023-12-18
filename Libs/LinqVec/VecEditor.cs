@@ -1,5 +1,4 @@
-﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LinqVec.Controls;
 using LinqVec.Drawing;
@@ -12,7 +11,7 @@ using LinqVec.Tools.Events;
 using UILib;
 using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.Rx;
-using PowRxVar;
+using ReactiveVars;
 
 namespace LinqVec;
 
@@ -33,13 +32,14 @@ public partial class VecEditor : UserControl
 	{
 		InitializeComponent();
 
-		var transform = Var.Make(Transform.Id).D(this);
-		whenInit = new AsyncSubject<VecEditorInitNfo>().D(this);
-		var curTool = Var.Make<ITool>(null!).D(this);
+		var ctrlD = this.GetD();
+		var transform = Var.Make(Transform.Id, ctrlD);
+		whenInit = new AsyncSubject<VecEditorInitNfo>().D(ctrlD);
+		var curTool = Var.Make<ITool>(null!, ctrlD);
 		var ctrl = new Ctrl(drawPanel);
 
 		var editorEvt = EvtMaker.MakeForControl(drawPanel, curTool.ToUnitExt());
-		var tempD = MkD().D(this);
+		var tempD = MkD().D(ctrlD);
 		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, tempD);
 
 		Env = new ToolEnv(
@@ -49,7 +49,7 @@ public partial class VecEditor : UserControl
 			isPanZoom,
 			transform,
 			editorEvt
-		).D(this);
+		).D(ctrlD);
 
 
 		this.InitRX(WhenInit, (init, d) =>
@@ -60,7 +60,7 @@ public partial class VecEditor : UserControl
 
 			var (docUndoer, tools) = init;
 			var undoMan = new UndoMan(docUndoer).D(d);
-			Obs.Merge(undoMan.WhenUndo, undoMan.WhenRedo).Subscribe(_ => Env.SigUndoRedo()).D(d);
+			Obs.Merge(undoMan.WhenUndo, undoMan.WhenRedo).Subscribe(_ => Env.TriggerUndoRedo()).D(d);
 
 			editorEvt.WhenKeyDown(Keys.D1).Subscribe(_ => Cursor = Cursors.Default).D(d);
 			editorEvt.WhenKeyDown(Keys.D2).Subscribe(_ => Cursor = CBase.Cursors.Pen).D(d);
@@ -81,7 +81,7 @@ public partial class VecEditor : UserControl
 				Env.Invalidate();
 			}).D(d);
 
-			G.Cfg.RunWhen(e => e.Log.Tools, curTool.Log).D(d);
+			G.Cfg.RunWhen(e => e.Log.Tools, d, curTool.Log);
 		});
 	}
 

@@ -4,7 +4,6 @@ using LinqVecDemo.Logic;
 using UILib;
 using VectorEditor.Panes;
 using WeifenLuo.WinFormsUI.Docking;
-using PowRxVar;
 
 namespace LinqVecDemo;
 

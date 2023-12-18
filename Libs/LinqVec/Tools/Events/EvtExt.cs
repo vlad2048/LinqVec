@@ -2,8 +2,8 @@
 using Geom;
 using LinqVec.Utils.WinForms_;
 using LinqVec.Utils.Rx;
-using PowRxVar;
 using ReactiveUI;
+using ReactiveVars;
 
 namespace LinqVec.Tools.Events;
 
@@ -119,7 +119,7 @@ public static class EvtExt
 	// ===========
 	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key, Disp d)
 	{
-		var isDown = Var.Make(false).D(d);
+		var isDown = Var.Make(false, d);
 		Observable.Merge(
 				src.WhenKeyDown(key).Select(_ => true),
 				src.WhenKeyUp(key).Select(_ => false)

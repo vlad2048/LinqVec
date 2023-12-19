@@ -8,7 +8,7 @@ sealed class EvtTimeout : IDisposable
 {
 	private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(500);
 
-	private readonly Disp d = new();
+	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
 	private readonly SerialDisp<IRwDispBase> serD;

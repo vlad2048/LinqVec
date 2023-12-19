@@ -36,7 +36,7 @@ static class G
 		};
 	}
 
-	public static IObservable<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Default, D);
+	public static IObservable<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Default);
 }
 
 

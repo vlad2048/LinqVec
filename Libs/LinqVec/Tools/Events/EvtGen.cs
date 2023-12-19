@@ -52,7 +52,7 @@ public sealed record KeyEvt(UpDown UpDown, Keys Key) : IEvt
 
 public class Evt : IDisposable
 {
-	private readonly Disp d = new();
+	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
 	private readonly Action<Cursor> setCursor;

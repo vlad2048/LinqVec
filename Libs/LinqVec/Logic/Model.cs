@@ -10,7 +10,7 @@ namespace LinqVec.Logic;
 
 public sealed class Model<D> : IUndoer where D : IDoc
 {
-	private readonly Disp d = new();
+	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
 	private readonly IObservable<IEvt> whenEvt;
@@ -40,7 +40,7 @@ public sealed class Model<D> : IUndoer where D : IDoc
 		enableRedrawOnMouseMove
 			.Select(enabled => enabled switch
 			{
-				true => whenEvt.WhenMouseMove().ToUnitExt(),
+				true => whenEvt.WhenMouseMove().ToUnit(),
 				false => Obs.Never<Unit>()
 			})
 			.Switch(),

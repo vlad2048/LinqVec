@@ -22,7 +22,7 @@ public interface IEntity : IDisposable
 
 public sealed class Entity<M, E> : IEntity, IDisposable
 {
-	private readonly Disp d = new();
+	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
 	private readonly EntityNfo<M, E> entityNfo;

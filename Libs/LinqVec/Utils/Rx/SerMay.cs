@@ -7,7 +7,7 @@ namespace LinqVec.Utils.Rx;
 
 public sealed class SerMay<T> : IDisposable where T : IDisposable
 {
-	private readonly Disp d = new();
+	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
 	private readonly ISubject<Option<T>> whenChanged;

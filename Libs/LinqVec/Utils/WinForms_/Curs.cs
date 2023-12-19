@@ -16,7 +16,7 @@ public class Ctrl(Control ctrl) : ICurs
 		set => ctrl.Cursor = value;
 	}
 
-	public IObservable<Unit> WhenSizeChanged => ctrl.Events().ClientSizeChanged.ToUnitExt();
+	public IObservable<Unit> WhenSizeChanged => ctrl.Events().ClientSizeChanged.ToUnit();
 
 	public Pt Sz => ctrl.ClientSize.ToPt();
 }

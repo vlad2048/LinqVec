@@ -24,7 +24,7 @@ public interface IMouseModder<O>
 public sealed class MemMouseModder<O> : IDisposable, IMouseModder<O>
 {
 	private static readonly MouseMod<O> identity = (o, _) => o;
-	private readonly Disp d = new();
+	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
     private readonly Undoer<O> undoer;
@@ -50,7 +50,7 @@ public sealed class MemMouseModder<O> : IDisposable, IMouseModder<O>
 public sealed class DocMouseModder<O> : IDisposable, IMouseModder<O>
 {
 	private static readonly MouseMod<O> identity = (o, _) => o;
-	private readonly Disp d = new();
+	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
 	private readonly Func<O> getFun;

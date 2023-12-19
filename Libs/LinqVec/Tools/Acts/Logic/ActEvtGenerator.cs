@@ -127,8 +127,8 @@ static class ActEvtGenerator
 								.SpotMatches(seqClick)
 								.IfOtherDoesntHappenWithin(
 									Obs.Merge(
-										evt.Where(e => e is LDownUsr).ToUnitExt(),
-										whenDoubleClickDelayed.ToUnitExt()
+										evt.Where(e => e is LDownUsr).ToUnit(),
+										whenDoubleClickDelayed.ToUnit()
 									)
 								, ClickDelay, scheduler)
 								.Select(e => (IActEvt)new ConfirmActEvt(act, ((LDownUsr)e).Pt))

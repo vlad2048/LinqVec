@@ -40,7 +40,7 @@ public sealed partial class DrawPanel : UserControl
 			if (DrawPanelUtils.SetupForDesignMode(DesignMode, d, this, res, transform)) return;
 
 			Obs.Merge(
-					transform.ToUnitExt()
+					transform.ToUnit()
 				)
 				.Subscribe(_ => Invalidate()).D(d);
 

@@ -8,17 +8,16 @@ public static class RxCfg
 {
 	private static readonly TimeSpan DebounceTime = TimeSpan.FromMilliseconds(500);
 
-	public static IRoVar<C> Make<C>(string filename, C defaultValue, Jsoner jsoner, Disp d) =>
+	public static IRoVar<C> Make<C>(string filename, C defaultValue, Jsoner jsoner) =>
 		Obs.Create<C>(obs =>
 			{
-				var obsD = new Disp(); // TODO
+				var obsD = MkD();
 
 				var init = jsoner.LoadOrCreateDefault(filename.MakeFolderForFileIFN(), defaultValue);
 				obs.OnNext(init);
 
 				var (folder, name) = filename.SplitFilename();
-				var fsWatch = new FileSystemWatcher(folder, name)
-				{
+				var fsWatch = new FileSystemWatcher(folder, name) {
 					NotifyFilter = NotifyFilters.LastWrite,
 				}.D(obsD);
 
@@ -32,7 +31,9 @@ public static class RxCfg
 
 				return obsD;
 			})
-			.ToVar(d);
+			.Replay(1)
+			.RefCount()
+			.ToVar();
 }
 
 

@@ -22,7 +22,7 @@ public interface IUndoer : IDisposable
 
 sealed class UndoMan : IUndoer
 {
-	private readonly Disp d = new();
+	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
 	private readonly IUndoer docUndoer;
@@ -108,7 +108,7 @@ public static class Undoer
 
 sealed class Undoer<T> : IUndoer
 {
-    private readonly Disp d = new();
+    private readonly Disp d = MkD();
     public void Dispose() => d.Dispose();
 
     private readonly IRwVar<T> cur;
@@ -128,10 +128,10 @@ sealed class Undoer<T> : IUndoer
     }
 
 	// IUndoer
-    public IObservable<Unit> WhenDo => WhenDoT.ToUnitExt();
+    public IObservable<Unit> WhenDo => WhenDoT.ToUnit();
     public IObservable<Unit> WhenUndo => whenUndo.AsObservable();
     public IObservable<Unit> WhenRedo => whenRedo.AsObservable();
-	public IObservable<Unit> WhenChanged => cur.AsObservable().ToUnitExt();
+	public IObservable<Unit> WhenChanged => cur.AsObservable().ToUnit();
     public bool Undo()
     {
 	    if (stackUndo.Count == 0) return false;

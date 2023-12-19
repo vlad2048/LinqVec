@@ -27,7 +27,7 @@ partial class MainWin : Form
 	{
 		InitializeComponent();
 
-		this.InitRX(this.Events().Load.ToUnitExt(), (_, d) =>
+		this.InitRX(this.Events().Load.ToUnit(), (_, d) =>
 		{
 			var doc = this.InitDocLogic(d);
 			

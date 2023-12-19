@@ -14,7 +14,7 @@ public sealed record Doc(
 	Layer[] Layers
 ) : IDoc
 {
-	public static readonly Doc Empty = new(new[] { Layer.Empty() });
+	public static readonly Doc Empty = new([Layer.Empty()]);
 
 	[JsonIgnore]
 	public IId[] AllObjects => Layers.OfType<IId>().Concat(Layers.SelectMany(e => e.Objects)).ToArray();
@@ -28,7 +28,7 @@ public sealed record Layer(
 	IVisualObjSer[] Objects
 ) : IId
 {
-	public static Layer Empty() => new(Guid.NewGuid(), System.Array.Empty<IVisualObjSer>());
+	public static Layer Empty() => new(Guid.NewGuid(), []);
 }
 
 public sealed record Curve(
@@ -36,10 +36,7 @@ public sealed record Curve(
 	CurvePt[] Pts
 ) : IVisualObjSer
 {
-	public static Curve Empty() => new(
-		Guid.NewGuid(),
-		System.Array.Empty<CurvePt>()
-	);
+	public static Curve Empty() => new(Guid.NewGuid(), []);
 
 	public R BoundingBox => this.GetDrawPoints().GetBBox();
 	public double DistanceToPoint(Pt pt) => this.GetDrawPoints().DistanceToPoint(pt);

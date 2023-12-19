@@ -8,7 +8,7 @@ namespace LinqVec.Drawing;
 
 public class Res : IDisposable
 {
-    private readonly Disp d = new();
+    private readonly Disp d = MkD();
     public void Dispose() => d.Dispose();
 
     private record struct PenNfo(Color Color, float Thickness, float Scale);

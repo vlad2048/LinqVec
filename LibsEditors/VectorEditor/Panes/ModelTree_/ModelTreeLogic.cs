@@ -1,6 +1,6 @@
 ﻿using BrightIdeasSoftware;
 using DynamicData;
-using LinqVec.Logic;
+using LinqVec;
 using LinqVec.Utils.WinForms_;
 using PowBasics.CollectionsExt;
 using ReactiveVars;
@@ -44,11 +44,11 @@ static class ModelTreeLogic
 
 		tree.SetupColumns();
 
-		doc.WhenChanged
+		doc.Cur
 			//.ObserveOnUI()
-			.Subscribe(_ =>
+			.Subscribe(cur =>
 			{
-				var roots = doc.V.ToTree();
+				var roots = cur.ToTree();
 				tree.SetObjects(roots);
 				tree.ExpandAll();
 			}).D(d);

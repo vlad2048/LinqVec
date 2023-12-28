@@ -20,4 +20,8 @@
     <ProjectReference Include="..\..\TestLib\TestLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TestSupport\" />
+  </ItemGroup>
+
 </Project>

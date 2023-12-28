@@ -3,8 +3,7 @@
 namespace LinqVec.Tools;
 
 public sealed record ToolActions(
-	Action Reset,
-	Action<IUndoer> SetUndoer
+	Action Reset
 );
 
 public interface ITool

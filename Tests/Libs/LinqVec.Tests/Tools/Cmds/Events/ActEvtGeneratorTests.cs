@@ -1,13 +1,13 @@
 ﻿/*
 using System.Reactive;
 using Geom;
-using LinqVec.Tools.Acts.Enums;
-using LinqVec.Tools.Acts.Events;
+using LinqVec.Tools.Cmds.Enums;
+using LinqVec.Tools.Cmds.Events;
 using LinqVec.Tools.Events;
 using Microsoft.Reactive.Testing;
 using TestLib;
 
-namespace LinqVec.Tests.Tools.Acts.Events;
+namespace LinqVec.Tests.Tools.Cmds.Events;
 
 class ActEvtGeneratorTests
 {
@@ -33,19 +33,19 @@ class ActEvtGeneratorTests
 
 			Move(11, 70, 5),
 		]);
-		var actEvt = src.ToActEvt(Gesture.Drag, sched, d);
-		var obs = sched.CreateObserver<IActEvt>();
+		var actEvt = src.ToCmdEvt(Gesture.Drag, sched, d);
+		var obs = sched.CreateObserver<ICmdEvt>();
 		actEvt.Subscribe(obs);
 
 		sched.Start();
 
-		obs.LogMessages("ToActEvt");
+		obs.LogMessages("ToCmdEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(3, (IActEvt)new DragStartActEvt(new Pt(10, 5))),
-			OnNext(5, (IActEvt)new ConfirmActEvt(ConfirmType.DragEnd, new Pt(10, 5), new Pt(30, 5))),
-			OnNext(8, (IActEvt)new DragStartActEvt(new Pt(40, 5))),
-			OnNext(10, (IActEvt)new ConfirmActEvt(ConfirmType.DragEnd, new Pt(40, 5), new Pt(60, 5))),
+			OnNext(3, (ICmdEvt)new DragStartCmdEvt(new Pt(10, 5))),
+			OnNext(5, (ICmdEvt)new ConfirmCmdEvt(ConfirmType.DragEnd, new Pt(10, 5), new Pt(30, 5))),
+			OnNext(8, (ICmdEvt)new DragStartCmdEvt(new Pt(40, 5))),
+			OnNext(10, (ICmdEvt)new ConfirmCmdEvt(ConfirmType.DragEnd, new Pt(40, 5), new Pt(60, 5))),
 		]);
 	}
 
@@ -58,16 +58,16 @@ class ActEvtGeneratorTests
 			LDown(2, 10, 5),
 			LUp(2.2, 10, 5),
 		]);
-		var actEvt = src.ToActEvt(Gesture.Click, sched, d);
-		var obs = sched.CreateObserver<IActEvt>();
+		var actEvt = src.ToCmdEvt(Gesture.Click, sched, d);
+		var obs = sched.CreateObserver<ICmdEvt>();
 		actEvt.Subscribe(obs);
 
 		sched.Start();
 
-		obs.LogMessages("ToActEvt");
+		obs.LogMessages("ToCmdEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(2.2, (IActEvt)new ConfirmActEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
+			OnNext(2.2, (ICmdEvt)new ConfirmCmdEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
 		]);
 	}
 
@@ -80,13 +80,13 @@ class ActEvtGeneratorTests
 			LDown(2, 10, 5),
 			LUp(3, 10, 5),
 		]);
-		var actEvt = src.ToActEvt(Gesture.Click, sched, d);
-		var obs = sched.CreateObserver<IActEvt>();
+		var actEvt = src.ToCmdEvt(Gesture.Click, sched, d);
+		var obs = sched.CreateObserver<ICmdEvt>();
 		actEvt.Subscribe(obs);
 
 		sched.Start();
 
-		obs.LogMessages("ToActEvt");
+		obs.LogMessages("ToCmdEvt");
 
 		obs.Messages.AssertEqual([
 		]);
@@ -102,16 +102,16 @@ class ActEvtGeneratorTests
 			LDown(2, 10, 5),
 			LUp(2.2, 10, 5),
 		]);
-		var actEvt = src.ToActEvt(Gesture.Click | Gesture.DoubleClick, sched, d);
-		var obs = sched.CreateObserver<IActEvt>();
+		var actEvt = src.ToCmdEvt(Gesture.Click | Gesture.DoubleClick, sched, d);
+		var obs = sched.CreateObserver<ICmdEvt>();
 		actEvt.Subscribe(obs);
 
 		sched.Start();
 
-		obs.LogMessages("ToActEvt");
+		obs.LogMessages("ToCmdEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(2.7, (IActEvt)new ConfirmActEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
+			OnNext(2.7, (ICmdEvt)new ConfirmCmdEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
 		]);
 	}
 
@@ -127,16 +127,16 @@ class ActEvtGeneratorTests
 			LDown(2.6, 10, 5),
 			LUp(3.0, 10, 5),
 		]);
-		var actEvt = src.ToActEvt(Gesture.Click | Gesture.DoubleClick, sched, d);
-		var obs = sched.CreateObserver<IActEvt>();
+		var actEvt = src.ToCmdEvt(Gesture.Click | Gesture.DoubleClick, sched, d);
+		var obs = sched.CreateObserver<ICmdEvt>();
 		actEvt.Subscribe(obs);
 
 		sched.Start();
 
-		obs.LogMessages("ToActEvt");
+		obs.LogMessages("ToCmdEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(3.0, (IActEvt)new ConfirmActEvt(ConfirmType.DoubleClick, new Pt(10, 5), new Pt(10, 5))),
+			OnNext(3.0, (ICmdEvt)new ConfirmCmdEvt(ConfirmType.DoubleClick, new Pt(10, 5), new Pt(10, 5))),
 		]);
 	}
 
@@ -151,17 +151,17 @@ class ActEvtGeneratorTests
 			Move(2.1, 20, 5),
 			LUp(2.2, 20, 5),
 		]);
-		var actEvt = src.ToActEvt(Gesture.Drag | Gesture.Click | Gesture.DoubleClick, sched, d);
-		var obs = sched.CreateObserver<IActEvt>();
+		var actEvt = src.ToCmdEvt(Gesture.Drag | Gesture.Click | Gesture.DoubleClick, sched, d);
+		var obs = sched.CreateObserver<ICmdEvt>();
 		actEvt.Subscribe(obs);
 
 		sched.Start();
 
-		obs.LogMessages("ToActEvt");
+		obs.LogMessages("ToCmdEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(2.1, (IActEvt)new DragStartActEvt(new Pt(10, 5))),
-			OnNext(2.2, (IActEvt)new ConfirmActEvt(ConfirmType.DragEnd, new Pt(10, 5), new Pt(20, 5))),
+			OnNext(2.1, (ICmdEvt)new DragStartCmdEvt(new Pt(10, 5))),
+			OnNext(2.2, (ICmdEvt)new ConfirmCmdEvt(ConfirmType.DragEnd, new Pt(10, 5), new Pt(20, 5))),
 		]);
 	}
 
@@ -175,16 +175,16 @@ class ActEvtGeneratorTests
 			LDown(2, 10, 5),
 			LUp(2.2, 10, 5),
 		]);
-		var actEvt = src.ToActEvt(Gesture.Drag | Gesture.Click | Gesture.DoubleClick, sched, d);
-		var obs = sched.CreateObserver<IActEvt>();
+		var actEvt = src.ToCmdEvt(Gesture.Drag | Gesture.Click | Gesture.DoubleClick, sched, d);
+		var obs = sched.CreateObserver<ICmdEvt>();
 		actEvt.Subscribe(obs);
 
 		sched.Start();
 
-		obs.LogMessages("ToActEvt");
+		obs.LogMessages("ToCmdEvt");
 
 		obs.Messages.AssertEqual([
-			OnNext(2.7, (IActEvt)new ConfirmActEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
+			OnNext(2.7, (ICmdEvt)new ConfirmCmdEvt(ConfirmType.Click, new Pt(10, 5), new Pt(10, 5))),
 		]);
 	}
 

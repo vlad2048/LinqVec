@@ -58,30 +58,30 @@ public partial class VecEditor : UserControl
 			drawPanel.Init(new DrawPanelInitNfo(transform, res));
 			if (DesignMode) return;
 
-			var (docUndoer, tools) = init;
-			var undoMan = new UndoMan(docUndoer).D(d);
-			Obs.Merge(undoMan.WhenUndo, undoMan.WhenRedo).Subscribe(_ => Env.TriggerUndoRedo()).D(d);
+			var (model, tools) = init;
+			model.WhenUndoRedo.Subscribe(_ => Env.TriggerUndoRedo()).D(d);
 
 			editorEvt.WhenKeyDown(Keys.D1).Subscribe(_ => Cursor = Cursors.Default).D(d);
 			editorEvt.WhenKeyDown(Keys.D2).Subscribe(_ => Cursor = CBase.Cursors.Pen).D(d);
 			editorEvt.WhenKeyDown(Keys.D3).Subscribe(_ => Cursor = CBase.Cursors.BlackArrowSmall).D(d);
 
-			Env.RunTools(tools, curTool, undoMan).D(d);
+			Env.RunTools(tools, curTool).D(d);
 
-			editorEvt.WhenKeyRepeat(Keys.Z, true).Subscribe(_ => undoMan.Undo()).D(d);
-			editorEvt.WhenKeyRepeat(Keys.Y, true).Subscribe(_ => undoMan.Redo()).D(d);
+			var isMouseDown = editorEvt.IsMouseDown();
+			editorEvt.WhenKeyRepeat(Keys.Z, true).Where(_ => !isMouseDown.V).Subscribe(_ => model.Undo()).D(d);
+			editorEvt.WhenKeyRepeat(Keys.Y, true).Where(_ => !isMouseDown.V).Subscribe(_ => model.Redo()).D(d);
 
 			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
 			statusStrip.AddLabel("zoom", transform.Select(e => $"{C.ZoomLevels[e.ZoomIndex]:P}")).D(d);
 			statusStrip.AddLabel("center", transform.Select(e => e.Center)).D(d);
 			statusStrip.AddLabel("tool", curTool.Select(GetToolName)).D(d);
 
-			undoMan.WhenChanged.Subscribe(_ =>
+			model.WhenPaintNeeded.Subscribe(_ =>
 			{
-				Env.Invalidate();
+				drawPanel.Invalidate();
 			}).D(d);
 
-			G.Cfg.RunWhen(e => e.Log.Tools, d, curTool.Log);
+			G.Cfg.RunWhen(e => e.Log.CurTool, d, curTool.Log);
 		});
 	}
 
@@ -93,7 +93,7 @@ public partial class VecEditor : UserControl
 
 file static class VecEditorUtils
 {
-	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool, UndoMan undoMan)
+	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool)
 	{
 		var d = MkD();
 
@@ -115,8 +115,7 @@ file static class VecEditorUtils
 				{
 					var resetD = resetDisp.GetNewD();
 					var toolActions = new ToolActions(
-						Reset,
-						undoMan.SetToolUndoer
+						Reset
 					);
 					tool.Run(toolActions).D(resetD);
 				}

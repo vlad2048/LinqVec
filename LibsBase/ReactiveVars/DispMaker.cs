@@ -30,12 +30,23 @@ public static class DispMaker
 		return d;
 	}
 
-	public static void CheckForUndisposedDisps()
+	public static bool LogAndTellIfThereAreUndisposedDisps(bool waitForKey = true, bool resetForTests = false)
+	{
+		var isIssue = LogAndTellIfThereAreUndisposedDisps_Inner();
+		if (isIssue && waitForKey)
+			Console.ReadKey();
+		if (resetForTests)
+			map.Clear();
+		return isIssue;
+	}
+
+	private static bool LogAndTellIfThereAreUndisposedDisps_Inner()
 	{
 		var allDisps = map.Values.WhereToArray(e => !e.Disposed);
 		if (allDisps.Length == 0)
 		{
 			LTitle("All Disps released");
+			return false;
 		}
 		else
 		{
@@ -44,7 +55,7 @@ public static class DispMaker
 			foreach (var d in topDisps)
 				L($"  {d}");
 			L("");
-			Console.ReadKey();
+			return true;
 		}
 	}
 

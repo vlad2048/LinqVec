@@ -1,20 +1,44 @@
-﻿using LinqVec.Structs;
+﻿namespace LinqVec.Utils;
+
+
+public static class EnumExt
+{
+	public static T[] AddArrIf<T>(this T[] xs, bool condition, T x) => condition switch {
+		false => xs,
+		true => xs.AddArr(x)
+	};
+	public static T[] AddArr<T>(this T[] xs, T x) => xs.ToList().Append(x).ToArray();
+	public static T[] RemoveArr<T>(this T[] xs, T x)
+	{
+		var list = xs.ToList();
+		if (!list.Remove(x)) throw new ArgumentException();
+		return list.ToArray();
+	}
+	public static T[] ToggleArr<T>(this T[] xs, T x) => xs.Contains(x) switch {
+		false => xs.AddArr(x),
+		true => xs.RemoveArr(x)
+	};
+	public static T[] SetIdxArr<T>(this T[] arr, int idx, Func<T, T> fun)
+	{
+		var list = arr.Take(idx).ToList();
+		list.Add(fun(arr[idx]));
+		list.AddRange(arr.Skip(idx + 1));
+		return list.ToArray();
+	}
+}
+
+
+/*
+using LinqVec.Structs;
 
 namespace LinqVec.Utils;
+
 
 public static class EnumExt
 {
 	public static T[] SkipToArray<T>(this T[] arr, int n) => arr.Skip(n).ToArray();
 
 	public static bool ContainsId<T>(this T[] arr, Guid id) where T : IId => arr.Count(e => e.Id == id) == 1;
-
-	/*public static bool ContainsIdAndIsOfType<T, U>(this T[] arr, Guid id) where T : IId where U : T
-	{
-		var mayElt = arr.GetMayId(id);
-		if (mayElt.IsNone) return false;
-		var mayElt.I
-		return elt is U;*
-	}*/
 
 	public static T[] Add<T>(this T[] arr, T e) => arr.ToList().Append(e).ToArray();
 	public static T[] Remove<T>(this T[] arr, T e)
@@ -45,7 +69,7 @@ public static class EnumExt
 	public static T[] SetId<T>(this T[] arr, T e) where T : IId
 	{
 		var idx = arr.SingleIndexWhere(f => f.Id == e.Id);
-		return arr.SetIdx(idx, e);
+		return arr.SetIdxArr(idx, e);
 	}
 
 	public static T[] ChangeId<T>(this T[] arr, Guid id, Func<T, T> fun) where T : IId
@@ -60,7 +84,7 @@ public static class EnumExt
 		return arr.RemoveIdx(idx);
 	}
 
-	public static T[] SetIdx<T>(this T[] arr, int idx, T e)
+	public static T[] SetIdxArr<T>(this T[] arr, int idx, T e)
 	{
 		var list = arr.Take(idx).ToList();
 		list.Add(e);
@@ -85,3 +109,4 @@ public static class EnumExt
 
 	private static int SingleIndexWhere<T>(this T[] arr, Func<T, bool> predicate) => arr.Select((e, i) => (e, i)).Single(t => predicate(t.e)).i;
 }
+*/

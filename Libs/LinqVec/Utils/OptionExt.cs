@@ -4,7 +4,14 @@ namespace LinqVec.Utils;
 
 public static class OptionExt
 {
+	public static T? ToNullable<T>(this Option<T> opt) where T : class => opt.MatchUnsafe(e => e, () => null);
+
 	public static T Ensure<T>(this Option<T> opt) => opt.IfNone(() => throw new ArgumentException());
+
+	public static Option<U> OfType<T, U>(this Option<T> opt) where U : T =>
+		from v in opt
+		where v is U
+		select (U)v;
 
 	public static Option<T> FirstOrOption<T>(this IEnumerable<T> src, Func<T, bool>? predicate = null)
 	{

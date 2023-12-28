@@ -1,13 +1,14 @@
-﻿using System.ComponentModel;
-using System.Reactive.Concurrency;
+﻿using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Text.Json;
+using LinqVec.Utils;
 using LinqVec.Utils.Json;
 using LinqVec.Utils.Rx;
 using PowBasics.Json_;
 using ReactiveVars;
 using UILib.Utils;
-using VectorEditor.Model;
 using WeifenLuo.WinFormsUI.Docking;
+using Doc = VectorEditor.Model.Doc;
 
 namespace LinqVecDemo.Logic;
 
@@ -15,25 +16,71 @@ static class DocLogic
 {
 	public static IRoVar<Option<DocPane>> InitDocLogic(this MainWin win, Disp d)
 	{
-		var activeDoc = win.dockPanel.GetActiveDoc(d);
-		var baseName = win.Text;
+		var curDoc = win.dockPanel.GetActiveDoc(d);
 
-
-		win.menuFileNew.Events().Click.Subscribe(_ => Open(false)).D(d);
-		win.menuFileOpen.Events().Click.Subscribe(_ => Open(true)).D(d);
-		win.menuFileSave.Events().Click.Subscribe(_ => Save(false)).D(d);
-		win.menuFileSaveAs.Events().Click.Subscribe(_ => Save(true)).D(d);
+		curDoc.Enables(win.menuFileSave, win.menuFileSaveAs).D(d);
+		win.menuFileNew.Events().Click.Subscribe(_ => New(win.dockPanel)).D(d);
+		win.menuFileOpen.Events().Click.Subscribe(_ => Open(win.dockPanel)).D(d);
+		win.menuFileSave.Events().Click.Subscribe(_ => Save(false, curDoc)).D(d);
+		win.menuFileSaveAs.Events().Click.Subscribe(_ => Save(true, curDoc)).D(d);
 		win.menuFileExit.Events().Click.Subscribe(_ => win.Close()).D(d);
 
+		TrackAndRestoreCurFile(win, curDoc, d);
+
+		return curDoc;
+	}
+
+
+	private static void TrackAndRestoreCurFile(
+		MainWin win,
+		IRoVar<Option<DocPane>> curDoc,
+		Disp d
+	)
+	{
+		var baseName = win.Text;
+
+		OpenLastLoadedFile(win);
+
+		var curFile =
+			curDoc
+				.Select(e => e.Match(
+					f => f.Filename,
+					() => Obs.Return(Option<string>.None)
+				))
+				.Switch()
+				.Select(e => e.ToNullable());
+
+		curFile
+			.Subscribe(e =>
+			{
+				win.LastLoadedFile = e;
+				win.Text = e switch
+				{
+					null => baseName,
+					not null => $"{baseName} - [{Path.GetFileNameWithoutExtension(e)}]"
+				};
+			}).D(d);
+
+		win.statusStrip.AddLabel("File", curFile.Select(e => e ?? "_")).D(d);
+	}
+
+
+
+	private static void OpenLastLoadedFile(MainWin win)
+	{
 		var hasOpened = false;
-		if (win.LastLoadedFile != null)
+		if (win.LastLoadedFile != null && File.Exists(win.LastLoadedFile))
 		{
 			if (File.Exists(win.LastLoadedFile))
 			{
-				var doc = OpenFile(win.LastLoadedFile);
-				doc.Show(win.dockPanel, DockState.Document);
-				doc.Focus();
-				hasOpened = true;
+				try
+				{
+					AddDocPane(win.LastLoadedFile, win.dockPanel);
+					hasOpened = true;
+				}
+				catch (JsonException)
+				{
+				}
 			}
 			else
 			{
@@ -41,99 +88,68 @@ static class DocLogic
 			}
 		}
 		if (!hasOpened)
-			Open(false);
-
-		activeDoc
-			.Where(e => e.IsNone)
-			.Subscribe(_ => win.LastLoadedFile = null).D(d);
-		
-
-		activeDoc.Enables(win.menuFileSave, win.menuFileSaveAs).D(d);
-
-
-		void SetTitle(Option<string> mayFilename) => win.Text = mayFilename.Match(
-			f => $"{baseName} - [{Path.GetFileNameWithoutExtension(f)}]",
-			baseName
-		);
-		activeDoc.Select(e =>
-			from doc in e
-			from file in doc.Filename.V
-			select file
-		).Subscribe(SetTitle).D(d);
-
-		
-		DocPane OpenFile(string file)
-		{
-			var m = VecJsoner.Default.Load<Doc>(file);
-			var doc = new DocPane((m, file));
-			win.LastLoadedFile = file;
-			return doc;
-		}
-
-		void Open(bool fromFile)
-		{
-			DocPane doc;
-			if (fromFile)
-			{
-				using var dlg = new OpenFileDialog
-				{
-					DefaultExt = ".json",
-					Filter = "Vec Files (*.json)|*.json",
-					RestoreDirectory = true,
-				};
-				if (dlg.ShowDialog() == DialogResult.OK)
-				{
-					doc = OpenFile(dlg.FileName);
-				}
-				else
-				{
-					return;
-				}
-			}
-			else
-			{
-				doc = new DocPane();
-			}
-			doc.Show(win.dockPanel, DockState.Document);
-			Rx.Sched.Schedule(() => doc.vecEditor.Focus());
-		}
-
-
-		void Save(bool saveAs)
-		{
-			var doc = activeDoc.V.IfNone(() => throw new ArgumentException());
-			var m = doc.Doc.V;
-
-			if (saveAs || doc.Filename.V.IsNone)
-			{
-				using var dlg = new SaveFileDialog
-				{
-					DefaultExt = ".json",
-					Filter = "Vec Files (*.json)|*.json",
-					RestoreDirectory = true,
-				};
-				if (dlg.ShowDialog() == DialogResult.OK)
-				{
-					VecJsoner.Default.Save(dlg.FileName, m);
-					doc.Filename.V = dlg.FileName;
-				}
-			}
-			else
-			{
-				var filename = doc.Filename.V.IfNone(() => throw new ArgumentException());
-				VecJsoner.Default.Save(filename, m);
-			}
-		}
-		
-
-
-		return activeDoc;
+			New(win.dockPanel);
 	}
+
+
+
+	private static void New(DockPanel dockPanel) => AddDocPane(null, dockPanel);
+
+	private static void Open(DockPanel dockPanel)
+	{
+		using var dlg = new OpenFileDialog
+		{
+			DefaultExt = ".json",
+			Filter = "Vec Files (*.json)|*.json",
+			RestoreDirectory = true,
+		};
+		if (dlg.ShowDialog() == DialogResult.OK)
+			AddDocPane(dlg.FileName, dockPanel);
+	}
+
+	private static void Save(bool saveAs, IRoVar<Option<DocPane>> curDoc)
+	{
+		var doc = curDoc.V.IfNone(() => throw new ArgumentException());
+		var m = doc.Doc.Cur;
+
+		if (saveAs || doc.Filename.V.IsNone)
+		{
+			using var dlg = new SaveFileDialog
+			{
+				DefaultExt = ".json",
+				Filter = "Vec Files (*.json)|*.json",
+				RestoreDirectory = true,
+			};
+			if (dlg.ShowDialog() == DialogResult.OK)
+			{
+				VecJsoner.Vec.Save(dlg.FileName, m.V);
+				doc.Filename.V = dlg.FileName;
+			}
+		}
+		else
+		{
+			var filename = doc.Filename.V.IfNone(() => throw new ArgumentException());
+			VecJsoner.Vec.Save(filename, m.V);
+		}
+	}
+
+
+	private static void AddDocPane(string? filename, DockPanel dockPanel)
+	{
+		var docPane = filename switch {
+			null => new DocPane(),
+			not null => new DocPane((VecJsoner.Vec.Load<Doc>(filename), filename))
+		};
+		docPane.Show(dockPanel, DockState.Document);
+		Rx.Sched.Schedule(() => docPane.vecEditor.Focus());
+	}
+
+
 
 	private static IRoVar<Option<DocPane>> GetActiveDoc(this DockPanel dockPanel, Disp d)
 	{
 		var activeDoc = Var.Make(Option<DocPane>.None, d);
-		dockPanel.WhenActiveDocChanged().Subscribe(v =>
+		dockPanel.WhenActiveDocChanged().Subscribe(_ =>
 		{
 			activeDoc.V = dockPanel.ActiveDocument as DocPane;
 		}).D(d);

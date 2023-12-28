@@ -27,7 +27,7 @@ public static class EvtCoordsTransformer
 		src switch
 		{
 			MouseMoveEvt { Pos: var pos } => new MouseMoveEvt(fun(pos)),
-			MouseBtnEvt { Pos: var pos, UpDown: var upDown, Btn: var btn } => new MouseBtnEvt(fun(pos), upDown, btn),
+			MouseBtnEvt { Pos: var pos, UpDown: var upDown, Btn: var btn, ModKey: var modKey } => new MouseBtnEvt(fun(pos), upDown, btn, modKey),
 			MouseClickEvt { Pos: var pos, Btn: var btn } => new MouseClickEvt(fun(pos), btn),
 			MouseWheelEvt { Pos: var pos, Delta: var delta } => new MouseWheelEvt(fun(pos), delta),
 			_ => src

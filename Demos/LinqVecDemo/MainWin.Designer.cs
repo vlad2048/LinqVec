@@ -39,6 +39,7 @@
 			menuFileSaveAs = new ToolStripMenuItem();
 			toolStripSeparator2 = new ToolStripSeparator();
 			menuFileExit = new ToolStripMenuItem();
+			statusStrip = new StatusStrip();
 			menuStrip.SuspendLayout();
 			SuspendLayout();
 			// 
@@ -50,7 +51,7 @@
 			dockPanel.Name = "dockPanel";
 			dockPanel.Padding = new Padding(6);
 			dockPanel.ShowAutoHideContentOnHover = false;
-			dockPanel.Size = new Size(800, 426);
+			dockPanel.Size = new Size(800, 404);
 			dockPanel.TabIndex = 0;
 			dockPanel.Theme = vS2015BlueTheme;
 			// 
@@ -74,44 +75,52 @@
 			// 
 			menuFileNew.Name = "menuFileNew";
 			menuFileNew.ShortcutKeys = Keys.Control | Keys.N;
-			menuFileNew.Size = new Size(180, 22);
+			menuFileNew.Size = new Size(155, 22);
 			menuFileNew.Text = "&New";
 			// 
 			// menuFileOpen
 			// 
 			menuFileOpen.Name = "menuFileOpen";
 			menuFileOpen.ShortcutKeys = Keys.Control | Keys.O;
-			menuFileOpen.Size = new Size(180, 22);
+			menuFileOpen.Size = new Size(155, 22);
 			menuFileOpen.Text = "&Open...";
 			// 
 			// toolStripSeparator1
 			// 
 			toolStripSeparator1.Name = "toolStripSeparator1";
-			toolStripSeparator1.Size = new Size(177, 6);
+			toolStripSeparator1.Size = new Size(152, 6);
 			// 
 			// menuFileSave
 			// 
 			menuFileSave.Name = "menuFileSave";
 			menuFileSave.ShortcutKeys = Keys.Control | Keys.S;
-			menuFileSave.Size = new Size(180, 22);
+			menuFileSave.Size = new Size(155, 22);
 			menuFileSave.Text = "&Save";
 			// 
 			// menuFileSaveAs
 			// 
 			menuFileSaveAs.Name = "menuFileSaveAs";
-			menuFileSaveAs.Size = new Size(180, 22);
+			menuFileSaveAs.Size = new Size(155, 22);
 			menuFileSaveAs.Text = "Save &As...";
 			// 
 			// toolStripSeparator2
 			// 
 			toolStripSeparator2.Name = "toolStripSeparator2";
-			toolStripSeparator2.Size = new Size(177, 6);
+			toolStripSeparator2.Size = new Size(152, 6);
 			// 
 			// menuFileExit
 			// 
 			menuFileExit.Name = "menuFileExit";
-			menuFileExit.Size = new Size(180, 22);
+			menuFileExit.Size = new Size(155, 22);
 			menuFileExit.Text = "E&xit";
+			// 
+			// statusStrip
+			// 
+			statusStrip.Location = new Point(0, 428);
+			statusStrip.Name = "statusStrip";
+			statusStrip.Size = new Size(800, 22);
+			statusStrip.TabIndex = 2;
+			statusStrip.Text = "statusStrip1";
 			// 
 			// MainWin
 			// 
@@ -119,6 +128,7 @@
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(800, 450);
 			Controls.Add(dockPanel);
+			Controls.Add(statusStrip);
 			Controls.Add(menuStrip);
 			MainMenuStrip = menuStrip;
 			Name = "MainWin";
@@ -141,5 +151,6 @@
 		public ToolStripMenuItem menuFileSave;
 		public ToolStripMenuItem menuFileSaveAs;
 		public ToolStripMenuItem menuFileExit;
+		public StatusStrip statusStrip;
 	}
 }

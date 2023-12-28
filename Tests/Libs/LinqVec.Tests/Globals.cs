@@ -9,3 +9,6 @@ global using LanguageExt;
 global using LanguageExt.Common;
 global using static LanguageExt.Prelude;
 global using Unit = LanguageExt.Unit;
+
+global using static TestLib.TestLogger;
+global using static LinqVec.Tests.TestSupport.EvtGen;

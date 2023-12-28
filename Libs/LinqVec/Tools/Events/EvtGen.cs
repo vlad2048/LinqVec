@@ -31,7 +31,7 @@ public sealed record MouseLeave : IEvt
 {
 	public override string ToString() => "Leave";
 }
-public sealed record MouseBtnEvt(Pt Pos, UpDown UpDown, MouseBtn Btn) : IEvt
+public sealed record MouseBtnEvt(Pt Pos, UpDown UpDown, MouseBtn Btn, ModKeyState ModKey) : IEvt
 {
 	public override string ToString() => $"{Btn}.{UpDown}({Pos})";
 }
@@ -52,7 +52,7 @@ public sealed record KeyEvt(UpDown UpDown, Keys Key) : IEvt
 
 public class Evt : IDisposable
 {
-	private readonly Disp d = MkD();
+	private readonly Disp d;
 	public void Dispose() => d.Dispose();
 
 	private readonly Action<Cursor> setCursor;
@@ -70,9 +70,11 @@ public class Evt : IDisposable
 	public Evt(
 		IObservable<IEvt> whenEvt,
 		Action<Cursor> setCursor,
-		IObservable<Unit> whenUndoRedo
+		IObservable<Unit> whenUndoRedo,
+		Disp d
 	)
 	{
+		this.d = d;
 		WhenEvt = whenEvt.MakeHot(d);
 		this.setCursor = setCursor;
 		MousePos = WhenEvt.TrackMouse(d);
@@ -84,7 +86,13 @@ public class Evt : IDisposable
 
 public static class EvtUtils
 {
-	public static Evt ToEvt(this IObservable<IEvt> src, Action<Cursor> setCursor, IObservable<Unit> whenUndoRedo, Disp d) => new Evt(src, setCursor, whenUndoRedo).D(d);
+	public static Evt ToEvt(this IObservable<IEvt> src, Action<Cursor> setCursor, IObservable<Unit> whenUndoRedo, Disp d) =>
+		new(
+			src,
+			setCursor,
+			whenUndoRedo,
+			d
+		);
 
 	public static IObservable<Pt> WhereSelectMousePos(this IObservable<IEvt> src) =>
 		src
@@ -117,41 +125,4 @@ public static class EvtUtils
 			.Where(_ => isEvtOn.V);
 	}
 	private static IObservable<MouseMoveEvt> WhenMouseMoveEvt(this IObservable<IEvt> src) => src.OfType<MouseMoveEvt>();
-
-
-
-
-
-	/*public static IObservable<IEvtGen<Maybe<Pt>>> TrackPos(this IObservable<IEvtGen<Maybe<Pt>>> src, out IRoMayVar<Pt> mousePos, IRoDispBase d)
-	{
-		mousePos = VarMay.Make(
-			src
-				.OfType<MouseMoveEvtGen<Maybe<Pt>>>()
-				.Select(e => e.Pos)
-		).D(d);
-		return src;
-	}
-
-	public static IObservable<IEvt> TrackPos(this IObservable<IEvt> src, out IRoMayVar<Pt> mousePos, IRoDispBase d)
-	{
-		mousePos = VarMay.Make(
-			src
-				.OfType<MouseMoveEvtGen<Maybe<Pt>>>()
-				.Select(e => e.Pos)
-		).D(d);
-		return src;
-	}
-
-	public static IObservable<IEvt> RestrictToGrid(this IObservable<IEvtGen<Maybe<Pt>>> src) =>
-		src
-			.Where(e => e switch
-			{
-				MouseMoveEvtGen<Maybe<Pt>> { Pos: var mayPos } => mayPos.IsSome(),
-				MouseBtnEvtGen<Maybe<Pt>> { Pos: var mayPos } => mayPos.IsSome(),
-				MouseClickEvtGen<Maybe<Pt>> { Pos: var mayPos } => mayPos.IsSome(),
-				MouseWheelEvtGen<Maybe<Pt>> { Pos: var mayPos } => mayPos.IsSome(),
-				KeyEvtGen<Maybe<Pt>> => true,
-				_ => throw new ArgumentException()
-			})
-			.Transform(p => p.Ensure());*/
 }

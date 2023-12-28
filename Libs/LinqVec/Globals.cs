@@ -21,7 +21,7 @@ using ReactiveVars;
 
 namespace LinqVec;
 
-static class G
+public static class G
 {
 	private const string ConfigFile = @"config\config.json";
 
@@ -36,11 +36,11 @@ static class G
 		};
 	}
 
-	public static IObservable<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Default);
+	public static IObservable<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Config);
 }
 
 
-static class CfgExt
+public static class CfgExt
 {
 	public static IObservable<T> When<T>(this IObservable<Cfg> cfg, Func<Cfg, T> fun) => cfg.Select(fun).DistinctUntilChanged();
 

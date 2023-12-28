@@ -3,10 +3,9 @@ using System.Reactive.Linq;
 using Geom;
 using LinqVec.Tools.Events;
 using LinqVec.Utils;
-using LinqVec.Utils.Rx;
 using ReactiveVars;
 
-namespace LinqVec.Tools.Acts.Logic;
+namespace LinqVec.Tools.Cmds.Logic;
 
 static class HotspotTracker
 {
@@ -19,24 +18,24 @@ static class HotspotTracker
 	private sealed record OtherEvt(Pt Pos) : IHotEvt;
 
 
-	public static IRoVar<HotspotActsRun> TrackHotspot(
-		this IRoVar<ActSet> curActs,
+	public static IRoVar<HotspotNfoResolved> TrackHotspot(
+		this IRoVar<ToolState> curState,
 		IObservable<IEvt> evt,
 		IScheduler scheduler,
 		Disp d
 	) =>
-		Obs.Create<HotspotActsRun>(obs =>
+		Obs.Create<HotspotNfoResolved>(obs =>
 			{
 				var obsD = MkD();
 
-				obs.OnNext(HotspotActsRun.Empty);
+				obs.OnNext(HotspotNfoResolved.Empty);
 
 				var evtHot = evt.Select(e => e.ToHotEvt()).WhereSome();
 
 				var isDragging =
 					Obs.Merge(
 							evtHot.Where(e => e is DownEvt).Select(_ => true),
-							evtHot.Where(e => e is UpEvt).Select(_ => false).Delay(TimeSpan.Zero, scheduler)
+							evtHot.Where(e => e is UpEvt).Select(_ => false) //.Delay(TimeSpan.Zero, scheduler)
 						)
 						.Prepend(false)
 						.ToVar(d);
@@ -46,7 +45,7 @@ static class HotspotTracker
 					.Select(e => e.ToHotEvt())
 					.WhereSome()
 					.WithLatestFrom(
-						curActs,
+						curState,
 						(evt_, curActs_) => new
 						{
 							Evt = evt_,
@@ -56,10 +55,10 @@ static class HotspotTracker
 					.Where(_ => !isDragging.V)
 					.Subscribe(t =>
 						obs.OnNext(
-							t.Acts.HotspotActSets
-								.Select(f => f.Hotspot.Fun(t.Evt.Pos).Map(g => new HotspotActsRun(f.Hotspot, g, f.ActFuns(g))))
+							t.Acts.Hotspots
+								.Select(f => f.Hotspot.Fun(t.Evt.Pos).Map(g => new HotspotNfoResolved(f.Hotspot, g, f.Cmds(g))))
 								.Aggregate()
-								.IfNone(HotspotActsRun.Empty)
+								.IfNone(HotspotNfoResolved.Empty)
 						)
 					).D(obsD);
 
@@ -78,57 +77,3 @@ static class HotspotTracker
 			_ => None,
 		};
 }
-
-
-
-
-/*
-using LinqVec.Tools.Acts.Delegates;
-using LinqVec.Tools.Acts.Structs;
-using LinqVec.Tools.Events;
-using PowRxVar;
-
-namespace LinqVec.Tools.Acts.Logic;
-
-static class HotspotTracker
-{
-	public static IDisposable Track(
-		IRwVar<Option<HotAct>> curHot,
-		Evt evt,
-		ActSet actSet,
-		Func<bool> isLocked
-	)
-	{
-		var d = MkD();
-		evt.MousePos
-			.Subscribe(mouseOpt => mouseOpt.Match(
-				mouse =>
-				{
-					foreach (var act in actSet.Acts)
-					{
-						var mayH = act.Hotspot.Fun(mouse);
-
-						var ret = false;
-						mayH.IfSome(h =>
-						{
-							var isAlreadySet = curHot.V.Map(e => e.Act) == act;
-							if (!isAlreadySet && !isLocked())
-								curHot.V = new HotAct(h, act, mouse);
-							ret = true;
-						});
-						if (ret)
-							return;
-					}
-					if (!isLocked())
-						curHot.V = None;
-				},
-				() =>
-				{
-					if (!isLocked())
-						curHot.V = None;
-				})).D(d);
-
-		return d;
-	}
-}
-*/

@@ -1,43 +1,43 @@
-﻿using LinqVec.Tools.Acts;
-using LinqVec.Tools.Acts.Enums;
+﻿using System.Reactive;
+using System.Reactive.Linq;
+using Geom;
+using LinqVec.Tools.Cmds;
+using LinqVec.Tools.Cmds.Enums;
+using LinqVec.Tools.Cmds.Logic;
 using LinqVec.Tools.Events;
 using Microsoft.Reactive.Testing;
 using ReactiveVars;
-using System.Reactive;
-using System.Reactive.Linq;
-using Geom;
-using LinqVec.Tools.Acts.Logic;
 using TestLib;
 using H = System.Object;
 
-namespace LinqVec.Tests.Tools.Acts.Logic;
+namespace LinqVec.Tests.Tools.Cmds.Logic;
 
 class HotspotTrackerTests
 {
-	private static readonly IRoVar<ActSet> curActs = Var.MakeConst(new ActSet(
+	private static readonly IRoVar<ToolState> curActs = Var.MakeConst(new ToolState(
 		"Main",
 		CBase.Cursors.Pen,
 		[
-			new HotspotActs(
+			new HotspotNfo(
 				new Hotspot("First", mouse => mouse.X switch {
 					>= 0 and < 25 => Option<H>.Some("A"),
 					>= 25 and < 50 => Option<H>.Some("B"),
 					_ => None
-				}, null),
+				}, null, () => {}),
 				_ => [
-					new HotspotAct("Drag", Gesture.Drag, HotspotActActions.Empty),
-					new HotspotAct("Click", Gesture.Click, HotspotActActions.Empty),
+					new DragHotspotCmd("Drag", Gesture.Drag, _ => {}),
+					new ClickHotspotCmd("Click", Gesture.Click, () => None),
 				]
 			),
-			new HotspotActs(
+			new HotspotNfo(
 				new Hotspot("Second", mouse => mouse.X switch {
 					>= 50 and < 75 => Option<H>.Some("C"),
 					>= 75 and < 100 => Option<H>.Some("D"),
 					_ => None
-				}, null),
+				}, null, () => {}),
 				_ => [
-					new HotspotAct("Drag", Gesture.Drag, HotspotActActions.Empty),
-					new HotspotAct("Click", Gesture.Click, HotspotActActions.Empty),
+					new DragHotspotCmd("Drag", Gesture.Drag, _ => {}),
+					new ClickHotspotCmd("Click", Gesture.Click, () => None),
 				]
 			),
 		]
@@ -107,8 +107,8 @@ class HotspotTrackerTests
 
 
 	private static Recorded<Notification<IEvt>> Move(double t, int x) => OnNext(t, (IEvt)new MouseMoveEvt(new Pt(x, 0)));
-	private static Recorded<Notification<IEvt>> LDown(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Down, MouseBtn.Left));
-	private static Recorded<Notification<IEvt>> RDown(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Down, MouseBtn.Right));
-	private static Recorded<Notification<IEvt>> LUp(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Up, MouseBtn.Left));
-	private static Recorded<Notification<IEvt>> RUp(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Up, MouseBtn.Right));
+	private static Recorded<Notification<IEvt>> LDown(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Down, MouseBtn.Left, ModKeyState.Empty));
+	private static Recorded<Notification<IEvt>> RDown(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Down, MouseBtn.Right, ModKeyState.Empty));
+	private static Recorded<Notification<IEvt>> LUp(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Up, MouseBtn.Left, ModKeyState.Empty));
+	private static Recorded<Notification<IEvt>> RUp(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Up, MouseBtn.Right, ModKeyState.Empty));
 }

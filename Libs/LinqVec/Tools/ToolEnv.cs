@@ -44,8 +44,8 @@ public sealed class ToolEnv : IDisposable
 
 	public ICurs Curs { get; }
     public IRoVar<Transform> Transform { get; }
-    public void Invalidate() => drawPanel.Invalidate();
     public IObservable<Gfx> WhenPaint { get; }
+    public void Invalidate() => drawPanel.Invalidate();
 
     public IObservable<IEvt> EditorEvt => editorEvt;
     public Evt GetEvtForTool(ITool tool, bool snap, Disp toolD) =>

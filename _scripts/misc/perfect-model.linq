@@ -1,4 +1,7 @@
-<Query Kind="Program" />
+<Query Kind="Program">
+  <Reference>C:\dev\big\LinqVec\LibsBase\Geom\bin\Debug\net8.0\Geom.dll</Reference>
+  <Namespace>Geom</Namespace>
+</Query>
 
 #load "_common\rx"
 // System
@@ -57,6 +60,7 @@ public sealed record Lens<D, O>(
 );
 */
 
+public delegate O MouseMod<O>(O obj, Pt mousePos);
 
 public sealed class CurvePtr : IDisposable
 {
@@ -67,8 +71,11 @@ public sealed class CurvePtr : IDisposable
 	private readonly Undoer<Curve> undoer;
 	private readonly Guid layerId;
 	private readonly Guid curveId;
+	private MouseMod<Curve> mod = (o, _) => o;
 	
 	public Curve V => (Curve)doc.V.Layers.Get(layerId).Objects.Get(curveId);
+	
+	
 	
 	private CurvePtr(Model<Doc> doc, Guid? create, (Guid, Guid)? edit)
 	{
@@ -161,12 +168,6 @@ public static class IIdExt
 		var idx = xs.Idx(xId);
 		return xs.Take(idx).Concat(xs.Skip(idx + 1)).ToArray();
 	}
-	/*public static T[] Del<T>(this T[] xs, T x) where T : IId
-	{
-		if (xs.All(e => e.Id != x.Id)) throw new ArgumentException();
-		var idx = xs.Idx(x);
-		return xs.Take(idx).Concat(xs.Skip(idx + 1)).ToArray();
-	}*/
 	public static T[] Set<T>(this T[] xs, T x) where T : IId
 	{
 		if (xs.All(e => e.Id != x.Id)) throw new ArgumentException();

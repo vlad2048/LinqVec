@@ -1,11 +1,11 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using LinqVec.Logic;
 using ReactiveVars;
 using VectorEditor.Model;
 using WeifenLuo.WinFormsUI.Docking;
 using UILib;
 using VectorEditor.Panes.ModelTree_;
+using LinqVec;
 
 namespace VectorEditor.Panes;
 

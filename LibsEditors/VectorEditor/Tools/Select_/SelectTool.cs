@@ -1,10 +1,12 @@
-﻿using LinqVec;
-using LinqVec.Logic;
+﻿using LanguageExt.SomeHelp;
+using LinqVec;
 using LinqVec.Tools;
-using LinqVec.Tools.Acts;
-using LinqVec.Tools.Acts.Enums;
+using LinqVec.Tools.Cmds;
+using LinqVec.Tools.Cmds.Enums;
 using LinqVec.Utils;
 using ReactiveVars;
+using System.Linq;
+using Geom;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_.Mods;
 
@@ -19,37 +21,93 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 	private static class States
 	{
 		public const string Neutral = nameof(Neutral);
-		public const string Selected = nameof(Selected);
 	}
-	private static class Acts
+	private static class Cmds
 	{
-		public const string SelectCurve = nameof(SelectCurve);
-		public const string UnselectCurve = nameof(UnselectCurve);
-		public const string MoveCurve = nameof(MoveCurve);
+		public const string Select = nameof(Select);
+		public const string MoveSelection = nameof(MoveSelection);
 	}
 
 	public IDisposable Run(ToolActions toolActions)
 	{
 		var d = MkD();
-		Doc.EnableRedrawOnMouseMove(d);
 
 		var evt = Env.GetEvtForTool(this, true, d);
+
+		var curSel = Var.Make<Guid[]>([], d);
+
+		ToolStateFun ModeNeutral(Unit _) => _ =>
+			new ToolState(
+				States.Neutral,
+				CBase.Cursors.BlackArrow,
+				[
+					Hotspots.Object(Doc)
+						.Do(objId =>
+							new IHotspotCmd [] {
+								Cmd.Click(
+									Cmds.Select,
+									ClickGesture.Click,
+									() =>
+									{
+										L.WriteLine($"Click: {objId}");
+										curSel.V = [objId];
+										return None;
+									}
+								),
+								Cmd.Click(
+									Cmds.Select,
+									ClickGesture.ShiftClick,
+									() =>
+									{
+										L.WriteLine($"ShiftClick: {objId}");
+										curSel.V = curSel.V.ToggleArr(objId);
+										return None;
+									}
+								),
+							}
+							.AddArrIf(curSel.V.Contains(objId),
+								Cmd.Drag(
+									Cmds.MoveSelection,
+									pt => Doc.ModSet(DocMods.MoveSelection(evt.MousePos, curSel.V, d)(pt))
+								)
+							)
+						)
+				]
+			);
+
+		ModeNeutral(Unit.Default)
+			.Run(evt, Env.Invalidate, d);
+
+		//curSel.Subscribe(_ => Env.Invalidate()).D(d);
+
+		Env.WhenPaint.Subscribe(gfx =>
+		{
+			var bboxOpt =
+				Doc.GetGfx().GetObjects(curSel.V)
+					.Select(e => e.BoundingBox)
+					.Union();
+			Painter.PaintSelectRectangle(gfx, bboxOpt);
+		}).D(d);
+
+
+		/*
+		Doc.EnableRedrawOnMouseMove(d);
+		
 		var curSel = Option<DocMouseModder<Curve>>.None;
 
 
-
-		ActSetMaker ModeNeutral(Unit _) => _ =>
+		ToolStateFun ModeNeutral(Unit _) => _ =>
 		{
 			curSel = None;
-			return new ActSet(
+			return new ToolState(
 				States.Neutral,
 				CBase.Cursors.BlackArrow,
 				[
 					Hotspots.Curve(Doc)
 						.Do(curve =>
 						[
-							Act.Click(
-								Acts.SelectCurve,
+							Cmd.Click(
+								Acts.Select,
 								ClickGesture.Click,
 								() => ModeSelected(curve)
 							)
@@ -60,27 +118,27 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 
 
-		ActSetMaker ModeSelected(Curve curve) => actD =>
+		ToolStateFun ModeSelected(Curve curve) => actD =>
 		{
 			var (getF, setF) = Doc.GetGetSet(curve);
 			curSel = new DocMouseModder<Curve>(getF, setF).D(actD);
 
-			return new ActSet(
+			return new ToolState(
 				States.Selected,
 				CBase.Cursors.BlackArrow,
 				[
 					Hotspots.Curve(Doc)
 						.Do(hotCurve => (hotCurve == curve) switch {
 							true => [
-								Act.Drag(
+								Cmd.Drag(
 									Acts.MoveCurve,
 									curSel.Ensure(),
 									CurveMods.MoveCurve
 								)
 							],
 							false => [
-								Act.Click(
-									Acts.SelectCurve,
+								Cmd.Click(
+									Acts.Select,
 									ClickGesture.Click,
 									() => ModeSelected(hotCurve)
 								)
@@ -88,7 +146,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 						}),
 					Hotspots.Anywhere
 						.Do(_ => [
-							Act.Click(
+							Cmd.Click(
 								Acts.UnselectCurve,
 								ClickGesture.Click,
 								() => ModeNeutral(Unit.Default)
@@ -107,7 +165,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		Env.WhenPaint.Subscribe(gfx =>
 		{
 			curSel.IfSome(cur => SelectPainter.DrawSelRect(gfx, cur.GetModded(evt.MousePos.V)));
-		}).D(d);
+		}).D(d);*/
 
 		return d;
 	}

@@ -8,15 +8,12 @@ namespace VectorEditor.Model;
 
 static class CurveOps
 {
-	public static (Func<Curve>, Action<Curve>) GetGetSet(this LinqVec.Logic.Model<Doc> doc, Curve curve)
-	{
-		var layerId = doc.V.Layers.Single(e => e.Objects.Any(f => f.Id == curve.Id)).Id;
-		var curveId = curve.Id;
-		return (
-			() => (Curve)doc.V.Layers.GetId(layerId).Objects.GetId(curveId),
-			o => doc.V = doc.V.ChangeLayer(objs => objs.SetId(o))
-		);
-	}
+	public static IObj[] GetObjects(this Doc doc, Guid[] objIds) => (
+		from layer in doc.Layers
+		from obj in layer.Objects
+		where objIds.Contains(obj.Id)
+		select obj
+	).ToArray();
 
 
 	private sealed record PtNfo(PointId Id, double Distance);
@@ -72,12 +69,12 @@ static class CurveOps
 			.SkipLast(1)
 			.ToArray();
 
-	public static Option<IVisualObjSer> GetObjectAt(this Doc doc, Pt pt)
+	public static Option<IObj> GetObjectAt(this Doc doc, Pt pt)
 	{
-		var objs = doc.AllObjects.OfType<IVisualObjSer>().ToArray();
+		var objs = doc.AllObjects.OfType<IObj>().ToArray();
 		return objs.Length switch
 		{
-			0 => Option<IVisualObjSer>.None,
+			0 => Option<IObj>.None,
 			_ => objs
 				.Select(obj => (obj, obj.DistanceToPoint(pt)))
 				.Where(t => t.Item2 < C.ActivateMoveMouseDistance)

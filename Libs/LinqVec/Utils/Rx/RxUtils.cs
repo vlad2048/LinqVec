@@ -24,5 +24,29 @@ static class RxUtils
 			.Where(e => e.AreSeqEqual(seq, matchFun))
 			.Select(e => e.First());
 
+	public static IObservable<T> OrderLogs<T>(
+		this IObservable<T> source,
+		IScheduler scheduler,
+		params Func<T, bool>[] funs
+	) =>
+		source
+			.Buffer(TimeSpan.FromMilliseconds(10), scheduler)
+			.Where(e => e.Any())
+			.Select(e => Order(e, funs).ToObservable())
+			.Concat();
+
+
 	private static bool AreSeqEqual<T, U>(this ICollection<T> xs, ICollection<U> ys, Func<U, T, bool> matchFun) => xs.Count == ys.Count && xs.Zip(ys).All(t => matchFun(t.Item2, t.Item1));
+
+	private static T[] Order<T>(IList<T> list, Func<T, bool>[] funs) =>
+		list
+			.OrderBy(e => GetNum(e, funs))
+			.ToArray();
+
+	private static int GetNum<T>(T elt, Func<T, bool>[] funs)
+	{
+		for (var i = 0; i < funs.Length; i++)
+			if (funs[i](elt)) return i;
+		return int.MaxValue;
+	}
 }

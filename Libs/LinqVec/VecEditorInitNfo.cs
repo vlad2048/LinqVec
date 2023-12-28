@@ -1,9 +1,8 @@
-﻿using LinqVec.Logic;
-using LinqVec.Tools;
+﻿using LinqVec.Tools;
 
 namespace LinqVec;
 
 public sealed record VecEditorInitNfo(
-	IUndoer DocUndoer,
+	IModel Model,
 	ITool[] Tools
 );

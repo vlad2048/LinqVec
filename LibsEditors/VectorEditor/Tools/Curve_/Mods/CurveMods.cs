@@ -1,7 +1,8 @@
-﻿using Geom;
-using LinqVec.Logic;
+﻿using System.Reactive.Linq;
+using Geom;
+using LinqVec;
 using LinqVec.Utils;
-using PowBasics.CollectionsExt;
+using ReactiveVars;
 using VectorEditor.Model.Structs;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_.Structs;
@@ -11,15 +12,49 @@ namespace VectorEditor.Tools.Curve_.Mods;
 
 static class CurveMods
 {
-	//public static MouseMod<Curve> AddPoint(Pt startPt) => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt, mouse)) };
-	//public static MouseMod<Curve> MovePoint(Pt startPt, PointId pointId) => (obj, mouse) => obj with { Pts = obj.Pts.ChangeIdx(pointId.Idx, e => e.Move(pointId.Type, mouse)) };
+	public static Func<Pt, Mod<Curve>> MovePoint_Drag(IRoVar<Option<Pt>> mouse, PointId pointId, Disp d) =>
+		startPt =>
+			new(
+				nameof(MovePoint_Drag),
+				true,
+				mouse
+					.WhereSome()
+					.Select(m => Mk(curve =>
+						curve with {
+							Pts = curve.Pts.SetIdxArr(pointId.Idx, e => e.Move(pointId.Type, m))
+						}))
+					.ToVar(d)
+			);
 
-	public static MouseMod<Curve> AddPoint() => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(mouse, mouse)) };
-	public static Func<Pt, MouseMod<Curve>> AddPoint(Unit _) => startPt => (obj, mouse) => obj with { Pts = obj.Pts.Add(CurvePt.Make(startPt, mouse)) };
-	public static Func<Pt, MouseMod<Curve>> MovePoint(PointId pointId) => startPt => (obj, mouse) => obj with { Pts = obj.Pts.ChangeIdx(pointId.Idx, e => e.Move(pointId.Type, mouse)) };
 
-	public static MouseMod<Curve> MoveCurve(Pt startPt) => (obj, mouse) => obj with { Pts = obj.Pts.SelectToArray(e => e.MoveAll(mouse - startPt)) };
+	public static Mod<Curve> AddPoint_Hover(IRoVar<Option<Pt>> mouse, Disp d) =>
+		new(
+			nameof(AddPoint_Hover),
+			false,
+			mouse
+				.WhereSome()
+				.Select(m => Mk(curve =>
+					curve with {
+						Pts = curve.Pts.AddArr(CurvePt.Make(m, m))
+					}))
+				.ToVar(d)
+		);
 
+	public static Func<Pt, Mod<Curve>> AddPoint_Drag(IRoVar<Option<Pt>> mouse, Disp d) =>
+		startPt =>
+			new(
+				nameof(AddPoint_Drag),
+				true,
+				mouse
+					.WhereSome()
+					.Select(m => Mk(curve =>
+						curve with {
+							Pts = curve.Pts.AddArr(CurvePt.Make(startPt, m))
+						}))
+					.ToVar(d)
+			);
+
+	private static Func<Curve, Curve> Mk(Func<Curve, Curve> f) => f;
 
 	private static CurvePt Move(this CurvePt pt, PointType type, Pt pos) => type switch
 	{

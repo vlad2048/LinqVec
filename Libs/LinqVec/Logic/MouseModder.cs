@@ -4,13 +4,27 @@ using ReactiveVars;
 namespace LinqVec.Logic;
 
 
+/*
 public delegate O MouseMod<O>(O obj, Pt mousePos);
+
+
+public interface IMouseModder<O>
+{
+	IUndoer Undoer { get; }
+	O Get();
+	void ModSet(MouseMod<O> modFun);
+	void ModClear();
+	void ModApply(Pt mousePos);
+}
+*/
+
+
 
 //public delegate MouseMod<O> MouseModStart<O>(Pt startPos);
 
 //public delegate MouseMod<O> MouseModStartHot<O, in H>(Pt startPos, H hot);
 
-
+/*
 public interface IMouseModder<O>
 {
 	IUndoer Undoer { get; }
@@ -75,3 +89,4 @@ public sealed class DocMouseModder<O> : IDisposable, IMouseModder<O>
 		mod = identity;
 	}
 }
+*/

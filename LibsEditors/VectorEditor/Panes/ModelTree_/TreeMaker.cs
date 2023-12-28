@@ -1,4 +1,4 @@
-﻿using LinqVec.Structs;
+﻿using LinqVec;
 using PowBasics.CollectionsExt;
 using VectorEditor.Model;
 

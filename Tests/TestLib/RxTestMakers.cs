@@ -20,7 +20,8 @@ public static class TestFmt
 		var tStr = $"{TimeSpan.FromTicks(e.Time).TotalSeconds:F1}s";
 		var notStr = e.Value.Kind switch
 		{
-			NotificationKind.OnNext => $"OnNext({e.Value.Value})",
+			//NotificationKind.OnNext => $"OnNext({e.Value.Value})",
+			NotificationKind.OnNext => $"{e.Value.Value}",
 			NotificationKind.OnError => $"OnError([{e.Value.Exception!.GetType().Name}] {e.Value.Exception.Message})",
 			NotificationKind.OnCompleted => "OnCompleted()",
 			_ => throw new ArgumentException()
@@ -31,6 +32,7 @@ public static class TestFmt
 	public static void LogMessages<T>(this ITestableObserver<T> obs, string title)
 	{
 		var msgs = obs.Messages;
+		L("");
 		LTitle($"{title} (x{msgs.Count})");
 		foreach (var msg in msgs)
 			L($"    {msg.Fmt()}");

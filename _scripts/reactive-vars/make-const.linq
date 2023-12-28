@@ -3,9 +3,28 @@
   <Namespace>ReactiveVars</Namespace>
 </Query>
 
+#load "_common\rx"
+// System
+using System.Threading.Tasks;
+
+// Reactive
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Reactive.Disposables;
+using System.Reactive.Concurrency;
+using Microsoft.Reactive.Testing;
 using Obs = System.Reactive.Linq.Observable;
 using Disp = System.Reactive.Disposables.CompositeDisposable;
 
+// LanguageExt
+using Unit = LanguageExt.Unit;
+
+// ReactiveVars
+using ReactiveVars;
+using static ReactiveVars.DispMaker;
+
+// LINQPad
+using static RxTestMakers;
 
 void Main()
 {
@@ -17,20 +36,3 @@ void Main()
 }
 
 public static IRoVar<T> MakeConst<T>(T val) => Obs.Return(val).ToVar();
-
-
-
-public static Disp D = null!;
-//public static TestScheduler Sched = null!;
-void OnStart()
-{
-	D?.Dispose();
-	D = new Disp();
-	//Sched = new TestScheduler();
-	Util.HtmlHead.AddStyles(
-	"""
-		body {
-			font-family: Consolas;
-		}
-	""");
-}

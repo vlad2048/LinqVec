@@ -43,6 +43,17 @@ public static class Logger
 		Disposable.Create(() => WriteLine($"[{name}].Dispose()")).D(d);
 	}
 
+	public static Func<IDisposable> Log(this Func<IDisposable> fun, string name) => () =>
+	{
+		WriteLine($"[{name}].On");
+		var d = fun();
+		return Disposable.Create(() =>
+		{
+			WriteLine($"[{name}].Off");
+			d.Dispose();
+		});
+	};
+
 	public static IDisposable AddLabel<T>(this StatusStrip strip, string label, IObservable<T> obs)
 	{
 		var d = MkD();

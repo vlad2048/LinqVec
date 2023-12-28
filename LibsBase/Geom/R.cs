@@ -4,8 +4,8 @@ namespace Geom;
 
 public readonly record struct R
 {
-    public Pt Min { get; }
-    public Pt Max { get; }
+    public Pt Min { get; init; }
+    public Pt Max { get; init; }
     [JsonIgnore]
 	public float Width => Max.X - Min.X;
     [JsonIgnore]

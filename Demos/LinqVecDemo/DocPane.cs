@@ -1,10 +1,10 @@
 using System.Reactive.Linq;
-using LinqVec.Logic;
 using ReactiveVars;
 using VectorEditor.Model;
 using UILib;
 using VectorEditor;
 using WeifenLuo.WinFormsUI.Docking;
+using LinqVec;
 
 namespace LinqVecDemo;
 

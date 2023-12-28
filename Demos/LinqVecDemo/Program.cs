@@ -20,7 +20,7 @@ static class Program
 
 		Application.Run(new MainWin().Track());
 
-		CheckForUndisposedDisps();
+		LogAndTellIfThereAreUndisposedDisps();
 
 		/*var testD = new Disp();
 		AppDomain.CurrentDomain.ProcessExit += (_, _) =>

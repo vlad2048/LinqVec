@@ -15,8 +15,8 @@ static class EvtMaker
 		var whenMouseMove = ctrl.Events().MouseMove.Select(e => new MouseMoveEvt(e.ToPt()));
 		var whenMouseEnter = ctrl.Events().MouseEnter.Select(_ => new MouseEnter());
 		var whenMouseLeave = ctrl.Events().MouseLeave.Select(_ => new MouseLeave());
-		var whenMouseDown = ctrl.Events().MouseDown.Select(e => new MouseBtnEvt(e.ToPt(), UpDown.Down, e.ToBtn()));
-		var whenMouseUp = ctrl.Events().MouseUp.Select(e => new MouseBtnEvt(e.ToPt(), UpDown.Up, e.ToBtn()));
+		var whenMouseDown = ctrl.Events().MouseDown.Select(e => new MouseBtnEvt(e.ToPt(), UpDown.Down, e.ToBtn(), ModKeyState.Make()));
+		var whenMouseUp = ctrl.Events().MouseUp.Select(e => new MouseBtnEvt(e.ToPt(), UpDown.Up, e.ToBtn(), ModKeyState.Make()));
 		var whenMouseWheel = ctrl.Events().MouseWheel.Select(e => new MouseWheelEvt(e.ToPt(), Math.Sign(e.Delta)));
 		var whenKeyDown = ctrl.Events().KeyDown.Select(e => new KeyEvt(UpDown.Down, e.KeyCode));
 		var whenKeyUp = ctrl.Events().KeyUp.Select(e => new KeyEvt(UpDown.Up, e.KeyCode));

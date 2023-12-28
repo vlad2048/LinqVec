@@ -1,9 +1,17 @@
 ﻿namespace LinqVec;
 
-record struct CfgLog(
-	bool Tools
+public record struct CfgLogCmd(
+	bool CurStateHotspot,
+	bool Evt,
+	bool DbgEvt
 );
 
-record struct Cfg(
+public record struct CfgLog(
+	bool UndoRedo,
+	bool CurTool,
+	CfgLogCmd LogCmd
+);
+
+public record struct Cfg(
 	CfgLog Log
 );

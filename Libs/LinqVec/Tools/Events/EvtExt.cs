@@ -139,4 +139,14 @@ public static class EvtExt
 			from evt in Obs.Timer(KeyDelayStart, KeyDelayRepeat, Rx.Sched).Prepend(0).Select(_ => Unit.Default).TakeUntil(whenStop)
 			select evt;
 	}
+
+	// Mouse Down
+	// ==========
+	public static IRoVar<bool> IsMouseDown(this IObservable<IEvt> src, MouseBtn btn = MouseBtn.Left) =>
+		Obs.Merge(
+				src.WhenMouseDown(btn).Select(_ => true),
+				src.WhenMouseUp(btn).Select(_ => false)
+			)
+			.Prepend(false)
+			.ToVar();
 }

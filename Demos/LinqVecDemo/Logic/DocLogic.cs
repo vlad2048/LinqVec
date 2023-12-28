@@ -24,10 +24,19 @@ static class DocLogic
 		win.menuFileSave.Events().Click.Subscribe(_ => Save(false, curDoc)).D(d);
 		win.menuFileSaveAs.Events().Click.Subscribe(_ => Save(true, curDoc)).D(d);
 		win.menuFileExit.Events().Click.Subscribe(_ => win.Close()).D(d);
+		win.Events().Closing.Subscribe(_ => DisposeAllDocPanes(win)).D(d);
 
 		TrackAndRestoreCurFile(win, curDoc, d);
 
 		return curDoc;
+	}
+
+
+	private static void DisposeAllDocPanes(MainWin win)
+	{
+		var docPanes = win.dockPanel.Documents.OfType<DocPane>().ToArray();
+		foreach (var docPane in docPanes)
+			docPane.Dispose();
 	}
 
 

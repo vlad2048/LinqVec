@@ -35,9 +35,7 @@ sealed class CurveTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 
 		var evt = Env.GetEvtForTool(this, true, d);
 
-		var curveD = Rx.MkUID(d);
-
-		var curve = Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, curveD);
+		var curve = Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
 		var gfxState = CurveGfxState.AddPoint;
 
 		evt.WhenKeyDown(Keys.Enter).Subscribe(_ =>

@@ -138,8 +138,9 @@ public sealed class Unmod<T> : Undoer<T>, IUnmod
 	)
 	{
 		if (IsDisposed) throw new ArgumentException();
+		var schedD = Rx.MkUID(d);
 		subMod.V.IfSome(_ => DisposeSub());
-		var sub = new Unmod<U>(init, d);
+		var sub = new Unmod<U>(init, schedD);
 		var commit = () =>
 		{
 			FlushModAndClearRedos();
@@ -150,7 +151,7 @@ public sealed class Unmod<T> : Undoer<T>, IUnmod
 		};
 		subMod.V = new SubWithCommit(sub, commit);
 
-		sub.WhenUncommittedDispose.Subscribe(_ => DisposeSubIf(sub)).D(d);
+		sub.WhenUncommittedDispose.Subscribe(_ => DisposeSubIf(sub)).D(schedD);
 
 		return sub;
 	}
@@ -186,7 +187,7 @@ public sealed class Unmod<T> : Undoer<T>, IUnmod
 
 	private void DisposeSubIf<U>(Unmod<U> unmod)
 	{
-		if (IsDisposed) throw new ArgumentException();
+		if (IsDisposed) return;
 		if (subMod.V.Map(e => e.Sub) == unmod)
 			DisposeSub();
 	}

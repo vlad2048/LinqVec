@@ -24,7 +24,7 @@ static class DocLogic
 		win.menuFileSave.Events().Click.Subscribe(_ => Save(false, curDoc)).D(d);
 		win.menuFileSaveAs.Events().Click.Subscribe(_ => Save(true, curDoc)).D(d);
 		win.menuFileExit.Events().Click.Subscribe(_ => win.Close()).D(d);
-		win.Events().Closing.Subscribe(_ => DisposeAllDocPanes(win)).D(d);
+		win.Events().FormClosing.Subscribe(_ => DisposeAllDocPanes(win)).D(d);
 
 		TrackAndRestoreCurFile(win, curDoc, d);
 

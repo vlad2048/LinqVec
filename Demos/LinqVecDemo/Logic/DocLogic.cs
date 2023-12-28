@@ -1,6 +1,8 @@
 ﻿using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text.Json;
+using LinqVec.Panes;
+using LinqVec.Panes.DocPaneLogic_;
 using LinqVec.Utils;
 using LinqVec.Utils.Json;
 using LinqVec.Utils.Rx;
@@ -14,7 +16,7 @@ namespace LinqVecDemo.Logic;
 
 static class DocLogic
 {
-	public static IRoVar<Option<DocPane>> InitDocLogic(this MainWin win, Disp d)
+	public static IRoVar<Option<DocPane<TDoc>>> InitDocLogic(this MainWin win, Disp d)
 	{
 		var curDoc = win.dockPanel.GetActiveDoc(d);
 
@@ -34,7 +36,7 @@ static class DocLogic
 
 	private static void DisposeAllDocPanes(MainWin win)
 	{
-		var docPanes = win.dockPanel.Documents.OfType<DocPane>().ToArray();
+		var docPanes = win.dockPanel.Documents.OfType<DocPane<TDoc>>().ToArray();
 		foreach (var docPane in docPanes)
 			docPane.Dispose();
 	}
@@ -42,7 +44,7 @@ static class DocLogic
 
 	private static void TrackAndRestoreCurFile(
 		MainWin win,
-		IRoVar<Option<DocPane>> curDoc,
+		IRoVar<Option<DocPane<TDoc>>> curDoc,
 		Disp d
 	)
 	{
@@ -116,7 +118,7 @@ static class DocLogic
 			AddDocPane(dlg.FileName, dockPanel);
 	}
 
-	private static void Save(bool saveAs, IRoVar<Option<DocPane>> curDoc)
+	private static void Save(bool saveAs, IRoVar<Option<DocPane<TDoc>>> curDoc)
 	{
 		var doc = curDoc.V.IfNone(() => throw new ArgumentException());
 		var m = doc.Doc.CurReadOnly;
@@ -146,8 +148,8 @@ static class DocLogic
 	private static void AddDocPane(string? filename, DockPanel dockPanel)
 	{
 		var docPane = filename switch {
-			null => new DocPane(),
-			not null => new DocPane((VecJsoner.Vec.Load<Doc>(filename), filename))
+			null => new DocPane<TDoc>(LogicSelector.Instance, None),
+			not null => new DocPane<TDoc>(LogicSelector.Instance, Some(new DocPaneLoadInfo<TDoc>(VecJsoner.Vec.Load<Doc>(filename), filename)))
 		};
 		docPane.Show(dockPanel, DockState.Document);
 		Rx.Sched.Schedule(() => docPane.vecEditor.Focus());
@@ -155,12 +157,12 @@ static class DocLogic
 
 
 
-	private static IRoVar<Option<DocPane>> GetActiveDoc(this DockPanel dockPanel, Disp d)
+	private static IRoVar<Option<DocPane<TDoc>>> GetActiveDoc(this DockPanel dockPanel, Disp d)
 	{
-		var activeDoc = Var.Make(Option<DocPane>.None, d);
+		var activeDoc = Var.Make(Option<DocPane<TDoc>>.None, d);
 		dockPanel.WhenActiveDocChanged().Subscribe(_ =>
 		{
-			activeDoc.V = dockPanel.ActiveDocument as DocPane;
+			activeDoc.V = dockPanel.ActiveDocument as DocPane<TDoc>;
 		}).D(d);
 		return activeDoc;
 	}

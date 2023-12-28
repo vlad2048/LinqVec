@@ -19,9 +19,22 @@ public sealed record Mod<T>(
 
 public static class UnmodExt
 {
-	public static Action ClearMod<O>(this Unmod<O> unmod) => () => unmod.ModSet(Mod<O>.Empty);
-	public static Action HoverMod<O>(this Unmod<O> unmod, Mod<O> mod) => () => unmod.ModSet(mod);
-	public static Action<Pt> DragMod<O>(this Unmod<O> unmod, Func<Pt, Mod<O>> mod) => pt => unmod.ModSet(mod(pt));
+	public static Action ClearMod<O>(this Unmod<O> unmod) => () =>
+	{
+		if (unmod.IsDisposed) return;
+		unmod.ModSet(Mod<O>.Empty);
+	};
+	public static Action HoverMod<O>(this Unmod<O> unmod, Mod<O> mod) => () =>
+	{
+		if (unmod.IsDisposed) return;
+		unmod.ModSet(mod);
+	};
+	public static Func<Pt, Action> DragMod<O>(this Unmod<O> unmod, Func<Pt, Mod<O>> mod) => pt =>
+	{
+		if (unmod.IsDisposed) return () => {};
+		unmod.ModSet(mod(pt));
+		return unmod.ModFlush;
+	};
 }
 
 
@@ -65,7 +78,7 @@ public sealed class Unmod<T> : Undoer<T>, IUnmod
 
 	public Unmod(T init, Disp d) : base(init, d)
 	{
-		mod = Option<Mod<T>>.None.MakeSafe(d);
+		mod = Option<Mod<T>>.None.Make(d);
 		subMod = Option<SubWithCommit>.None.Make(d);
 
 		subMod
@@ -98,12 +111,14 @@ public sealed class Unmod<T> : Undoer<T>, IUnmod
 
 	public void ModSet(Mod<T> mod_)
 	{
+		if (IsDisposed) throw new ArgumentException();
 		ModFlush();
 		//if (!whenModEvt.IsDisposed) whenModEvt.OnNext(new SetModEvt(mod_.Name));
 		mod.V = Some(mod_);
 	}
-	private void ModFlush()
+	public void ModFlush()
 	{
+		if (IsDisposed) throw new ArgumentException();
 		mod.V.IfSome(m =>
 		{
 			if (m.ApplyWhenDone)

@@ -31,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Panes\DocPaneLogic_\" />
     <Folder Include="Tools\Cmds\Events\" />
   </ItemGroup>
 

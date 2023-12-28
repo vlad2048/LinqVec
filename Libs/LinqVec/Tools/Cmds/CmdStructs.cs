@@ -51,19 +51,9 @@ public sealed record ClickHotspotCmd(
 public sealed record DragHotspotCmd(
 	string Name,
 	Gesture Gesture,
-	Action<Pt> Action
+	Func<Pt, Action> Action
 ) : IHotspotCmd;
 
-/*public sealed record CmdActions(
-	Action<Pt> DragStart,
-	Func<Pt, Option<ToolStateFun>> Confirm
-)
-{
-	public static readonly CmdActions Empty = new(
-        _ => {},
-        _ => None
-	);
-}*/
 
 
 // ************
@@ -72,10 +62,11 @@ public sealed record DragHotspotCmd(
 sealed record HotspotNfoResolved(
 	Hotspot Hotspot,
     H HotspotValue,
-	IHotspotCmd[] Cmds
+	IHotspotCmd[] Cmds,
+    bool RepeatFlag
 )
 {
-	public static readonly HotspotNfoResolved Empty = new(Hotspot.Empty, null!, []);
+	public static readonly HotspotNfoResolved Empty = new(Hotspot.Empty, null!, [], false);
 }
 
 

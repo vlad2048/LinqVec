@@ -1,9 +1,7 @@
 ﻿namespace LinqVec;
 
 public record struct CfgLogCmd(
-	bool CurStateHotspot,
-	bool Evt,
-	bool DbgEvt
+	bool RunEvt
 );
 
 public record struct CfgLog(

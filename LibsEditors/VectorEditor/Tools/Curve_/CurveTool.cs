@@ -36,13 +36,16 @@ sealed class CurveTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 		var evt = Env.GetEvtForTool(this, true, d);
 
 		var curve = Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
+
 		var gfxState = CurveGfxState.AddPoint;
 
-		evt.WhenKeyDown(Keys.Enter).Subscribe(_ =>
-		{
-			Doc.SubCommit(curve);
-			toolActions.Reset();
-		}).D(d);
+		evt.WhenKeyDown(Keys.Enter)
+			.ObserveOnUI()
+			.Subscribe(_ =>
+			{
+				Doc.SubCommit(curve);
+				toolActions.Reset();
+			}).D(d);
 
 		ToolStateFun ModeNeutral(Unit _) => _ => new ToolState(
 			States.Neutral,
@@ -67,11 +70,11 @@ sealed class CurveTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 			]
 		);
 
+
 		var cmdOutput =
 			ModeNeutral(Unit.Default)
 				.Run(evt, Env.Invalidate, d);
 
-		//Log(cmdOutput, curve, d);
 
 		cmdOutput
 			.WhenRunEvt

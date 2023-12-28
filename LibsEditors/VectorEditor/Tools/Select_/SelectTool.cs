@@ -26,7 +26,9 @@ sealed class SelectTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 	private static class Cmds
 	{
 		public const string Select = nameof(Select);
+		public const string ShiftSelect = nameof(ShiftSelect);
 		public const string MoveSelection = nameof(MoveSelection);
+		public const string UnselectAll = nameof(UnselectAll);
 	}
 
 	public Disp Run(ToolActions toolActions)
@@ -43,44 +45,44 @@ sealed class SelectTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 				CBase.Cursors.BlackArrow,
 				[
 					Hotspots.Object(Doc)
-						.Do(objId =>
-							new IHotspotCmd [] {
+						.Do(objId => [
 								Cmd.Click(
 									Cmds.Select,
 									ClickGesture.Click,
-									() =>
-									{
-										L.WriteLine($"Click: {objId}");
-										curSel.V = [objId];
-										return None;
-									}
+									() => curSel.V = [objId]
 								),
 								Cmd.Click(
-									Cmds.Select,
+									Cmds.ShiftSelect,
 									ClickGesture.ShiftClick,
-									() =>
-									{
-										L.WriteLine($"ShiftClick: {objId}");
-										curSel.V = curSel.V.ToggleArr(objId);
-										return None;
-									}
+									() => curSel.V = curSel.V.ToggleArr(objId)
 								),
-							}
-							.AddArrIf(curSel.V.Contains(objId),
-								Cmd.Drag(
-									Cmds.MoveSelection,
-									pt => Doc.ModSet(DocMods.MoveSelection(evt.MousePos, curSel.V, d)(pt))
-								)
+								.. curSel.V.Contains(objId)
+									? new[] {
+										Cmd.Drag(
+											Cmds.MoveSelection,
+											Doc.DragMod(DocMods.MoveSelection(evt.MousePos, curSel.V, d))
+										)
+									}
+									: [],
+							]
+						),
+					Hotspots.Anywhere
+						.Do(_ => [
+							Cmd.Click(
+								Cmds.UnselectAll,
+								ClickGesture.Click,
+								() => curSel.V = []
 							)
-						)
+						]),
 				]
 			);
 
-		ModeNeutral(Unit.Default)
-			.Run(evt, Env.Invalidate, d);
+		
+		var cmdOutput =
+			ModeNeutral(Unit.Default)
+				.Run(evt, Env.Invalidate, d);
 
-		//curSel.Subscribe(_ => Env.Invalidate()).D(d);
-
+		
 		Env.WhenPaint.Subscribe(gfx =>
 		{
 			var bboxOpt =

@@ -13,7 +13,7 @@ namespace LinqVec.Tests.Tools.Cmds.Logic;
 
 class CmdEvtGeneratorTests
 {
-	private static readonly DragHotspotCmd cmdDrag = new("Drag", Gesture.Drag, _ => {});
+	private static readonly DragHotspotCmd cmdDrag = new("Drag", Gesture.Drag, _ => () => {});
 	private static readonly ClickHotspotCmd cmdClick = new("Click", Gesture.Click, () => None);
 	private static readonly ClickHotspotCmd cmdRightClick = new("RightClick", Gesture.RightClick, () => None);
 	private static readonly ClickHotspotCmd cmdDoubleClick = new("DoubleClick", Gesture.DoubleClick, () => None);
@@ -21,7 +21,8 @@ class CmdEvtGeneratorTests
 	private static IRoVar<HotspotNfoResolved> MkActsRun(IHotspotCmd[] acts) => Var.MakeConst(new HotspotNfoResolved(
 		Hotspot.Empty,
 		123,
-		acts
+		acts,
+		false
 	));
 
 	[Test]

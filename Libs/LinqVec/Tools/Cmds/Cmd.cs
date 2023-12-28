@@ -16,10 +16,24 @@ public static class Cmd
 		confirm
 	);
 
+	public static ClickHotspotCmd Click(
+		string name,
+		ClickGesture gesture,
+		Action confirm
+	) => new(
+		name,
+		(Gesture)gesture,
+		() =>
+		{
+			confirm();
+			return None;
+		}
+	);
+
 
 	public static DragHotspotCmd Drag(
 		string name,
-		Action<Pt> action
+		Func<Pt, Action> action
 	) => new(
 		name,
 		Gesture.Drag,

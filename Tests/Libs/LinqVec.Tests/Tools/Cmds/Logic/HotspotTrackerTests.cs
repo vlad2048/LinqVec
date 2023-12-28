@@ -25,7 +25,7 @@ class HotspotTrackerTests
 					_ => None
 				}, null, () => {}),
 				_ => [
-					new DragHotspotCmd("Drag", Gesture.Drag, _ => {}),
+					new DragHotspotCmd("Drag", Gesture.Drag, _ => () => {}),
 					new ClickHotspotCmd("Click", Gesture.Click, () => None),
 				]
 			),
@@ -36,7 +36,7 @@ class HotspotTrackerTests
 					_ => None
 				}, null, () => {}),
 				_ => [
-					new DragHotspotCmd("Drag", Gesture.Drag, _ => {}),
+					new DragHotspotCmd("Drag", Gesture.Drag, _ => () => {}),
 					new ClickHotspotCmd("Click", Gesture.Click, () => None),
 				]
 			),
@@ -54,7 +54,7 @@ class HotspotTrackerTests
 			Move(4, 60),
 		]);
 		using var d = new Disp();
-		var curHotspot = curActs.TrackHotspot(evt, sched, d);
+		var curHotspot = curActs.TrackHotspot(evt, Obs.Never<Unit>(), sched, d);
 
 		var obs = sched.CreateObserver<(string, H)>();
 		curHotspot
@@ -84,7 +84,7 @@ class HotspotTrackerTests
 			Move(5, 80),
 		]);
 		using var d = new Disp();
-		var curHotspot = curActs.TrackHotspot(evt, sched, d);
+		var curHotspot = curActs.TrackHotspot(evt, Obs.Never<Unit>(), sched, d);
 
 		var obs = sched.CreateObserver<(string, H)>();
 		curHotspot

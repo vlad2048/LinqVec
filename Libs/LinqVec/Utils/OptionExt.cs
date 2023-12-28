@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using LinqVec.Utils.Rx;
 
 namespace LinqVec.Utils;
 
@@ -33,6 +34,11 @@ public static class OptionExt
 				return elt;
 		return None;
 	}
+
+	public static IObservable<Unit> WhereNone<T>(this IObservable<Option<T>> src) =>
+		src
+			.Where(e => e.IsNone)
+			.ToUnit();
 
 	public static IObservable<T> WhereSome<T>(this IObservable<Option<T>> src) =>
 		src

@@ -57,7 +57,11 @@ public partial class VecEditor : UserControl
 		{
 			var res = new Res().D(d);
 			drawPanel.Init(new DrawPanelInitNfo(transform, res));
-			if (DesignMode) return;
+			if (DesignMode)
+			{
+				VecEditorUtils.SetupDesignMode(drawPanel, d);
+				return;
+			}
 
 			var (model, tools) = init;
 			model.WhenUndoRedo.Subscribe(_ => Env.TriggerUndoRedo()).D(d);
@@ -94,6 +98,17 @@ public partial class VecEditor : UserControl
 
 file static class VecEditorUtils
 {
+	private static readonly Brush designModeBackBrush = new SolidBrush(MkCol(0x542a57));
+
+	public static void SetupDesignMode(DrawPanel drawPanel, Disp d)
+	{
+		drawPanel.Events().Paint.Subscribe(e =>
+		{
+			var gfx = e.Graphics;
+			gfx.FillRectangle(designModeBackBrush, drawPanel.ClientRectangle);
+		}).D(d);
+	}
+
 	public static IDisposable RunTools(this ToolEnv env, ITool[] tools, IRwVar<ITool> curTool)
 	{
 		var d = MkD();

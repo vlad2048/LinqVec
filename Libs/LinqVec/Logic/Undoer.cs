@@ -18,7 +18,7 @@ public interface IUndoerReadOnly<out T>
 */
 public class Undoer<T> : IUndoerReadOnly<T>, IDisposable
 {
-	protected readonly Disp D;
+	public Disp D { get; }
 	public bool IsDisposed => D.IsDisposed;
 	public void Dispose() => D.Dispose();
 

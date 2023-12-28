@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Geom;
-using LinqVec;
+using LinqVec.Logic;
 using LinqVec.Utils;
 using ReactiveVars;
 using VectorEditor.Model.Structs;

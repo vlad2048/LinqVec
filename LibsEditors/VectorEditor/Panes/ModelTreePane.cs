@@ -6,15 +6,16 @@ using WeifenLuo.WinFormsUI.Docking;
 using UILib;
 using VectorEditor.Panes.ModelTree_;
 using LinqVec;
+using LinqVec.Logic;
 
 namespace VectorEditor.Panes;
 
 public partial class ModelTreePane : DockContent
 {
-	private readonly ISubject<IObservable<Option<Model<Doc>>>> whenInit;
-	private IObservable<IObservable<Option<Model<Doc>>>> WhenInit => whenInit.AsObservable();
+	private readonly ISubject<IObservable<Option<IUndoerReadOnly<Doc>>>> whenInit;
+	private IObservable<IObservable<Option<IUndoerReadOnly<Doc>>>> WhenInit => whenInit.AsObservable();
 
-	public void Init(IObservable<Option<Model<Doc>>> modelMan)
+	public void Init(IObservable<Option<IUndoerReadOnly<Doc>>> modelMan)
 	{
 		whenInit.OnNext(modelMan);
 		whenInit.OnCompleted();
@@ -24,7 +25,7 @@ public partial class ModelTreePane : DockContent
 	{
 		InitializeComponent();
 		var ctrlD = this.GetD();
-		whenInit = new AsyncSubject<IObservable<Option<Model<Doc>>>>().D(ctrlD);
+		whenInit = new AsyncSubject<IObservable<Option<IUndoerReadOnly<Doc>>>>().D(ctrlD);
 
 		this.InitRX(d =>
 		{

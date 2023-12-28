@@ -4,7 +4,7 @@ using VectorEditor.Model;
 using UILib;
 using VectorEditor;
 using WeifenLuo.WinFormsUI.Docking;
-using LinqVec;
+using LinqVec.Logic;
 
 namespace LinqVecDemo;
 
@@ -12,7 +12,7 @@ sealed partial class DocPane : DockContent
 {
 	public IRwVar<Option<string>> Filename { get; }
 
-	public Model<Doc> Doc { get; private set; } = null!;
+	public IUndoerReadOnly<Doc> Doc { get; private set; } = null!;
 
 	public DocPane((Doc model, string filename)? load = null)
 	{

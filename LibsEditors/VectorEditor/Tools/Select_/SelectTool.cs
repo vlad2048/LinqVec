@@ -7,6 +7,7 @@ using LinqVec.Utils;
 using ReactiveVars;
 using System.Linq;
 using Geom;
+using LinqVec.Logic;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_.Mods;
 
@@ -14,7 +15,7 @@ namespace VectorEditor.Tools.Select_;
 
 
 
-sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
+sealed class SelectTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 {
 	public Keys Shortcut => Keys.Q;
 
@@ -28,7 +29,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		public const string MoveSelection = nameof(MoveSelection);
 	}
 
-	public IDisposable Run(ToolActions toolActions)
+	public Disp Run(ToolActions toolActions)
 	{
 		var d = MkD();
 
@@ -83,7 +84,7 @@ sealed class SelectTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		Env.WhenPaint.Subscribe(gfx =>
 		{
 			var bboxOpt =
-				Doc.GetGfx().GetObjects(curSel.V)
+				Doc.VModded.GetObjects(curSel.V)
 					.Select(e => e.BoundingBox)
 					.Union();
 			Painter.PaintSelectRectangle(gfx, bboxOpt);

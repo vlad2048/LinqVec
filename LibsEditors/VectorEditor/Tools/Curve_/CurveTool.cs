@@ -1,10 +1,13 @@
-﻿using System.Reactive.Linq;
+﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using LinqVec;
+using LinqVec.Logic;
 using VectorEditor.Model;
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Cmds.Events;
 using LinqVec.Tools.Events;
+using LinqVec.Utils;
 using LinqVec.Utils.Rx;
 using ReactiveVars;
 using VectorEditor.Tools.Curve_.Mods;
@@ -12,7 +15,7 @@ using VectorEditor.Tools.Curve_.Mods;
 namespace VectorEditor.Tools.Curve_;
 
 
-sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
+sealed class CurveTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 {
 	public Keys Shortcut => Keys.P;
 
@@ -26,14 +29,22 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 		public const string AddPoint = nameof(AddPoint);
 	}
 
-	public IDisposable Run(ToolActions toolActions)
+	public Disp Run(ToolActions toolActions)
 	{
 		var d = MkD();
+
 		var evt = Env.GetEvtForTool(this, true, d);
-		var curve = Doc.CurveCreate(d);
+
+		var curveD = Rx.MkUID(d);
+
+		var curve = Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, curveD);
 		var gfxState = CurveGfxState.AddPoint;
 
-		evt.WhenKeyDown(Keys.Enter).Subscribe(_ => toolActions.Reset()).D(d);
+		evt.WhenKeyDown(Keys.Enter).Subscribe(_ =>
+		{
+			Doc.SubCommit(curve);
+			toolActions.Reset();
+		}).D(d);
 
 		ToolStateFun ModeNeutral(Unit _) => _ => new ToolState(
 			States.Neutral,
@@ -62,7 +73,7 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 			ModeNeutral(Unit.Default)
 				.Run(evt, Env.Invalidate, d);
 
-		Log(cmdOutput, curve, d);
+		//Log(cmdOutput, curve, d);
 
 		cmdOutput
 			.WhenRunEvt
@@ -78,13 +89,14 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 
 		Env.WhenPaint.Subscribe(gfx =>
 		{
-			Painter.PaintCurve(gfx, curve.ModGet(), gfxState);
+			Painter.PaintCurve(gfx, curve.VModded, gfxState);
 		}).D(d);
 
 		return d;
 	}
 
 
+	/*
 	private const int HotspotKey = 0x979b32;
 	private const int HotspotVal = 0xf2f77d;
 	private const int ModKey = 0x451094;
@@ -124,17 +136,17 @@ sealed class CurveTool(ToolEnv Env, Model<Doc> Doc) : ITool
 							break;
 					}
 
-					/*var str = e switch {
-						RunDbgEvt { Evt: HotspotChangedRunEvt { Hotspot: var hotspot } } => $"[Hotspot] <- {hotspot}",
-						CmdDbgEvt { Evt: ConfirmCmdEvt { HotspotCmd.Name: var name } } => $"Cmd[{name}]",
-						ModDbgEvt { Evt: SetModEvt { Name: var name } } => $"                      -> mod.set({name})",
-						ModDbgEvt { Evt: ApplyModEvt { Name: var name } } => $"                      -> mod.app({name})",
-						_ => string.Empty
-					};
-					L.WriteLine(str);*/
+					//var str = e switch {
+					//	RunDbgEvt { Evt: HotspotChangedRunEvt { Hotspot: var hotspot } } => $"[Hotspot] <- {hotspot}",
+					//	CmdDbgEvt { Evt: ConfirmCmdEvt { HotspotCmd.Name: var name } } => $"Cmd[{name}]",
+					//	ModDbgEvt { Evt: SetModEvt { Name: var name } } => $"                      -> mod.set({name})",
+					//	ModDbgEvt { Evt: ApplyModEvt { Name: var name } } => $"                      -> mod.app({name})",
+					//	_ => string.Empty
+					//};
+					//L.WriteLine(str);
 				})
 		]);
-	}
+	}*/
 
 
 

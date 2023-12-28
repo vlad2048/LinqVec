@@ -9,5 +9,5 @@ public sealed record ToolActions(
 public interface ITool
 {
 	Keys Shortcut { get; }
-	IDisposable Run(ToolActions toolActions);
+	Disp Run(ToolActions toolActions);
 }

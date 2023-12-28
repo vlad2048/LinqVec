@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Geom;
+using LinqVec.Logic;
 using LinqVec.Utils;
 using ReactiveVars;
 

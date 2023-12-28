@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿/*
+using System.Reactive.Linq;
 using LinqVec.Tests.ModelTesting.TestSupport;
 using LinqVec.Tests.Tools.Cmds.TestSupport;
 using LinqVec.Tools.Cmds;
@@ -66,13 +67,11 @@ class CmdRunnerTests : ModelTestBase
 
 		// Assert
 		// ======
-		/*
-		docObs.AssertEq([
-			(0, [[]]),
-			(2, [[(4, 4)]]),
-			(3, [[(5, 5)]]),
-		]);
-		*/
+		//docObs.AssertEq([
+		//	(0, [[]]),
+		//	(2, [[(4, 4)]]),
+		//	(3, [[(5, 5)]]),
+		//]);
 	}
 
 
@@ -94,3 +93,4 @@ class CmdRunnerTests : ModelTestBase
 		]
 	);
 }
+*/

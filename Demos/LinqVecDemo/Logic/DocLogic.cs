@@ -110,7 +110,7 @@ static class DocLogic
 	private static void Save(bool saveAs, IRoVar<Option<DocPane>> curDoc)
 	{
 		var doc = curDoc.V.IfNone(() => throw new ArgumentException());
-		var m = doc.Doc.Cur;
+		var m = doc.Doc.CurReadOnly;
 
 		if (saveAs || doc.Filename.V.IsNone)
 		{

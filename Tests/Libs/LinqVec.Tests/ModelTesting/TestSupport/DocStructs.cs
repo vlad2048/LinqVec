@@ -38,6 +38,7 @@ sealed record Curve(
 
 
 
+/*
 static class Entities
 {
 	public static IPtr<Doc, Curve> CurveCreate(this Model<Doc> model, Disp d) => new PtrCreate<Doc, Curve, Guid>(model, Curve, d);
@@ -70,3 +71,4 @@ static class Entities
 
 	private static Doc ChangeLayer(this Doc doc, Guid layerId, Func<IObj[], IObj[]> fun) => doc with { Layers = doc.Layers.Set(layerId, layer => layer with { Objects = fun(layer.Objects) }) };
 }
+*/

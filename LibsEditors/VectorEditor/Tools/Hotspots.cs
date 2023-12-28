@@ -1,4 +1,5 @@
 ﻿using LinqVec;
+using LinqVec.Logic;
 using LinqVec.Utils;
 using LinqVec.Tools.Cmds;
 using VectorEditor.Model;
@@ -16,12 +17,12 @@ static class Hotspots
 		_ => Unit.Default
 	);
 
-	public static Hotspot<PointId> CurvePoint(IPtrMod<Curve> curve, bool excludeLast) => new(
+	public static Hotspot<PointId> CurvePoint(Unmod<Curve> curve, bool excludeLast) => new(
 		CurvePointId,
 		p => excludeLast switch
 		{
-			false => curve.V.GetClosestPointTo(p, C.ActivateMoveMouseDistance),
-			true => curve.V.GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
+			false => curve.Cur.V.GetClosestPointTo(p, C.ActivateMoveMouseDistance),
+			true => curve.Cur.V.GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
 		}
 	);
 
@@ -30,7 +31,7 @@ static class Hotspots
 		p => doc.Cur.V.GetObjectAt(p).OfType<IObj, Curve>()
 	);*/
 
-	public static Hotspot<Guid> Object(Model<Doc> doc) => new(
+	public static Hotspot<Guid> Object(Unmod<Doc> doc) => new(
 		nameof(Curve),
 		p => doc.Cur.V.GetObjectAt(p).Map(e => e.Id)
 	);

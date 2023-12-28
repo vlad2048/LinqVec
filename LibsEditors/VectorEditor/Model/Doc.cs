@@ -60,7 +60,30 @@ public sealed record Curve(
 }
 
 
+static class DocUtils
+{
+	public static Doc SetCurve(Doc doc, Curve curve) =>
+		doc with {
+			Layers = [
+				SetCurve(doc.Layers[0], curve),
+				..doc.Layers.Skip(1)
+			]
+		};
 
+	private static Layer SetCurve(Layer layer, Curve curve) => layer with { Objects = layer.Objects.AddSet(curve) };
+
+	private static T[] AddSet<T>(this T[] xs, T x) where T : IId
+	{
+		var idx = xs.IndexOf(e => e.Id == x.Id);
+		var list = xs.ToList();
+		if (idx == -1) return list.Append(x).ToArray();
+		list[idx] = x;
+		return list.ToArray();
+	}
+}
+
+
+/*
 static class Entities
 {
 	public static IPtr<Doc, Curve> CurveCreate(this Model<Doc> model, Disp toolD) => new PtrCreate<Doc, Curve, Guid>(model, Curve, toolD);
@@ -93,3 +116,4 @@ static class Entities
 
 	private static Doc ChangeLayer(this Doc doc, Guid layerId, Func<IObj[], IObj[]> fun) => doc with { Layers = doc.Layers.Set(layerId, layer => layer with { Objects = fun(layer.Objects) }) };
 }
+*/

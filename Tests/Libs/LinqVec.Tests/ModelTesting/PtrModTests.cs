@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿/*
+using System.Reactive.Linq;
 using Geom;
 using LinqVec.Tests.ModelTesting.TestSupport;
 using LinqVec.Utils;
@@ -77,6 +78,7 @@ class PtrModTests : ModelTestBase
 
 	private static Func<Curve, Curve> Mk(Func<Curve, Curve> f) => f;
 }
+*/
 
 
 

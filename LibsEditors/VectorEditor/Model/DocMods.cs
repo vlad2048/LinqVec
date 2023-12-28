@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Linq;
 using Geom;
 using LinqVec;
+using LinqVec.Logic;
 using LinqVec.Utils;
 using PowBasics.CollectionsExt;
 using ReactiveVars;

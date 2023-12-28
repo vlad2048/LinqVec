@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿/*
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Geom;
@@ -176,98 +177,5 @@ public sealed class PtrCreate<Doc, O, Loc>
 			}
 		}
 	}
-}
-
-
-/*
-public sealed class PtrEdit<Doc, O, Loc> : IDisposable where Doc : IDoc where O : IId
-{
-	private readonly Disp d = MkD();
-	public void Dispose() => d.Dispose();
-
-	private readonly IBoundVar<Doc> doc;
-	private readonly ObjAccessor<Doc, O, Loc> desc;
-	private readonly Loc loc;
-	private readonly Guid objId;
-
-	public PtrEdit(Model<Doc> model, IObjDesc<Doc, O, Loc> desc, Loc loc, Guid objId)
-	{
-		doc = model.Cur;
-		this.desc = new ObjAccessor<Doc, O, Loc>(desc);
-		this.loc = loc;
-		this.objId = objId;
-	}
-}
-*/
-
-
-
-
-
-/*
-public sealed class Ptr<Doc, O, Loc> : IDisposable where Doc : IDoc where O : IId
-{
-	private interface IArgs { Loc Loc { get; } }
-	private sealed record CreateArgs(Loc Loc) : IArgs;
-	private sealed record EditArgs(Loc Loc, Guid Id) : IArgs;
-
-	private readonly Disp d = MkD();
-	public void Dispose() => d.Dispose();
-
-	private readonly IBoundVar<Doc> doc;
-	private readonly IObjDesc<Doc, O, Loc> desc;
-	private readonly Loc loc;
-	private readonly Guid id;
-	private readonly IBoundVar<O> obj;
-
-	public IRwVar<O> Obj => obj;
-
-	private Ptr(Model<Doc> model, IObjDesc<Doc, O, Loc> desc, IArgs args)
-	{
-		doc = model.Cur;
-		this.desc = desc;
-		loc = args.Loc;
-
-		bool hasContent;
-		switch (args)
-		{
-			case CreateArgs:
-				id = Guid.NewGuid();
-				obj = Var.MakeBound(desc.Make(id), d);
-				id = obj.V.Id;
-				hasContent = desc.HasContent(obj.V);
-				break;
-			case EditArgs { Id: var id_ }:
-				id = id_;
-				obj = Var.MakeBound(desc.Get(doc.V, loc, id), d);
-				hasContent = desc.HasContent(obj.V);
-				if (!hasContent) throw new ArgumentException();
-				break;
-			default:
-				throw new ArgumentException();
-		}
-
-		void Reset()
-		{
-
-		}
-
-		// Tool changes Obj to HasContent
-		obj.WhenOuter
-			.Where(e => !hasContent && desc.HasContent(e))
-			.Subscribe(e =>
-			{
-				hasContent = true;
-				doc.V = desc.Add(doc.V, loc, e);
-			}).D(d);
-
-		// Doc Undo/Redo changes with Obj removed
-		doc.WhenInner
-			.Where(doc_ => !desc.Contains(doc_, loc, id))
-			.Subscribe(e =>)
-	}
-
-	public static Ptr<Doc, O, Loc> Create(Model<Doc> doc, IObjDesc<Doc, O, Loc> desc, Loc loc) => new(doc, desc, new CreateArgs(loc));
-	public static Ptr<Doc, O, Loc> Edit(Model<Doc> doc, IObjDesc<Doc, O, Loc> desc, Loc loc, Guid id) => new(doc, desc, new EditArgs(loc, id));
 }
 */

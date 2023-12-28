@@ -42,7 +42,7 @@ public interface IDoc
 												(unregisters the previous registered Ptr if any)
 
 */
-
+/*
 public interface IModel
 {
 	IObservable<Unit> WhenPaintNeeded { get; }
@@ -143,3 +143,4 @@ public sealed class Model<Doc> : IModel, IPtrMod<Doc> where Doc : IDoc
 			ptr.V = None;
 	}
 }
+*/

@@ -1,4 +1,5 @@
-﻿using Microsoft.Reactive.Testing;
+﻿/*
+using Microsoft.Reactive.Testing;
 using System.Text;
 using ReactiveVars;
 using Shouldly;
@@ -53,3 +54,4 @@ class ModelTestBase
 		return obs;
 	}
 }
+*/

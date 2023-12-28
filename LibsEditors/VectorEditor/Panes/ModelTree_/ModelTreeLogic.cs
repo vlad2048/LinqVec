@@ -1,6 +1,7 @@
 ﻿using BrightIdeasSoftware;
 using DynamicData;
 using LinqVec;
+using LinqVec.Logic;
 using LinqVec.Utils.WinForms_;
 using PowBasics.CollectionsExt;
 using ReactiveVars;
@@ -36,7 +37,7 @@ namespace VectorEditor.Panes.ModelTree_;
 
 static class ModelTreeLogic
 {
-	public static IDisposable Setup(TreeListView tree, Model<Doc> doc)
+	public static IDisposable Setup(TreeListView tree, IUndoerReadOnly<Doc> doc)
 	{
 		var d = MkD();
 
@@ -44,7 +45,7 @@ static class ModelTreeLogic
 
 		tree.SetupColumns();
 
-		doc.Cur
+		doc.CurReadOnly
 			//.ObserveOnUI()
 			.Subscribe(cur =>
 			{

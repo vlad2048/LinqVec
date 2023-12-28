@@ -1,4 +1,5 @@
 ﻿using LinqVec;
+using LinqVec.Logic;
 using ReactiveVars;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
@@ -8,10 +9,10 @@ namespace VectorEditor;
 
 public static class VectorEditorLogic
 {
-	public static Model<Doc> InitVectorEditor(this VecEditor vecEditor, Doc? initModel, Disp d)
+	public static IUndoerReadOnly<Doc> InitVectorEditor(this VecEditor vecEditor, Doc? initModel, Disp d)
 	{
 		var env = vecEditor.Env;
-		var doc = new Model<Doc>(initModel ?? Doc.Empty(), d);
+		var doc = new Unmod<Doc>(initModel ?? Doc.Empty(), d);
 
 		vecEditor.Init(
 			new VecEditorInitNfo(
@@ -26,7 +27,7 @@ public static class VectorEditorLogic
 		env.WhenPaint
 			.Subscribe(gfx =>
 			{
-				var m = doc.GetGfx();
+				var m = doc.VModded;
 				foreach (var layer in m.Layers)
 				foreach (var obj in layer.Objects)
 				{

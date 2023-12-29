@@ -11,9 +11,10 @@ namespace LinqVec.Tools.Cmds;
 
 
 // @formatter:off
-public interface ICmdEvt { IHotspotCmd HotspotCmd { get; } }
+public interface ICmdEvt;
 public sealed record DragStartCmdEvt(IHotspotCmd HotspotCmd, Pt PtStart) : ICmdEvt { public override string ToString() => $"[{HotspotCmd.Name}].DragStart({PtStart})"; }
 public sealed record ConfirmCmdEvt(IHotspotCmd HotspotCmd, Pt Pt) : ICmdEvt { public override string ToString() => $"[{HotspotCmd.Name}].Confirm({Pt})"; }
+public sealed record ShortcutCmdEvt(ShortcutNfo ShortcutNfo) : ICmdEvt { public override string ToString() => $"[{ShortcutNfo.Name}].Shortcut({ShortcutNfo.Key})"; }
 
 public interface IRunEvt { string State { get; } string Hotspot { get; } }
 public sealed record HotspotChangedRunEvt(string State, string Hotspot) : IRunEvt { public override string ToString() => $"[{State}] HotspotChanged({Hotspot})"; }
@@ -50,7 +51,7 @@ public static class CmdRunner
 		var (repeatHotspot, whenRepeatHotspot) = RxEventMaker.Make(d);
 		curState.Subscribe(_ => repeatHotspot()).D(d);
 		var curHotspot = curState.TrackHotspot(evt.WhenEvt, whenRepeatHotspot, scheduler, d);
-		var cmdEvt = curHotspot.ToCmdEvt(evt.WhenEvt, scheduler, d).MakeHot(d);
+		var cmdEvt = curHotspot.ToCmdEvt(curState, evt.WhenEvt, scheduler, d).MakeHot(d);
 
 		SetCursor(curState, curHotspot, evt.SetCursor, d);
 		InvokeActions(cmdEvt, curHotspot, curStateSet, curStateReset, d);
@@ -62,6 +63,7 @@ public static class CmdRunner
 		var cmdOutput = new CmdOutput(runEvents, cmdEvt);
 
 		G.Cfg.RunWhen(e => e.Log.LogCmd.RunEvt, d, [() => cmdOutput.WhenRunEvt.LogD("RunEvt")]);
+		G.Cfg.RunWhen(e => e.Log.LogCmd.CmdEvt, d, [() => cmdOutput.WhenCmdEvt.LogD("CmdEvt")]);
 
 		return cmdOutput;
 	}
@@ -164,6 +166,12 @@ public static class CmdRunner
 								break;
 						}
 
+						break;
+					}
+
+					case ShortcutCmdEvt { ShortcutNfo: var shortcutNfo }:
+					{
+						shortcutNfo.Action();
 						break;
 					}
 				}

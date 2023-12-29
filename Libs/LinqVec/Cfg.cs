@@ -1,7 +1,8 @@
 ﻿namespace LinqVec;
 
 public record struct CfgLogCmd(
-	bool RunEvt
+	bool RunEvt,
+	bool CmdEvt
 );
 
 public record struct CfgLog(

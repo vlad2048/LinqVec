@@ -18,10 +18,10 @@ class CmdEvtGeneratorTests
 	private static readonly ClickHotspotCmd cmdRightClick = new("RightClick", Gesture.RightClick, () => None);
 	private static readonly ClickHotspotCmd cmdDoubleClick = new("DoubleClick", Gesture.DoubleClick, () => None);
 
-	private static IRoVar<HotspotNfoResolved> MkActsRun(IHotspotCmd[] acts) => Var.MakeConst(new HotspotNfoResolved(
+	private static IRoVar<HotspotNfoResolved> MkActsRun(IHotspotCmd[] cmds) => Var.MakeConst(new HotspotNfoResolved(
 		Hotspot.Empty,
 		123,
-		acts,
+		cmds,
 		false
 	));
 

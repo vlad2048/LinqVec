@@ -97,13 +97,14 @@ public static class EvtExt
 
 	// Key Down
 	// ========
-	public static bool IsKeyDown(this IEvt evt, Keys key) => evt is KeyEvt { UpDown: UpDown.Down, Key: var evtKey } && evtKey == key;
-	public static IObservable<Unit> WhenKeyDown(this IObservable<IEvt> src, Keys key) =>
+	public static bool IsKeyDown(this IEvt evt, Keys key, bool ctrl = false) => evt is KeyEvt { UpDown: UpDown.Down, Key: var evtKey } && evtKey == key && (!ctrl || KeyUtils.IsCtrlPressed);
+	public static IObservable<Unit> WhenKeyDown(this IObservable<IEvt> src, Keys key, bool ctrl = false) =>
 		src
 			.OfType<KeyEvt>()
 			.Where(e => e.UpDown == UpDown.Down && e.Key == key)
+			.Where(_ => !ctrl || KeyUtils.IsCtrlPressed)
 			.ToUnit();
-	public static IObservable<Unit> WhenKeyDown(this Evt src, Keys key) => src.WhenEvt.WhenKeyDown(key);
+	public static IObservable<Unit> WhenKeyDown(this Evt src, Keys key, bool ctrl = false) => src.WhenEvt.WhenKeyDown(key, ctrl);
 
 	// Key Up
 	// ======
@@ -117,20 +118,18 @@ public static class EvtExt
 
 	// Is Key Down
 	// ===========
-	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key, Disp d)
-	{
-		var isDown = Var.Make(false, d);
-		Observable.Merge(
+	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key, Disp d) =>
+		Obs.Merge(
 				src.WhenKeyDown(key).Select(_ => true),
 				src.WhenKeyUp(key).Select(_ => false)
 			)
-			.Subscribe(v => isDown.V = v).D(d);
-		return isDown;
-	}
+			.Prepend(false)
+			.DistinctUntilChanged()
+			.ToVar(d);
 
 	// Key Repeat
 	// ==========
-	public static IObservable<Unit> WhenKeyRepeat(this IObservable<IEvt> src, Keys key, bool ctrl)
+	/*public static IObservable<Unit> WhenKeyRepeat(this IObservable<IEvt> src, Keys key, bool ctrl)
 	{
 		var whenStart = src.WhenKeyDown(key).Where(_ => !ctrl || KeyUtils.IsCtrlPressed).ToUnit();
 		var whenStop = src.OfType<KeyEvt>().ToUnit();
@@ -138,7 +137,7 @@ public static class EvtExt
 			from _ in whenStart
 			from evt in Obs.Timer(KeyDelayStart, KeyDelayRepeat, Rx.Sched).Prepend(0).Select(_ => Unit.Default).TakeUntil(whenStop)
 			select evt;
-	}
+	}*/
 
 	// Mouse Down
 	// ==========

@@ -14,6 +14,7 @@ static class PanesLogic
 	public static void InitPanesLogic(this MainWin win, IRoVar<Option<DocPane<TDoc>>> doc, Disp d)
 	{
 		var editorLogic = LogicSelector.Instance;
+		win.menuViewLayout.ShowShortcutKeys = true;
 
 		// LayoutPane
 		// ==========
@@ -58,7 +59,6 @@ static class PanesLogic
 	private static void TogglePane<T>(DockPanel dockPanel, IRoVar<bool> isDisplayed, Action makeFun) where T : DockContent
 	{
 		if (isDisplayed.V)
-			//dockPanel.Contents.OfType<T>().ToArray().ForEach(e => e.Close());
 			dockPanel.Contents.OfType<T>().ToArray().ForEach(e => e.DockHandler.DockPanel = null);
 		else
 			makeFun();

@@ -1,5 +1,6 @@
 ﻿using Geom;
 using LinqVec.Utils;
+using PowBasics.CollectionsExt;
 using VectorEditor.Model.Structs;
 using VectorEditor.Tools.Curve_.Structs;
 
@@ -14,6 +15,16 @@ static class CurveOps
 		where objIds.Contains(obj.Id)
 		select obj
 	).ToArray();
+
+	public static Doc DeleteObjects(this Doc doc, Guid[] objIds) =>
+		doc with
+		{
+			Layers = doc.Layers.SelectToArray(
+				layer => layer with {
+					Objects = layer.Objects.WhereNotToArray(e => objIds.Contains(e.Id))
+				}
+			)
+		};
 
 
 	private sealed record PtNfo(PointId Id, double Distance);

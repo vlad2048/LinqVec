@@ -43,9 +43,9 @@ public partial class VecEditor<TDoc> : UserControl
 			var (doc, tools) = init;
 			var (curTool, setCurTool, editorEvt) = VecEditorUtils.TrackUserEventsAndCurTool(drawPanel, tools, d);
 
-			//var tempD = MkD().D(ctrlD);
-			//var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, tempD);
-			var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, d);
+			var tempD = MkD().D(ctrlD);
+			var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, tempD);
+			//var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, d);
 
 			Env = new ToolEnv<TDoc>(
 				doc,
@@ -75,8 +75,10 @@ public partial class VecEditor<TDoc> : UserControl
 			VecEditorUtils.RunTools(curTool, Env, d);
 
 			var isMouseDown = editorEvt.IsMouseDown();
-			editorEvt.WhenKeyRepeat(Keys.Z, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Undo()).D(d);
-			editorEvt.WhenKeyRepeat(Keys.Y, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Redo()).D(d);
+			//editorEvt.WhenKeyRepeat(Keys.Z, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Undo()).D(d);
+			//editorEvt.WhenKeyRepeat(Keys.Y, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Redo()).D(d);
+			editorEvt.WhenKeyDown(Keys.Z, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Undo()).D(d);
+			editorEvt.WhenKeyDown(Keys.Y, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Redo()).D(d);
 
 			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
 			statusStrip.AddLabel("zoom", transform.Select(e => $"{C.ZoomLevels[e.ZoomIndex]:P}")).D(d);

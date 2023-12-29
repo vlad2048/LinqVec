@@ -31,12 +31,13 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 		public const string ShiftSelect = nameof(ShiftSelect);
 		public const string MoveSelection = nameof(MoveSelection);
 		public const string UnselectAll = nameof(UnselectAll);
+		public const string Delete = nameof(Delete);
 	}
 
 	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
 	{
 		var d = MkD();
-
+		var Doc = Env.Doc;
 		var evt = Env.GetEvtForTool(this, true, d);
 
 		var curSel = Var.Make<Guid[]>([], d);
@@ -46,7 +47,7 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 				States.Neutral,
 				CBase.Cursors.BlackArrow,
 				[
-					Hotspots.Object(Env.Doc)
+					Hotspots.Object(Doc)
 						.Do(objId => [
 								Cmd.Click(
 									Cmds.Select,
@@ -62,7 +63,7 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 									? new[] {
 										Cmd.Drag(
 											Cmds.MoveSelection,
-											Env.Doc.DragMod(DocMods.MoveSelection(evt.MousePos, curSel.V, d))
+											Doc.DragMod(DocMods.MoveSelection(evt.MousePos, curSel.V, d))
 										)
 									}
 									: [],
@@ -76,6 +77,13 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 								() => curSel.V = []
 							)
 						]),
+				],
+				[
+					Kbd.Make(
+						Cmds.Delete,
+						Keys.Delete,
+						() => Doc.Cur.V = Doc.Cur.V.DeleteObjects(curSel.V)
+					)
 				]
 			);
 

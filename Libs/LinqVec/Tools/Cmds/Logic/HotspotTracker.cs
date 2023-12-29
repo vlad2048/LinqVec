@@ -50,17 +50,17 @@ static class HotspotTracker
 					.WhereSome()
 					.WithLatestFrom(
 						curState,
-						(evt_, curActs_) => new
+						(evt_, curState_) => new
 						{
 							Evt = evt_,
-							Acts = curActs_
+							State = curState_
 						}
 					)
 					.Where(_ => !isDragging.V)
 					.Subscribe(t =>
 						obs.OnNext(
 							last =
-								t.Acts.Hotspots
+								t.State.Hotspots
 									.Select(f => f.Hotspot.Fun(t.Evt.Pos).Map(g => new HotspotNfoResolved(f.Hotspot, g, f.Cmds(g), false)))
 									.Aggregate()
 									.IfNone(HotspotNfoResolved.Empty)

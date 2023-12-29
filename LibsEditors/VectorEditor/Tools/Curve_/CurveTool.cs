@@ -34,10 +34,10 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
 	{
 		var d = MkD();
-
+		var Doc = Env.Doc;
 		var evt = Env.GetEvtForTool(this, true, d);
 
-		var curve = Env.Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
+		var curve = Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
 
 		var gfxState = CurveGfxState.AddPoint;
 
@@ -45,7 +45,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 			.ObserveOnUI()
 			.Subscribe(_ =>
 			{
-				Env.Doc.SubCommit(curve);
+				Doc.SubCommit(curve);
 				toolActions.Reset();
 			}).D(d);
 

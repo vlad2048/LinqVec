@@ -6,7 +6,6 @@ using LinqVec.Tools.Events;
 using LinqVec.Utils;
 using LinqVec.Utils.Rx;
 using ReactiveVars;
-using Splat.ModeDetection;
 
 namespace LinqVec.Tools.Cmds.Logic;
 
@@ -19,7 +18,8 @@ static class CmdEvtGenerator
 
 
 	public static IObservable<ICmdEvt> ToCmdEvt(
-		this IRoVar<HotspotNfoResolved> curHotActs,
+		this IRoVar<HotspotNfoResolved> curHotspot,
+		IRoVar<ToolState> curState,
 		IObservable<IEvt> evt,
 		IScheduler scheduler,
 		Disp d
@@ -29,30 +29,31 @@ static class CmdEvtGenerator
 			.TimeInterval(scheduler)
 			.Select(e => e.Value.ToUsr(e.Interval <= ClickDelay))
 			.WhereSome();
-		return curHotActs
-			.Select(e => e.ToCmdEvt(usrEvt, scheduler, d))
+		return curHotspot
+			.Select(e => e.ToCmdEvt(curState.V, usrEvt, scheduler, d))
 			.Switch()
 			.MakeHot(d);
 	}
 
 
 	private static IObservable<ICmdEvt> ToCmdEvt(
-		this HotspotNfoResolved acts,
+		this HotspotNfoResolved hotspot,
+		ToolState state,
 		IObservable<IUsr> evt,
 		IScheduler scheduler,
 		Disp d
 	)
 	{
-		if (acts.Cmds.Select(e => e.Gesture).Distinct().Count() != acts.Cmds.Length) throw new ArgumentException("Gestures should be unique for a Hotspot");
-		var hasBothSingleAndDoubleClicks = acts.Cmds.Any(e => e.Gesture == Gesture.Click) && acts.Cmds.Any(e => e.Gesture == Gesture.DoubleClick);
+		if (hotspot.Cmds.Select(e => e.Gesture).Distinct().Count() != hotspot.Cmds.Length) throw new ArgumentException("Gestures should be unique for a Hotspot");
+		var hasBothSingleAndDoubleClicks = hotspot.Cmds.Any(e => e.Gesture == Gesture.Click) && hotspot.Cmds.Any(e => e.Gesture == Gesture.DoubleClick);
 
 		var whenDragStart =
-			acts.Cmds
+			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.Drag)
-				.Map(act =>
+				.Map(cmd =>
 					evt
 						.SpotMatches(seqDrag)
-						.Select(e => (ICmdEvt)new DragStartCmdEvt(act, ((LDownUsr)e).Pt))
+						.Select(e => (ICmdEvt)new DragStartCmdEvt(cmd, ((LDownUsr)e).Pt))
 				)
 				.IfNone(Obs.Never<ICmdEvt>);
 
@@ -61,7 +62,7 @@ static class CmdEvtGenerator
 				.Select(_ =>
 					evt
 						.Where(e => e is LUpUsr)
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(acts.Cmds.Single(f => f.Gesture == Gesture.Drag), ((LUpUsr)e).Pt))
+						.Select(e => (ICmdEvt)new ConfirmCmdEvt(hotspot.Cmds.Single(f => f.Gesture == Gesture.Drag), ((LUpUsr)e).Pt))
 						.Take(1)
 				)
 				.Switch();
@@ -75,24 +76,24 @@ static class CmdEvtGenerator
 				.ToVar(d);
 
 		var whenRightClick =
-			acts.Cmds
+			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.RightClick)
-				.Map(act =>
+				.Map(cmd =>
 					evt
 						.Where(_ => !isDragging.V)
 						.SpotMatches(seqRightClick)
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(act, ((RDownUsr)e).Pt))
+						.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((RDownUsr)e).Pt))
 				)
 				.IfNone(Obs.Never<ICmdEvt>);
 
 		var whenDoubleClick =
-			acts.Cmds
+			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.DoubleClick)
-				.Map(act =>
+				.Map(cmd =>
 					evt
 						.Where(_ => !isDragging.V)
 						.SpotMatches(seqDoubleClick)
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(act, ((LDownUsr)e).Pt))
+						.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
 				)
 				.IfNone(Obs.Never<ICmdEvt>)
 				.MakeHot(d);
@@ -100,16 +101,16 @@ static class CmdEvtGenerator
 		var whenDoubleClickDelayed = whenDoubleClick.Delay(TimeSpan.Zero, scheduler).MakeHot(d);
 
 		var whenClick =
-			acts.Cmds
+			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.Click)
-				.Map(act =>
+				.Map(cmd =>
 					hasBothSingleAndDoubleClicks switch
 					{
 						false =>
 							evt
 								.Where(_ => !isDragging.V)
 								.SpotMatches(seqClick)
-								.Select(e => (ICmdEvt)new ConfirmCmdEvt(act, ((LDownUsr)e).Pt)),
+								.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt)),
 						true =>
 							evt
 								.Where(_ => !isDragging.V)
@@ -120,24 +121,35 @@ static class CmdEvtGenerator
 										whenDoubleClickDelayed.ToUnit()
 									)
 								, ClickDelay, scheduler)
-								.Select(e => (ICmdEvt)new ConfirmCmdEvt(act, ((LDownUsr)e).Pt))
+								.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
 					}
 				)
 				.IfNone(Obs.Never<ICmdEvt>);
 
 		var whenShiftClick =
-			acts.Cmds
+			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.ShiftClick)
-				.Map(act =>
+				.Map(cmd =>
 					evt
 						.Where(_ => !isDragging.V)
 						.SpotMatches(seqShiftClick)
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(act, ((LDownUsr)e).Pt))
+						.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
 				)
 				.IfNone(Obs.Never<ICmdEvt>);
 
 
 		//void Log(string s) => L.WriteLine($"[{scheduler.Now:HH:mm:ss.f}] {s}");
+
+		var whenShortcut =
+			state.Shortcuts
+				.Select(shortcut =>
+					evt
+						.OfType<KeyDownUsr>()
+						.Where(e => e.Key == shortcut.Key)
+						.Select(_ => new ShortcutCmdEvt(shortcut))
+				)
+				.Merge();
+
 
 		return Obs.Merge(
 			whenDragStart,
@@ -145,7 +157,8 @@ static class CmdEvtGenerator
 			whenRightClick,
 			whenDoubleClick,
 			whenClick,
-			whenShiftClick
+			whenShiftClick,
+			whenShortcut
 		);
 	}
 
@@ -209,6 +222,10 @@ static class CmdEvtGenerator
 	{
 		public override string ToString() => $"RUp({Pt}) IsQuick:{IsQuick}";
 	}
+	private sealed record KeyDownUsr(bool IsQuick, Keys Key) : IUsr
+	{
+		public override string ToString() => $"KeyDown({Key}) IsQuick:{IsQuick}";
+	}
 	private static Option<IUsr> ToUsr(this IEvt e, bool isQuick) => e switch
 	{
 		MouseMoveEvt { Pos: var pos } => new MoveUsr(isQuick, pos),
@@ -216,6 +233,7 @@ static class CmdEvtGenerator
 		MouseBtnEvt { UpDown: UpDown.Up, Btn: MouseBtn.Left, Pos: var pos, ModKey: var modKey } => new LUpUsr(isQuick, pos, modKey),
 		MouseBtnEvt { UpDown: UpDown.Down, Btn: MouseBtn.Right, Pos: var pos } => new RDownUsr(isQuick, pos),
 		MouseBtnEvt { UpDown: UpDown.Up, Btn: MouseBtn.Right, Pos: var pos } => new RUpUsr(isQuick, pos),
+		KeyEvt { UpDown: UpDown.Down, Key: var key } => new KeyDownUsr(isQuick, key),
 		_ => None
 	};
 

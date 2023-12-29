@@ -2,6 +2,7 @@
 using Geom;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
+using LinqVec.Utils;
 using LinqVec.Utils.WinForms_;
 using PowBasics.MathCode;
 using ReactiveVars;
@@ -18,6 +19,9 @@ static class PanZoomer
 	)
 	{
 		var isOn = evt.IsKeyDown(C.KeyMap.PanZoom, d);
+
+		d.Log("PanZoomer");
+		isOn.Log(d);
 
 		isOn.Subscribe(e => ctrl.Cursor = e ? CBase.Cursors.HandOpened : Cursors.Default).D(d);
 

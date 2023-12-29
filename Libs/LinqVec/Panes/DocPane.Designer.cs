@@ -28,7 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			vecEditor = new VecEditor();
+			vecEditor = new VecEditor<TDoc>();
 			SuspendLayout();
 			// 
 			// vecEditor
@@ -52,6 +52,6 @@
 
 		#endregion
 
-		public VecEditor vecEditor;
+		public VecEditor<TDoc> vecEditor;
 	}
 }

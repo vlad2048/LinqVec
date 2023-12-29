@@ -1,6 +1,6 @@
 ﻿namespace LinqVec
 {
-	partial class VecEditor
+	partial class VecEditor<TDoc>
 	{
 		/// <summary> 
 		/// Required designer variable.
@@ -63,6 +63,6 @@
 		#endregion
 
 		public StatusStrip statusStrip;
-		internal Controls.DrawPanel drawPanel;
+		public Controls.DrawPanel drawPanel;
 	}
 }

@@ -1,6 +1,6 @@
 ﻿using System.Drawing.Drawing2D;
 
-namespace VectorEditor.Utils;
+namespace LinqVec.Utils;
 
 public enum ToolIconState
 {
@@ -25,9 +25,8 @@ public static class ToolIconUtils
 	private static readonly Brush activeBack = new SolidBrush(MkCol(0x1F4A7D));
 	private static readonly Pen activeBorder = new Pen(MkCol(0x141414), 1.0f);
 
-	public static Bitmap Render(string fileIn, ToolIconState state)
+	public static Bitmap Render(Bitmap bmpIn, ToolIconState state)
 	{
-		var bmpIn = new Bitmap(fileIn);
 		var bmpOut = new Bitmap(32, 32);
 		using var gfx = Graphics.FromImage(bmpOut);
 		var r = new Rectangle(0, 0, bmpOut.Width, bmpOut.Height);

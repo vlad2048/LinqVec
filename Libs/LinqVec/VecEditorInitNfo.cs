@@ -3,7 +3,7 @@ using LinqVec.Tools;
 
 namespace LinqVec;
 
-public sealed record VecEditorInitNfo(
-	IUnmod Model,
-	ITool[] Tools
+public sealed record VecEditorInitNfo<TDoc>(
+	Unmod<TDoc> Doc,
+	ITool<TDoc>[] Tools
 );

@@ -15,9 +15,11 @@ namespace VectorEditor.Tools.Select_;
 
 
 
-sealed class SelectTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
+sealed class SelectTool(Keys shortcut) : ITool<Doc>
 {
-	public Keys Shortcut => Keys.Q;
+	public string Name => "S";
+	public Bitmap? Icon => Resource.toolicon_Select;
+	public Keys Shortcut => shortcut;
 
 	private static class States
 	{
@@ -31,7 +33,7 @@ sealed class SelectTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 		public const string UnselectAll = nameof(UnselectAll);
 	}
 
-	public Disp Run(ToolActions toolActions)
+	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
 	{
 		var d = MkD();
 
@@ -44,7 +46,7 @@ sealed class SelectTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 				States.Neutral,
 				CBase.Cursors.BlackArrow,
 				[
-					Hotspots.Object(Doc)
+					Hotspots.Object(Env.Doc)
 						.Do(objId => [
 								Cmd.Click(
 									Cmds.Select,
@@ -60,7 +62,7 @@ sealed class SelectTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 									? new[] {
 										Cmd.Drag(
 											Cmds.MoveSelection,
-											Doc.DragMod(DocMods.MoveSelection(evt.MousePos, curSel.V, d))
+											Env.Doc.DragMod(DocMods.MoveSelection(evt.MousePos, curSel.V, d))
 										)
 									}
 									: [],
@@ -86,7 +88,7 @@ sealed class SelectTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 		Env.WhenPaint.Subscribe(gfx =>
 		{
 			var bboxOpt =
-				Doc.VModded.GetObjects(curSel.V)
+				Env.Doc.VModded.GetObjects(curSel.V)
 					.Select(e => e.BoundingBox)
 					.Union();
 			Painter.PaintSelectRectangle(gfx, bboxOpt);

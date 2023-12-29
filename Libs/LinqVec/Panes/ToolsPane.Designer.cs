@@ -1,6 +1,6 @@
 ﻿namespace LinqVec.Panes
 {
-	partial class ToolboxPane
+	partial class ToolsPane<TDoc>
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -30,12 +30,12 @@
 		{
 			SuspendLayout();
 			// 
-			// ToolboxPane
+			// ToolsPane
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(800, 450);
-			Name = "ToolboxPane";
+			Name = "ToolsPane";
 			Text = "Toolbox";
 			ResumeLayout(false);
 		}

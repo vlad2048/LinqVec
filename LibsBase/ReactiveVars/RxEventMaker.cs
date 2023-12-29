@@ -14,12 +14,12 @@ public static class RxEventMaker
 		);
 	}
 
-	/*public static (Action<T>, IObservable<T>) Make<T>(Disp d)
+	public static (Action<T>, IObservable<T>) Make<T>(Disp d)
 	{
 		var when = new Subject<T>().D(d);
 		return (
 			when.OnNext,
 			when.AsObservable()
 		);
-	}*/
+	}
 }

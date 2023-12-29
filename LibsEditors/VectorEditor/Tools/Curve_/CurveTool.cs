@@ -15,9 +15,11 @@ using VectorEditor.Tools.Curve_.Mods;
 namespace VectorEditor.Tools.Curve_;
 
 
-sealed class CurveTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
+sealed class CurveTool(Keys shortcut) : ITool<Doc>
 {
-	public Keys Shortcut => Keys.P;
+	public string Name => "C";
+	public Bitmap? Icon => Resource.toolicon_CurveCreate;
+	public Keys Shortcut => shortcut;
 
 	private static class States
 	{
@@ -29,13 +31,13 @@ sealed class CurveTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 		public const string AddPoint = nameof(AddPoint);
 	}
 
-	public Disp Run(ToolActions toolActions)
+	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
 	{
 		var d = MkD();
 
 		var evt = Env.GetEvtForTool(this, true, d);
 
-		var curve = Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
+		var curve = Env.Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
 
 		var gfxState = CurveGfxState.AddPoint;
 
@@ -43,7 +45,7 @@ sealed class CurveTool(ToolEnv Env, Unmod<Doc> Doc) : ITool
 			.ObserveOnUI()
 			.Subscribe(_ =>
 			{
-				Doc.SubCommit(curve);
+				Env.Doc.SubCommit(curve);
 				toolActions.Reset();
 			}).D(d);
 

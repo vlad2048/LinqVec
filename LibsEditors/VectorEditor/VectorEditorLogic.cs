@@ -1,12 +1,16 @@
 ﻿using BrightIdeasSoftware;
 using LinqVec;
 using LinqVec.Logic;
+using LinqVec.Tools;
 using LinqVec.Utils;
+using LinqVec.Utils.Json;
 using PowBasics.CollectionsExt;
+using PowBasics.Json_;
 using ReactiveVars;
 using UILib.Utils;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_;
+using VectorEditor.Tools.CurveEdit_;
 using VectorEditor.Tools.Select_;
 
 namespace VectorEditor;
@@ -16,22 +20,24 @@ public sealed class VectorEditorLogic : EditorLogic<Doc>
 {
 	public override EditorLogicCaps Caps => EditorLogicCaps.SupportLayoutPane;
 
-	public override IUndoerReadOnly<Doc> Init(VecEditor vecEditor, Doc? initModel, Disp d)
+	public override ITool<Doc>[] Tools { get; } = [
+		new SelectTool(Keys.Q),
+		new CurveTool(Keys.P),
+		new CurveEditTool(Keys.E),
+	];
+
+	public override Doc LoadOrCreate(Option<string> file) => file.Match(
+		VecJsoner.Vec.Load<Doc>,
+		Doc.Empty
+	);
+
+	public override void Init(
+		VecEditor<Doc> vecEditor,
+		Unmod<Doc> doc,
+		Disp d
+	)
 	{
-		var env = vecEditor.Env;
-		var doc = new Unmod<Doc>(initModel ?? Doc.Empty(), d);
-
-		vecEditor.Init(
-			new VecEditorInitNfo(
-				doc,
-				[
-					new CurveTool(env, doc),
-					new SelectTool(env, doc),
-				]
-			)
-		);
-
-		env.WhenPaint
+		vecEditor.drawPanel.WhenPaint
 			.Subscribe(gfx =>
 			{
 				var m = doc.VModded;
@@ -46,8 +52,6 @@ public sealed class VectorEditorLogic : EditorLogic<Doc>
 					}
 				}
 			}).D(d);
-
-		return doc;
 	}
 
 	public override void SetupLayoutPane(TreeListView tree, IObservable<Option<Doc>> doc, Disp d)

@@ -2,7 +2,6 @@
 using System.Reactive.Linq;
 using System.Text.Json;
 using LinqVec.Panes;
-using LinqVec.Panes.DocPaneLogic_;
 using LinqVec.Utils;
 using LinqVec.Utils.Json;
 using LinqVec.Utils.Rx;
@@ -10,7 +9,6 @@ using PowBasics.Json_;
 using ReactiveVars;
 using UILib.Utils;
 using WeifenLuo.WinFormsUI.Docking;
-using Doc = VectorEditor.Model.Doc;
 
 namespace LinqVecDemo.Logic;
 
@@ -149,7 +147,7 @@ static class DocLogic
 	{
 		var docPane = filename switch {
 			null => new DocPane<TDoc>(LogicSelector.Instance, None),
-			not null => new DocPane<TDoc>(LogicSelector.Instance, Some(new DocPaneLoadInfo<TDoc>(VecJsoner.Vec.Load<Doc>(filename), filename)))
+			not null => new DocPane<TDoc>(LogicSelector.Instance, Some(filename))
 		};
 		docPane.Show(dockPanel, DockState.Document);
 		Rx.Sched.Schedule(() => docPane.vecEditor.Focus());

@@ -33,7 +33,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{267F3577-5
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqVec.Tests", "Tests\Libs\LinqVec.Tests\LinqVec.Tests.csproj", "{7C0223CD-F862-4587-A496-84F108DF787C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveVars", "LibsBase\ReactiveVars\ReactiveVars.csproj", "{945F0520-DABF-46A3-8A64-86D08FDDA291}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveVars", "LibsBase\ReactiveVars\ReactiveVars.csproj", "{945F0520-DABF-46A3-8A64-86D08FDDA291}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PtrLib", "LibsBase\PtrLib\PtrLib.csproj", "{D7941760-F1FE-4C36-B87D-2DC98622BDD6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +83,10 @@ Global
 		{945F0520-DABF-46A3-8A64-86D08FDDA291}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{945F0520-DABF-46A3-8A64-86D08FDDA291}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{945F0520-DABF-46A3-8A64-86D08FDDA291}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7941760-F1FE-4C36-B87D-2DC98622BDD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7941760-F1FE-4C36-B87D-2DC98622BDD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7941760-F1FE-4C36-B87D-2DC98622BDD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7941760-F1FE-4C36-B87D-2DC98622BDD6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,6 +103,7 @@ Global
 		{267F3577-5C57-4BBB-BC10-61DFF7DF4C33} = {A042093B-2B45-4318-B71A-038149621320}
 		{7C0223CD-F862-4587-A496-84F108DF787C} = {267F3577-5C57-4BBB-BC10-61DFF7DF4C33}
 		{945F0520-DABF-46A3-8A64-86D08FDDA291} = {7C483943-C024-4D72-AE1E-5AFDADC92682}
+		{D7941760-F1FE-4C36-B87D-2DC98622BDD6} = {7C483943-C024-4D72-AE1E-5AFDADC92682}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {942E18C0-D0C3-41A3-87D2-4474E3F15E70}

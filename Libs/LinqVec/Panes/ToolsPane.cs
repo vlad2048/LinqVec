@@ -18,7 +18,10 @@ namespace LinqVec.Panes
 		{
 			iconMap ??= new(() => IconMapLoader.Load(tools));
 			DoubleBuffered = true;
+
 			InitializeComponent();
+
+			var tooltip = new ToolTip();
 
 
 			this.InitRX(d =>
@@ -36,12 +39,29 @@ namespace LinqVec.Panes
 						.Prepend(false)
 						.ToVar(d);
 
+				var hoveredTool = mousePos
+					.Select(e => tools.FirstOrOption(f => IconMap.Tool2IconR[f].Contains(e)))
+					.Prepend(None)
+					.DistinctUntilChanged()
+					.ToVar(d);
+
+				hoveredTool.Subscribe(e => e.Match(
+					t =>
+					{
+						tooltip.SetToolTip(this, t.GetType().Name);
+						tooltip.Active = true;
+					},
+					() => tooltip.Active = false
+				)).D(d);
+
+
 				var stateMap =
 					Obs.CombineLatest(
 							curTool,
+							hoveredTool,
 							mousePos,
 							isDown,
-							(curTool_, mousePos_, isDown_) => (curTool_, mousePos_, isDown_)
+							(curTool_, hoveredTool_, mousePos_, isDown_) => (curTool_, hoveredTool_, mousePos_, isDown_)
 						)
 						.Select(t =>
 							tools
@@ -51,7 +71,7 @@ namespace LinqVec.Panes
 										(tool == curTool.V) switch
 											{
 												true => ToolIconState.Active,
-												false => (IconMap.Tool2IconR[tool].Contains(t.mousePos_), t.isDown_) switch
+												false => (Some(tool) == t.hoveredTool_, t.isDown_) switch
 												{
 													(true, true) => ToolIconState.MouseDown,
 													(true, false) => ToolIconState.Hover,

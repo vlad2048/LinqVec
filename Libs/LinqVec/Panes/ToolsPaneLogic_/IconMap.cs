@@ -1,6 +1,7 @@
 ﻿using Geom;
 using LinqVec.Tools;
 using LinqVec.Utils;
+using Point = System.Drawing.Point;
 
 namespace LinqVec.Panes.ToolsPaneLogic_;
 
@@ -45,17 +46,14 @@ static class IconMapLoader
 			state
 		);
 
-	private static readonly Brush normalBack = new SolidBrush(MkCol(0x353535));
-	private static readonly Font iconFont = new(FontFamily.GenericMonospace, 18, FontStyle.Bold, GraphicsUnit.Point);
+	private static readonly Color textBackColor = Color.Transparent;
+	private static readonly Font iconFont = new(FontFamily.GenericMonospace, 14, FontStyle.Bold, GraphicsUnit.Point);
 
 	private static Bitmap MakeBaseIconFromName(string name)
 	{
-		var bmp = new Bitmap(32, 32);
-		var r = new Rectangle(0, 0, bmp.Width, bmp.Height);
+		var bmp = new Bitmap(16, 16);
 		using var gfx = Graphics.FromImage(bmp);
-		gfx.FillRectangle(normalBack, r);
-		gfx.SetClip(new Rectangle(8, 8, 16, 16));
-		TextRenderer.DrawText(gfx, name, iconFont, new Point(8, 8), Color.White, MkCol(0x353535), TextFormatFlags.PreserveGraphicsClipping);
+		TextRenderer.DrawText(gfx, name, iconFont, new Point(-2, -3), Color.White, textBackColor, TextFormatFlags.PreserveGraphicsClipping);
 		return bmp;
 	}
 }

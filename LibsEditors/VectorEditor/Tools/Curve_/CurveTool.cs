@@ -1,16 +1,13 @@
-﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using LinqVec;
-using LinqVec.Logic;
 using VectorEditor.Model;
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
-using LinqVec.Tools.Cmds.Events;
 using LinqVec.Tools.Events;
-using LinqVec.Utils;
 using LinqVec.Utils.Rx;
 using ReactiveVars;
 using VectorEditor.Tools.Curve_.Mods;
+using LinqVec.Logic.Utils;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -34,10 +31,10 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
 	{
 		var d = MkD();
-		var Doc = Env.Doc;
+		var doc = Env.Doc;
 		var evt = Env.GetEvtForTool(this, true, d);
 
-		var curve = Doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
+		var curve = doc.SubCreate(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
 
 		var gfxState = CurveGfxState.AddPoint;
 
@@ -45,7 +42,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 			.ObserveOnUI()
 			.Subscribe(_ =>
 			{
-				Doc.SubCommit(curve);
+				doc.SubCommit(curve);
 				toolActions.Reset();
 			}).D(d);
 

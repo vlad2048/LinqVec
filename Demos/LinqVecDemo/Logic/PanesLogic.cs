@@ -14,7 +14,6 @@ static class PanesLogic
 	public static void InitPanesLogic(this MainWin win, IRoVar<Option<DocPane<TDoc>>> doc, Disp d)
 	{
 		var editorLogic = LogicSelector.Instance;
-		win.menuViewLayout.ShowShortcutKeys = true;
 
 		// LayoutPane
 		// ==========

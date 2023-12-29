@@ -1,4 +1,7 @@
-﻿namespace LinqVec.Panes
+﻿using LinqVec.Logic;
+using LinqVec.Tools;
+
+namespace LinqVec.Panes
 {
 	partial class DocPane<TDoc> where TDoc : class
 	{
@@ -26,9 +29,9 @@
 		/// Required method for Designer support - do not modify
 		/// the contents of this method with the code editor.
 		/// </summary>
-		private void InitializeComponent()
+		private void InitializeComponent(Unmod<TDoc> doc, ITool<TDoc>[] tools)
 		{
-			vecEditor = new VecEditor<TDoc>();
+			vecEditor = new VecEditor<TDoc>(doc, tools);
 			SuspendLayout();
 			// 
 			// vecEditor

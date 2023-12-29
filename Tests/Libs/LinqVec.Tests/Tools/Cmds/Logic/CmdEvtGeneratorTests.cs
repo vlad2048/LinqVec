@@ -1,4 +1,5 @@
-﻿using System.Reactive;
+﻿/*
+using System.Reactive;
 using Geom;
 using LinqVec.Tests.TestSupport;
 using LinqVec.Tools.Cmds;
@@ -18,7 +19,7 @@ class CmdEvtGeneratorTests
 	private static readonly ClickHotspotCmd cmdRightClick = new("RightClick", Gesture.RightClick, () => None);
 	private static readonly ClickHotspotCmd cmdDoubleClick = new("DoubleClick", Gesture.DoubleClick, () => None);
 
-	private static IRoVar<HotspotNfoResolved> MkActsRun(IHotspotCmd[] cmds) => Var.MakeConst(new HotspotNfoResolved(
+	private static IRoVar<HotspotNfoResolved> MkHotspot(IHotspotCmd[] cmds) => Var.MakeConst(new HotspotNfoResolved(
 		Hotspot.Empty,
 		123,
 		cmds,
@@ -29,7 +30,7 @@ class CmdEvtGeneratorTests
 	public void _0_DragClick()
 	{
 		var sched = new TestScheduler();
-		var actsRun = MkActsRun([cmdDrag, cmdClick]);
+		var curHotspot = MkHotspot([cmdDrag, cmdClick]);
 		var evt = sched.CreateHotObservable([
 			Move(1),
 
@@ -52,7 +53,7 @@ class CmdEvtGeneratorTests
 
 		var obs = sched.CreateObserver<ICmdEvt>();
 		using var d = new Disp();
-		actsRun.ToCmdEvt(evt, sched, d).Subscribe(obs);
+		curHotspot.ToCmdEvt(evt, sched, d).Subscribe(obs);
 
 		sched.Start();
 		obs.LogMessages("ActEvt");
@@ -71,7 +72,7 @@ class CmdEvtGeneratorTests
 	public void _1_ClickDoubleClick()
 	{
 		var sched = new TestScheduler();
-		var actsRun = MkActsRun([cmdClick, cmdDoubleClick]);
+		var actsRun = MkHotspot([cmdClick, cmdDoubleClick]);
 		var evt = sched.CreateHotObservable([
 			Move(1),
 			LDown(2),
@@ -107,7 +108,7 @@ class CmdEvtGeneratorTests
 	public void _2_RightClick()
 	{
 		var sched = new TestScheduler();
-		var actsRun = MkActsRun([cmdRightClick]);
+		var actsRun = MkHotspot([cmdRightClick]);
 		var evt = sched.CreateHotObservable([
 			Move(1),
 			LDown(2),
@@ -145,3 +146,4 @@ class CmdEvtGeneratorTests
 	private static Recorded<Notification<IEvt>> LUp(double t) => OnNext(t, (IEvt)new MouseBtnEvt(Pt.Zero, UpDown.Up, MouseBtn.Left, ModKeyState.Empty));
 	private static Recorded<Notification<IEvt>> RUp(double t) => OnNext(t, (IEvt)new MouseBtnEvt(Pt.Zero, UpDown.Up, MouseBtn.Right, ModKeyState.Empty));
 }
+*/

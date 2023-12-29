@@ -6,7 +6,7 @@ using ReactiveVars;
 
 namespace LinqVec.Drawing;
 
-public class Res : IDisposable
+public class GfxResources : IDisposable
 {
     private readonly Disp d = MkD();
     public void Dispose() => d.Dispose();
@@ -15,7 +15,7 @@ public class Res : IDisposable
     private readonly Dictionary<Color, Brush> brushMap;
     private readonly Dictionary<PenNfo, Pen> penMap;
 
-    public Res()
+    public GfxResources()
     {
         brushMap = new Dictionary<Color, Brush>().D(d);
         penMap = new Dictionary<PenNfo, Pen>().D(d);

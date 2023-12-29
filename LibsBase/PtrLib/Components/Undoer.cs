@@ -1,12 +1,10 @@
-﻿using System.Reactive.Disposables;
+﻿using ReactiveVars;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using ReactiveVars;
 using System.Reactive.Subjects;
-using LinqVec.Utils.Rx;
 using PowBasics.CollectionsExt;
 
-namespace LinqVec.Logic;
-
+namespace PtrLib.Components;
 
 /*
 	Cur.WhenOuter	<=>	WhenDo
@@ -117,34 +115,4 @@ public class Undoer<T> : IDisposable
 				cur = valRedo;
 			}).D(d);
 	}
-
-
-
-	private const int DoCol = 0x42f55a;
-	private const int UndoCol = 0xe32d49;
-	private const int RedoCol = 0x782fde;
-	private const int ArrowCol = 0xf2e33d;
-	private const int StateCol = 0x167a72;
-	private const int StateCurCol = 0x3dccc1;
-
-	public IDisposable PrintLog(Func<T, string> fmt) =>
-		Obs.Merge(
-			Cur.WhenOuter.Select(_ => ("Do  ", DoCol)),
-			whenUndo.Select(_ => ("Undo", UndoCol)),
-			whenRedo.Select(_ => ("Redo", RedoCol))
-		)
-		.Subscribe(op =>
-		{
-			var all = stackUndo.Concat(stackRedo).Append(Cur.V).SelectToArray(fmt);
-			var lng = all.Max(e => e.Length) + 1;
-			var x = 8 + lng * stackUndo.Count + lng / 2 - 1;
-			L.WriteLine(new string(' ', x) + "↓", ArrowCol);
-			L.Write($"{op.Item1}    ", op.Item2);
-			foreach (var elt in stackUndo.Rev())
-				L.Write(fmt(elt).PadRight(lng), StateCol);
-			L.Write(fmt(Cur.V).PadRight(lng), StateCurCol);
-			foreach (var elt in stackRedo)
-				L.Write(fmt(elt).PadRight(lng), StateCol);
-			L.WriteLine();
-		}).D(D);
 }

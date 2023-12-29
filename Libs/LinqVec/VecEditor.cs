@@ -10,6 +10,7 @@ using LinqVec.Tools;
 using LinqVec.Tools.Events;
 using UILib;
 using LinqVec.Tools.Events.Utils;
+using LinqVec.Utils.Rx;
 using ReactiveVars;
 
 namespace LinqVec;
@@ -17,47 +18,34 @@ namespace LinqVec;
 
 public partial class VecEditor<TDoc> : UserControl
 {
-	private readonly ISubject<VecEditorInitNfo<TDoc>> whenInit;
-	private IObservable<VecEditorInitNfo<TDoc>> WhenInit => whenInit.AsObservable();
+	public ToolEnv<TDoc> Env { get; }
 
-	public ToolEnv<TDoc> Env { get; private set; } = null!;
-	public void Init(VecEditorInitNfo<TDoc> initNfo)
+	public VecEditor(Unmod<TDoc> doc, ITool<TDoc>[] tools)
 	{
-		whenInit.OnNext(initNfo);
-		whenInit.OnCompleted();
-	}
-
-	public VecEditor()
-	{
-		InitializeComponent();
 		var ctrlD = this.GetD();
 		var transform = Var.Make(Transform.Id, ctrlD);
-		whenInit = new AsyncSubject<VecEditorInitNfo<TDoc>>().D(ctrlD);
+
+		InitializeComponent(transform);
+
 		var ctrl = new Ctrl(drawPanel);
+		var (curTool, setCurTool, editorEvt) = VecEditorUtils.TrackUserEventsAndCurTool(drawPanel, tools, ctrlD);
+
+		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, ctrlD);
+
+		Env = new ToolEnv<TDoc>(
+			doc,
+			curTool,
+			setCurTool,
+			drawPanel,
+			ctrl,
+			isPanZoom,
+			transform,
+			editorEvt
+		).D(ctrlD);
 
 
-		this.InitRX(WhenInit, (init, d) =>
+		this.InitRX(d =>
 		{
-			var (doc, tools) = init;
-			var (curTool, setCurTool, editorEvt) = VecEditorUtils.TrackUserEventsAndCurTool(drawPanel, tools, d);
-
-			var tempD = MkD().D(ctrlD);
-			var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, tempD);
-			//var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, d);
-
-			Env = new ToolEnv<TDoc>(
-				doc,
-				curTool,
-				setCurTool,
-				drawPanel,
-				ctrl,
-				isPanZoom,
-				transform,
-				editorEvt
-			).D(d);
-
-			var res = new Res().D(d);
-			drawPanel.Init(new DrawPanelInitNfo(transform, res));
 			if (DesignMode)
 			{
 				VecEditorUtils.SetupDesignMode(drawPanel, d);
@@ -81,10 +69,11 @@ public partial class VecEditor<TDoc> : UserControl
 			statusStrip.AddLabel("center", transform.Select(e => e.Center)).D(d);
 			statusStrip.AddLabel("tool", curTool.Select(GetToolName)).D(d);
 
-			doc.WhenPaintNeeded.Subscribe(_ =>
-			{
-				drawPanel.Invalidate();
-			}).D(d);
+			Obs.Merge(
+					doc.WhenPaintNeeded,
+					transform.ToUnit()
+				)
+				.Subscribe(_ => drawPanel.Invalidate()).D(d);
 
 			G.Cfg.RunWhen(e => e.Log.CurTool, d, curTool.Log);
 		});

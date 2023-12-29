@@ -1,4 +1,7 @@
-﻿namespace LinqVec
+﻿using LinqVec.Structs;
+using ReactiveVars;
+
+namespace LinqVec
 {
 	partial class VecEditor<TDoc>
 	{
@@ -26,10 +29,10 @@
 		/// Required method for Designer support - do not modify 
 		/// the contents of this method with the code editor.
 		/// </summary>
-		private void InitializeComponent()
+		private void InitializeComponent(IRwVar<Transform> transform)
 		{
 			statusStrip = new StatusStrip();
-			drawPanel = new Controls.DrawPanel();
+			drawPanel = new Controls.DrawPanel(transform);
 			SuspendLayout();
 			// 
 			// statusStrip

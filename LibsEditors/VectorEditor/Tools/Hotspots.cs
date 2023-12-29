@@ -1,5 +1,4 @@
-﻿using LinqVec;
-using LinqVec.Logic;
+﻿using LinqVec.Logic;
 using LinqVec.Utils;
 using LinqVec.Tools.Cmds;
 using VectorEditor.Model;
@@ -32,8 +31,13 @@ static class Hotspots
 	);*/
 
 	public static Hotspot<Guid> Object(Unmod<Doc> doc) => new(
-		nameof(Curve),
+		nameof(Object),
 		p => doc.Cur.V.GetObjectAt(p).Map(e => e.Id)
+	);
+
+	public static Hotspot<Guid> Object<T>(Unmod<Doc> doc) where T : IObj => new(
+		$"{nameof(Object)}<{typeof(T).Name}>",
+		p => doc.Cur.V.GetObjectAt(p).OfType<IObj, T>().Map(e => e.Id)
 	);
 
 

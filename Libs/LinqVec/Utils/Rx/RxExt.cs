@@ -8,8 +8,8 @@ namespace LinqVec.Utils.Rx;
 
 public static class RxExt
 {
-	public static IObservable<Unit> ToUnit<T>(this IObservable<T> source) => source.Select(_ => Unit.Default);
 	public static IObservable<T> ObserveOnUI<T>(this IObservable<T> obs) => obs.ObserveOn(Rx.Sched);
+	public static IObservable<Option<U>> Map2<T, U>(this IObservable<Option<T>> obs, Func<T, U> fun) => obs.Select(e => e.Map(fun));
 }
 
 public static class Rx

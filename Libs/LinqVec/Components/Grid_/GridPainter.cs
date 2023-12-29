@@ -58,7 +58,7 @@ static class GridPainter
 		var b0 = b + v * halfBase;
 		var b1 = b - v * halfBase;
 		var e = b + u * length;
-		var brush = gfx.Res.Brush(Color.Black);
+		var brush = gfx.GfxResources.Brush(Color.Black);
 		var pts = new[] { b0, b1, e }.SelectToArray(f => f.ToWinPt());
 		gfx.Line(a, b, pen);
 		gfx.Graphics.FillPolygon(brush, pts, System.Drawing.Drawing2D.FillMode.Winding);

@@ -1,11 +1,11 @@
 ﻿using System.Reactive.Linq;
 using Geom;
-using LinqVec.Logic;
 using LinqVec.Utils;
 using ReactiveVars;
 using VectorEditor.Model.Structs;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_.Structs;
+using LinqVec.Logic.Structs;
 
 namespace VectorEditor.Tools.Curve_.Mods;
 

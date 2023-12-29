@@ -1,5 +1,6 @@
 ﻿using LinqVec.Utils.Rx;
 using LinqVecDemo.Logic;
+using ReactiveVars;
 using UILib;
 
 namespace LinqVecDemo;

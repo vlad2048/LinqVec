@@ -1,5 +1,4 @@
-﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LinqVec.Controls;
 using LinqVec.Drawing;
@@ -11,7 +10,6 @@ using LinqVec.Tools;
 using LinqVec.Tools.Events;
 using UILib;
 using LinqVec.Tools.Events.Utils;
-using LinqVec.Utils.Rx;
 using ReactiveVars;
 
 namespace LinqVec;

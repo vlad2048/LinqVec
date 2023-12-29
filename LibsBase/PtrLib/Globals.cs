@@ -7,4 +7,8 @@ global using Obs = System.Reactive.Linq.Observable;
 global using Disp = System.Reactive.Disposables.CompositeDisposable;
 global using static ReactiveVars.DispMaker;
 
-global using L = PtrLib.Utils.PtrLibLogger;
+global using L = ReactiveVars.ReactiveVarsLogger;
+
+using System.Runtime.CompilerServices;
+
+[assembly:InternalsVisibleTo("PtrLib.Tests")]

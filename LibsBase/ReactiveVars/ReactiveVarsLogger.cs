@@ -1,10 +1,9 @@
 ﻿using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
-using ReactiveVars;
 
-namespace PtrLib.Utils;
+namespace ReactiveVars;
 
-static class PtrLibLogger
+public static class ReactiveVarsLogger
 {
 	public static void Write(string s) => Console.Write(s);
 	public static void WriteLine(string s) => Console.WriteLine(s);

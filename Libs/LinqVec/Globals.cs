@@ -8,7 +8,8 @@ global using Disp = System.Reactive.Disposables.CompositeDisposable;
 global using static ReactiveVars.DispMaker;
 
 global using static LinqVec.Utils.CommonMakers;
-global using L = LinqVec.Utils.Logger;
+global using L = ReactiveVars.ReactiveVarsLogger;
+global using LC = LinqVec.Utils.ColoredLogger;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;

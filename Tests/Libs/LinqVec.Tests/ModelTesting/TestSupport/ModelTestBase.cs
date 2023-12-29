@@ -27,8 +27,7 @@ class ModelTestBase
 	public void TearDown()
 	{
 		D.Dispose();
-		var isIssue = LogAndTellIfThereAreUndisposedDisps(false, true);
-		isIssue.ShouldBeFalse();
+		LogAndTellIfThereAreUndisposedDisps(false, true).ShouldBeFalse();
 	}
 
 	protected void SetT(double t)

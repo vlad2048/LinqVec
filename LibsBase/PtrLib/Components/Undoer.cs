@@ -2,7 +2,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using PowBasics.CollectionsExt;
 
 namespace PtrLib.Components;
 
@@ -10,12 +9,14 @@ namespace PtrLib.Components;
 	Cur.WhenOuter	<=>	WhenDo
 	Cur.WhenInner	<=>	Obs.Merge(WhenUndo, WhenRedo)
 */
-public class Undoer<T> : IDisposable
+sealed class Undoer<T> : IDisposable
 {
 	public Disp D { get; }
+	private void EnsureNotDisp() => ObjectDisposedException.ThrowIf(IsDisposed, this);
 	public bool IsDisposed => D.IsDisposed;
 	public void Dispose() => D.Dispose();
 
+	private readonly IBoundVar<T> curV;
 	private readonly ISubject<Unit> whenUndo;
 	private readonly ISubject<Unit> whenRedo;
 	private readonly Stack<T> stackUndo = new();
@@ -23,51 +24,18 @@ public class Undoer<T> : IDisposable
 	private readonly ISubject<Unit> whenUncommittedDispose;
 	private bool isCommitted;
 
+	internal T[] StackRedo { get { EnsureNotDisp(); return stackRedo.ToArray(); } }
+
+	// @formatter:off
 	public void FlagIsCommitted() => isCommitted = true;
 	public IObservable<Unit> WhenUncommittedDispose => whenUncommittedDispose.AsObservable();
-
-	protected T[] StackUndoExt
-	{
-		get
-		{
-			if (IsDisposed) throw new ArgumentException();
-			return stackUndo.Reverse().Append(Cur.V).ToArray();
-		}
-	}
-	protected void ClearRedos()
-	{
-		if (IsDisposed) throw new ArgumentException();
-		stackRedo.Clear();
-	}
-
-	private readonly IBoundVar<T> curV;
-	public IBoundVar<T> Cur
-	{
-		get
-		{
-			if (IsDisposed) throw new ArgumentException();
-			return curV;
-		}
-	}
-
+	public T[] StackUndoExt { get { EnsureNotDisp(); return stackUndo.Reverse().Append(Cur.V).ToArray(); } }
+	public void ClearRedos() { EnsureNotDisp(); stackRedo.Clear(); }
+	public IBoundVar<T> Cur { get { EnsureNotDisp(); return curV; } }
 	public IObservable<Unit> WhenDo => Cur.WhenOuter.ToUnit();
-
-	public virtual bool Undo()
-	{
-		if (IsDisposed) throw new ArgumentException();
-		if (stackUndo.Count == 0) return false;
-		whenUndo.OnNext(Unit.Default);
-		return true;
-	}
-	public virtual bool Redo()
-	{
-		if (IsDisposed) throw new ArgumentException();
-		if (stackRedo.Count == 0) return false;
-		whenRedo.OnNext(Unit.Default);
-		return true;
-	}
-
-	public IRoVar<T> CurReadOnly => Cur;
+	public bool Undo() { EnsureNotDisp(); if (stackUndo.Count == 0) return false; whenUndo.OnNext(Unit.Default); return true; }
+	public bool Redo() { EnsureNotDisp(); if (stackRedo.Count == 0) return false; whenRedo.OnNext(Unit.Default); return true; }
+	// @formatter:on
 
 	public Undoer(T init, Disp d)
 	{
@@ -89,7 +57,7 @@ public class Undoer<T> : IDisposable
 
 		Cur.WhenOuter.Subscribe(v =>
 		{
-			if (IsDisposed) throw new ArgumentException();
+			EnsureNotDisp();
 			stackUndo.Push(cur);
 			ClearRedos();
 			cur = v;
@@ -98,7 +66,7 @@ public class Undoer<T> : IDisposable
 		whenUndo
 			.Subscribe(_ =>
 			{
-				if (IsDisposed) throw new ArgumentException();
+				EnsureNotDisp();
 				var valUndo = stackUndo.Pop();
 				stackRedo.Push(Cur.V);
 				Cur.SetInner(valUndo);
@@ -108,7 +76,7 @@ public class Undoer<T> : IDisposable
 		whenRedo
 			.Subscribe(_ =>
 			{
-				if (IsDisposed) throw new ArgumentException();
+				EnsureNotDisp();
 				var valRedo = stackRedo.Pop();
 				stackUndo.Push(Cur.V);
 				Cur.SetInner(valRedo);

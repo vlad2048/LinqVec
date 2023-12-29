@@ -138,13 +138,13 @@ public class Undoer<T> : IDisposable
 			var all = stackUndo.Concat(stackRedo).Append(Cur.V).SelectToArray(fmt);
 			var lng = all.Max(e => e.Length) + 1;
 			var x = 8 + lng * stackUndo.Count + lng / 2 - 1;
-			L.WriteLine(new string(' ', x) + "↓", ArrowCol);
-			L.Write($"{op.Item1}    ", op.Item2);
+			LC.WriteLine(new string(' ', x) + "↓", ArrowCol);
+			LC.Write($"{op.Item1}    ", op.Item2);
 			foreach (var elt in stackUndo.Rev())
-				L.Write(fmt(elt).PadRight(lng), StateCol);
-			L.Write(fmt(Cur.V).PadRight(lng), StateCurCol);
+				LC.Write(fmt(elt).PadRight(lng), StateCol);
+			LC.Write(fmt(Cur.V).PadRight(lng), StateCurCol);
 			foreach (var elt in stackRedo)
-				L.Write(fmt(elt).PadRight(lng), StateCol);
+				LC.Write(fmt(elt).PadRight(lng), StateCol);
 			L.WriteLine();
 		}).D(D);
 }

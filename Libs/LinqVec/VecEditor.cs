@@ -170,5 +170,5 @@ file static class VecEditorUtils
 	public static IDisposable Log<TDoc>(this IRoVar<ITool<TDoc>> curTool) =>
 		curTool
 			.Select(e => $"Tool <- {e.GetType().Name.RemoveSuffixIFP("Tool")}")
-			.Subscribe(e => L.WriteLine(e, 0xfd5c5b));
+			.Subscribe(e => LC.WriteLine(e, 0xfd5c5b));
 }

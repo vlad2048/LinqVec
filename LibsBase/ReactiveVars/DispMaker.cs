@@ -30,13 +30,15 @@ public static class DispMaker
 		return d;
 	}
 
-	public static bool LogAndTellIfThereAreUndisposedDisps(bool waitForKey = true, bool resetForTests = false)
+	//public static void StopTrackingDisp(Disp d) => map.Remove(d, out _);
+
+	public static void ResetDispTrackingForTestStart() => map.Clear();
+
+	public static bool LogAndTellIfThereAreUndisposedDisps(bool waitForKey = true)
 	{
 		var isIssue = LogAndTellIfThereAreUndisposedDisps_Inner();
 		if (isIssue && waitForKey)
 			Console.ReadKey();
-		if (resetForTests)
-			map.Clear();
 		return isIssue;
 	}
 
@@ -45,6 +47,7 @@ public static class DispMaker
 		var allDisps = map.Values.WhereToArray(e => !e.Disposed);
 		if (allDisps.Length == 0)
 		{
+			L("");
 			LTitle("All Disps released");
 			return false;
 		}

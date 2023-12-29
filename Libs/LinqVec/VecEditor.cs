@@ -75,8 +75,6 @@ public partial class VecEditor<TDoc> : UserControl
 			VecEditorUtils.RunTools(curTool, Env, d);
 
 			var isMouseDown = editorEvt.IsMouseDown();
-			//editorEvt.WhenKeyRepeat(Keys.Z, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Undo()).D(d);
-			//editorEvt.WhenKeyRepeat(Keys.Y, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Redo()).D(d);
 			editorEvt.WhenKeyDown(Keys.Z, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Undo()).D(d);
 			editorEvt.WhenKeyDown(Keys.Y, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Redo()).D(d);
 

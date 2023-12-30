@@ -3,6 +3,7 @@ using LinqVec;
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Events;
+using LinqVec.Utils;
 using LinqVec.Utils.Rx;
 using ReactiveVars;
 using VectorEditor._Model;
@@ -29,14 +30,15 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
 	{
 		var d = MkD();
-		d.Log("CurveTool");
 		var doc = Env.Doc;
 		var evt = Env.GetEvtForTool(this, true, d);
 
 		var curve = doc.Create(Curve.Empty(), CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun, d);
-		curve.D.Log("IPtr<Curve>");
 
-		var gfxState = CurveGfxState.AddPoint;
+		var gizmo = CurveGfxState.AddPoint;
+		Action<Func<CurveGfxState, CurveGfxState>> gizmoApply = f => gizmo = f(gizmo);
+		gizmoApply = gizmoApply.Log("CurveTool");
+
 
 		evt.WhenKeyDown(Keys.Enter)
 			.ObserveOnUI()
@@ -51,18 +53,27 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 			CBase.Cursors.Pen,
 			[
 				Hotspots.CurvePoint(curve.V, false)
+					.OnHover(
+						Cmd.EmptyHoverAction
+							.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
+					)
 					.Do(pointId => [
 						Cmd.Drag(
 							Cmds.MovePoint,
 							curve.ModSetDrag("Curve_MovePoint", (ptStart, ptEnd, curveV) => curveV.MovePoint(pointId, ptEnd))
+								.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
 						)
 					]),
 				Hotspots.Anywhere
-					.OnHover(curve.ModSetHover("Curve_AddPoint_Hover", (pt, curveV) => curveV.AddPoint(pt, pt)))
+					.OnHover(
+						curve.ModSetHover("Curve_AddPoint_Hover", (pt, curveV) => curveV.AddPoint(pt, pt))
+							.UpdateGizmo(gizmoApply, _ => CurveGfxState.AddPoint)
+					)
 					.Do(_ => [
 						Cmd.Drag(
 							Cmds.AddPoint,
 							curve.ModSetDrag("Curve_AddPoint", (ptStart, ptEnd, curveV) => curveV.AddPoint(ptStart, ptEnd))
+								.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.DragHandle)
 						),
 					]),
 			]
@@ -74,21 +85,21 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 				.Run(evt, Env.Invalidate, d);
 
 
-		cmdOutput
+		/*cmdOutput
 			.WhenRunEvt
 			.Select(e => e switch
 			{
-				DragStartRunEvt {Cmd: Cmds.AddPoint} => CurveGfxState.DragHandle,
-				HotspotChangedRunEvt {Hotspot: Hotspots.CurvePointId} => CurveGfxState.Edit,
+				//DragStartRunEvt {Cmd: Cmds.AddPoint} => CurveGfxState.DragHandle,
+				//HotspotChangedRunEvt {Hotspot: Hotspots.CurvePointId} => CurveGfxState.Edit,
 				_ => CurveGfxState.AddPoint
 			})
-			.Subscribe(e => gfxState = e).D(d);
+			.Subscribe(e => gizmo = e).D(d);*/
 
 
 
 		Env.WhenPaint.Subscribe(gfx =>
 		{
-			Painter.PaintCurve(gfx, curve.VModded, gfxState);
+			Painter.PaintCurve(gfx, curve.VModded, gizmo);
 		}).D(d);
 
 		return d;

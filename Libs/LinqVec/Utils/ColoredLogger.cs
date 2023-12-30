@@ -9,6 +9,23 @@ public static class ColoredLogger
 {
 	private const uint DefaultColor = 0xCCCCCC;
 
+
+	public static Action<Func<Gizmo, Gizmo>> Log<Gizmo>(this Action<Func<Gizmo, Gizmo>> applyFunPrev, string name)
+	{
+		Action<Func<Gizmo, Gizmo>> applyFunNext = fPrev =>
+		{
+			Func<Gizmo, Gizmo> fNext = vPrev =>
+			{
+				var vNext = fPrev(vPrev);
+				L.WriteLine($"[gizmo - {name}]: {vPrev} -> {vNext}");
+				return vNext;
+			};
+			applyFunPrev(fNext);
+		};
+		return applyFunNext;
+	}
+
+
 	public static void Write(string s, int col)
 	{
 		WinAPI.Utils.ConUtils.SetColor(MkCol(col));

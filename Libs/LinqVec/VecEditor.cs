@@ -158,7 +158,6 @@ file static class VecEditorUtils
 			.DupWhen(WhenReset)
 			.Subscribe(tool =>
 			{
-				LT.Log($"Reset({tool.GetType().Name})");
 				var toolActions = new ToolActions(
 					() => whenReset.OnNext(Unit.Default)
 				);

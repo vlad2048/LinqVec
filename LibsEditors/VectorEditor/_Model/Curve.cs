@@ -7,6 +7,7 @@ using PtrLib;
 using ReactiveVars;
 using VectorEditor._Model.Interfaces;
 using VectorEditor._Model.Structs;
+using VectorEditor.Tools.Curve_;
 
 namespace VectorEditor._Model;
 
@@ -58,35 +59,21 @@ static class CurveFuns
 // ********
 static class CurveMods
 {
-	public static Curve MovePoint(this Curve curve, PointId pointId, Pt ptEnd) =>
-		curve with
-		{
-			Pts = curve.Pts.SetIdxArr(pointId.Idx, e => e.Move(pointId.Type, ptEnd))
+	public static CurveGizmo MovePoint(this CurveGizmo curve, PointId pointId, Pt ptEnd) =>
+		curve with {
+			V = curve.V with {
+				Pts = curve.V.Pts.SetIdxArr(pointId.Idx, e => e.Move(pointId.Type, ptEnd))
+			}
 		};
 
-	public static Curve AddPoint(this Curve curve, Pt ptStart, Pt ptEnd) =>
-		curve with
-		{
-			Pts = curve.Pts.AddArr(CurvePt.Make(ptStart, ptEnd))
+	public static CurveGizmo AddPoint(this CurveGizmo curve, Pt ptStart, Pt ptEnd) =>
+		curve with {
+			State = GizmoState.DragHandle,
+			V = curve.V with {
+				Pts = curve.V.Pts.AddArr(CurvePt.Make(ptStart, ptEnd))
+			}
 		};
 
-	public static Mod<Curve> AddPoint_Hover(IRoVar<Option<Pt>> mouse, Disp d) =>
-		new(
-			nameof(AddPoint_Hover),
-			false,
-			mouse
-				.WhereSome()
-				.Select(m => Mk(curve =>
-					curve with
-					{
-						Pts = curve.Pts.AddArr(CurvePt.Make(m, m))
-					}))
-				.ToVar(d)
-		);
-
-
-
-	private static Func<Curve, Curve> Mk(Func<Curve, Curve> f) => f;
 
 	private static CurvePt Move(this CurvePt pt, PointType type, Pt pos) => type switch
 	{

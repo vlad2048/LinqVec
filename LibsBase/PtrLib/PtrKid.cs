@@ -17,13 +17,13 @@ interface IPtrKidEdit<Dad> : IPtrKid
 }
 
 
-sealed class PtrKidEdit<Dad, Kid> : PtrBase<Kid>, IPtrKidEdit<Dad>, IPtrRegular<Kid>
+sealed class PtrKidEdit<Dad, Kid, KidGizmo> : PtrBase<KidGizmo>, IPtrKidEdit<Dad>, IPtrRegular<KidGizmo> where KidGizmo : IKidGizmo<Kid>
 {
 	private readonly Func<Dad, Kid, Dad> setFun;
 	private readonly Func<Dad, Kid, Dad> removeFun;
 
 	public PtrKidEdit(
-		Kid init,
+		KidGizmo init,
 		Func<Dad, Kid, Dad> setFun,
 		Func<Dad, Kid, Dad> removeFun,
 		PtrDad<Dad> dad,
@@ -53,14 +53,14 @@ sealed class PtrKidEdit<Dad, Kid> : PtrBase<Kid>, IPtrKidEdit<Dad>, IPtrRegular<
 }
 
 
-sealed class PtrKidCreate<Dad, Kid> : PtrBase<Kid>, IPtrKidCreate, IPtrCommit<Kid>
+sealed class PtrKidCreate<Dad, Kid, KidGizmo> : PtrBase<KidGizmo>, IPtrKidCreate, IPtrCommit<KidGizmo> where KidGizmo : IKidGizmo<Kid>
 {
 	private readonly PtrDad<Dad> dad;
 	internal Func<Dad, Kid, Dad> SetFun { get; }
 	internal Func<Kid, bool> ValidFun { get; }
 
 	public PtrKidCreate(
-		Kid init,
+		KidGizmo init,
 		Func<Dad, Kid, Dad> setFun,
 		Func<Kid, bool> validFun,
 		PtrDad<Dad> dad,

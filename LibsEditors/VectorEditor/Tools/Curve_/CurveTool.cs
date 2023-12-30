@@ -4,10 +4,28 @@ using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Events;
 using LinqVec.Utils.Rx;
+using PtrLib;
 using ReactiveVars;
 using VectorEditor._Model;
 
 namespace VectorEditor.Tools.Curve_;
+
+
+enum GizmoState
+{
+	None,
+	Edit,
+	AddPoint,
+	DragHandle,
+};
+
+sealed record CurveGizmo(
+	GizmoState State,
+	Curve V
+) : IKidGizmo<Curve>
+{
+	public static CurveGizmo Empty() => new(GizmoState.None, Curve.Empty());
+}
 
 
 sealed class CurveTool(Keys shortcut) : ITool<Doc>
@@ -26,6 +44,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 		public const string AddPoint = nameof(AddPoint);
 	}
 
+
 	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
 	{
 		var d = MkD();
@@ -33,7 +52,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 		var doc = Env.Doc;
 		var evt = Env.GetEvtForTool(this, true, d);
 
-		var curve = doc.Create(Curve.Empty(), CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun, d);
+		var curve = doc.Create<Curve, CurveGizmo>(CurveGizmo.Empty(), CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun, d);
 		curve.D.Log("IPtr<Curve>");
 
 		var gfxState = CurveGfxState.AddPoint;
@@ -50,7 +69,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 			States.Neutral,
 			CBase.Cursors.Pen,
 			[
-				Hotspots.CurvePoint(curve.V, false)
+				Hotspots.CurvePoint(curve.V.V, false)
 					.Do(pointId => [
 						Cmd.Drag(
 							Cmds.MovePoint,
@@ -88,7 +107,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 
 		Env.WhenPaint.Subscribe(gfx =>
 		{
-			Painter.PaintCurve(gfx, curve.VModded, gfxState);
+			Painter.PaintCurve(gfx, curve.VModded.V, gfxState);
 		}).D(d);
 
 		return d;

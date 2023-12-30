@@ -9,38 +9,25 @@ public sealed record Mod<T>(
 )
 {
 	public override string ToString() => $"Mod({Name}) apply:{Apply}";
-
 	public static readonly Mod<T> Empty = new("Empty", false, Var.MakeConst<Func<T, T>>(e => e));
-}
-
-public interface IPtrRegular<T>
-{
-	Disp D { get; }
-	T V { get; set; }
-	T VModded { get; }
-	IDisposable ModSet(Mod<T> modVal);
-}
-public interface IPtrCommit<Kid> : IPtrRegular<Kid>
-{
-	void Commit();
 }
 
 public interface IPtr<Dad> : IPtrRegular<Dad>
 {
 	// Used by the Tools
 	// =================
-	IPtrRegular<Kid> Edit<Kid>(
-		Kid init,
+	public IPtrRegular<KidGizmo> Edit<Kid, KidGizmo>(
+		KidGizmo init,
 		Func<Dad, Kid, Dad> setFun,
 		Func<Dad, Kid, Dad> removeFun,
 		Disp d
-	);
-	IPtrCommit<Kid> Create<Kid>(
-		Kid init,
+	) where KidGizmo : IKidGizmo<Kid>;
+	public IPtrCommit<KidGizmo> Create<Kid, KidGizmo>(
+		KidGizmo init,
 		Func<Dad, Kid, Dad> setFun,
 		Func<Kid, bool> validFun,
 		Disp d
-	);
+	) where KidGizmo : IKidGizmo<Kid>;
 
 	// Used by VecEditor for management
 	// ================================
@@ -54,6 +41,25 @@ public interface IPtr<Dad> : IPtrRegular<Dad>
 	IObservable<Unit> WhenValueChanged { get; }
 }
 
+
+
+public interface IKidGizmo<out Kid>
+{
+	Kid V { get; }
+}
+
+
+public interface IPtrRegular<T>
+{
+	Disp D { get; }
+	T V { get; set; }
+	T VModded { get; }
+	IDisposable ModSet(Mod<T> modVal);
+}
+public interface IPtrCommit<Kid> : IPtrRegular<Kid>
+{
+	void Commit();
+}
 
 
 

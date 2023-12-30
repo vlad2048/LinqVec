@@ -36,7 +36,7 @@ sealed class PtrDad<Dad> : PtrBase<Dad>, IPtr<Dad>
 		kid.V = None;
 	}
 
-	internal void KidCreate_Commit<Kid>(PtrKidCreate<Dad, Kid> kidVal)
+	internal void KidCreate_Commit<Kid, KidGizmo>(PtrKidCreate<Dad, Kid, KidGizmo> kidVal) where KidGizmo : IKidGizmo<Kid>
 	{
 		// Commit
 		// ======
@@ -44,29 +44,29 @@ sealed class PtrDad<Dad> : PtrBase<Dad>, IPtr<Dad>
 		Undoer.ClearRedos();
 		kidVal.Undoer.ClearRedos();
 		foreach (var kidState in kidVal.Undoer.StackUndoExt)
-			if (kidVal.ValidFun(kidState))
-				V = kidVal.SetFun(V, kidState);
+			if (kidVal.ValidFun(kidState.V))
+				V = kidVal.SetFun(V, kidState.V);
 
 		// Dispose
 		// =======
 		kidVal.Dispose();
 	}
 
-	internal void KidEdit_Update<Kid>(PtrKidEdit<Dad, Kid> kidVal)
+	internal void KidEdit_Update<Kid, KidGizmo>(PtrKidEdit<Dad, Kid, KidGizmo> kidVal) where KidGizmo : IKidGizmo<Kid>
 	{
 		if (kid.V != kidVal) throw new ArgumentException($"KidEdit<{typeof(Dad).Name}, {typeof(Kid).Name}> has been changed before it could be disposed");
 		V = kidVal.SetUpdatedValueInDad(V);
 	}
 
 
-	public IPtrRegular<Kid> Edit<Kid>(
-		Kid init,
+	public IPtrRegular<KidGizmo> Edit<Kid, KidGizmo>(
+		KidGizmo init,
 		Func<Dad, Kid, Dad> setFun,
 		Func<Dad, Kid, Dad> removeFun,
 		Disp d
-	)
+	) where KidGizmo : IKidGizmo<Kid>
 	{
-		var kidVal = new PtrKidEdit<Dad, Kid>(
+		var kidVal = new PtrKidEdit<Dad, Kid, KidGizmo>(
 			init,
 			setFun,
 			removeFun,
@@ -77,14 +77,14 @@ sealed class PtrDad<Dad> : PtrBase<Dad>, IPtr<Dad>
 		return kidVal;
 	}
 
-	public IPtrCommit<Kid> Create<Kid>(
-		Kid init,
+	public IPtrCommit<KidGizmo> Create<Kid, KidGizmo>(
+		KidGizmo init,
 		Func<Dad, Kid, Dad> setFun,
 		Func<Kid, bool> validFun,
 		Disp d
-	)
+	) where KidGizmo : IKidGizmo<Kid>
 	{
-		var kidVal = new PtrKidCreate<Dad, Kid>(
+		var kidVal = new PtrKidCreate<Dad, Kid, KidGizmo>(
 			init,
 			setFun,
 			validFun,

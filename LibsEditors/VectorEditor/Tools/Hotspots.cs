@@ -1,7 +1,8 @@
 ﻿using LinqVec.Utils;
 using LinqVec.Tools.Cmds;
-using VectorEditor.Model;
-using VectorEditor.Tools.Curve_.Structs;
+using VectorEditor._Model;
+using VectorEditor._Model.Interfaces;
+using VectorEditor._Model.Structs;
 
 namespace VectorEditor.Tools;
 
@@ -33,10 +34,6 @@ static class Hotspots
 		}
 	);
 
-	/*public static Hotspot<Curve> Curve(Model<Doc> doc) => new(
-		nameof(Curve),
-		p => doc.Cur.V.GetObjectAt(p).OfType<IObj, Curve>()
-	);*/
 
 	public static Hotspot<Guid> Object(Doc doc) => new(
 		nameof(Object),
@@ -47,38 +44,4 @@ static class Hotspots
 		$"{nameof(Object)}<{typeof(T).Name}>",
 		p => doc.GetObjectAt(p).OfType<IObj, T>().Map(e => e.Id)
 	);
-
-
-
-	/*
-	public static Hotspot<Curve> CurveSpecific(Model<Doc> doc, Curve curve) => new(
-		nameof(CurveSpecific),
-		p => doc.Cur.GetObjectAt(p).OfType<IObj, Curve>().Where(e => e == curve),
-		null
-	);
-
-	public static Hotspot<Curve> CurveExcept(Model<Doc> doc, Curve curve) => new(
-		nameof(CurveExcept),
-		p => doc.Cur.GetObjectAt(p).OfType<IObj, Curve>().Where(e => e != curve),
-		null
-	);
-
-	public static Hotspot<Curve> Curve(Model<Doc> doc) => new(
-		nameof(Curve),
-		p => doc.Cur.GetObjectAt(p).OfType<IObj, Curve>(),
-		null
-	);
-
-	public static Hotspot<PointId> CurvePoint(IMouseModder<Curve> curve) => new(
-		nameof(CurvePoint),
-		p => curve.Get().GetClosestPointTo(p, C.ActivateMoveMouseDistance),
-		null
-	);
-
-	public static Hotspot<PointId> CurvePointButLast(IMouseModder<Curve> curve) => new(
-		nameof(CurvePointButLast),
-		p => curve.Get().GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
-		null
-	);
-	*/
 }

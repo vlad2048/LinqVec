@@ -2,9 +2,9 @@
 using LinqVec.Drawing;
 using LinqVec.Structs;
 using PowBasics.CollectionsExt;
-using VectorEditor.Model.Structs;
-using VectorEditor.Model;
 using System.Drawing.Drawing2D;
+using VectorEditor._Model;
+using VectorEditor._Model.Structs;
 
 namespace VectorEditor;
 

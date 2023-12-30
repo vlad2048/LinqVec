@@ -1,12 +1,11 @@
 ﻿using System.Reactive.Linq;
 using LinqVec;
-using VectorEditor.Model;
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Events;
 using LinqVec.Utils.Rx;
 using ReactiveVars;
-using VectorEditor.Tools.Curve_.Mods;
+using VectorEditor._Model;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -34,7 +33,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 		var doc = Env.Doc;
 		var evt = Env.GetEvtForTool(this, true, d);
 
-		var curve = doc.Create(Curve.Empty(), DocUtils.SetCurve, e => e.Pts.Length > 1, d);
+		var curve = doc.Create(Curve.Empty(), CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun, d);
 		curve.D.Log("IPtr<Curve>");
 
 		var gfxState = CurveGfxState.AddPoint;
@@ -52,11 +51,9 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 			CBase.Cursors.Pen,
 			[
 				Hotspots.CurvePoint(curve.V, false)
-					//.OnHover(curve.ClearMod())
 					.Do(pointId => [
 						Cmd.Drag(
 							Cmds.MovePoint,
-							//curve.DragMod(CurveMods.MovePoint_Drag(evt.MousePos, pointId, d))
 							curve.ModSetDrag("Curve_MovePoint", (ptStart, ptEnd, curveV) => curveV.MovePoint(pointId, ptEnd))
 						)
 					]),
@@ -65,7 +62,6 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 					.Do(_ => [
 						Cmd.Drag(
 							Cmds.AddPoint,
-							//curve.DragMod(CurveMods.AddPoint_Drag(evt.MousePos, d))
 							curve.ModSetDrag("Curve_AddPoint", (ptStart, ptEnd, curveV) => curveV.AddPoint(ptStart, ptEnd))
 						),
 					]),

@@ -1,6 +1,5 @@
 ﻿using BrightIdeasSoftware;
 using LinqVec;
-using LinqVec.Logic;
 using LinqVec.Tools;
 using LinqVec.Utils;
 using LinqVec.Utils.Json;
@@ -8,7 +7,7 @@ using PowBasics.CollectionsExt;
 using PowBasics.Json_;
 using ReactiveVars;
 using UILib.Utils;
-using VectorEditor.Model;
+using VectorEditor._Model;
 using VectorEditor.Tools.Curve_;
 using VectorEditor.Tools.CurveEdit_;
 using VectorEditor.Tools.Select_;

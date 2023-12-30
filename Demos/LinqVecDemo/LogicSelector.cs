@@ -1,7 +1,6 @@
-﻿global using TDoc = VectorEditor.Model.Doc;
+﻿global using TDoc = VectorEditor._Model.Doc;
 using LinqVec;
 using VectorEditor;
-using VectorEditor.Model;
 
 namespace LinqVecDemo;
 

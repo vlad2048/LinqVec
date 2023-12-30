@@ -1,9 +1,7 @@
 ﻿using LinqVec;
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
-using LinqVec.Tools.Events;
-using VectorEditor.Model;
-using VectorEditor.Tools.Curve_.Mods;
+using VectorEditor._Model;
 
 namespace VectorEditor.Tools.CurveEdit_;
 

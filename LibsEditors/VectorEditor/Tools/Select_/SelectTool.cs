@@ -5,7 +5,7 @@ using LinqVec.Tools.Cmds.Enums;
 using LinqVec.Utils;
 using ReactiveVars;
 using Geom;
-using VectorEditor.Model;
+using VectorEditor._Model;
 
 namespace VectorEditor.Tools.Select_;
 

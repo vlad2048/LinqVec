@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Geom;
 
-namespace VectorEditor.Model.Structs;
+namespace VectorEditor._Model.Structs;
 
 public sealed record CurvePt(
 	Pt P,

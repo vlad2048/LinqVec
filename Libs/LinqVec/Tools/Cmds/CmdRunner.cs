@@ -1,5 +1,7 @@
 ﻿using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Geom;
 using LinqVec.Tools.Cmds.Logic;
 using LinqVec.Tools.Events;
@@ -54,7 +56,7 @@ public static class CmdRunner
 		var cmdEvt = curHotspot.ToCmdEvt(curState, evt.WhenEvt, scheduler, d).MakeHot(d);
 
 		SetCursor(curState, curHotspot, evt.SetCursor, d);
-		InvokeActions(cmdEvt, curHotspot, curStateSet, curStateReset, d);
+		InvokeActions(cmdEvt, evt.MousePos, curHotspot, curStateSet, curStateReset, d);
 
 		var runEvents = GetRunEvents(curState, curHotspot, cmdEvt);
 
@@ -69,32 +71,6 @@ public static class CmdRunner
 	}
 
 
-	/*
-	private static IDisposable Log(IRoVar<ToolState> curState, IRoVar<HotspotNfoResolved> curHotspot) =>
-		Obs.CombineLatest(
-				curState,
-				curHotspot,
-				(state, hotspot) => new {
-					StateName = state.Name,
-					Hotspots = state.Hotspots.SelectToArray(e => e.Hotspot.Name),
-					ActiveHotspot = hotspot.Hotspot.Name,
-					Actions = hotspot.Cmds.SelectToArray(e => $"{e.Name}({e.Gesture})")
-				}
-			)
-			.DistinctUntilChanged()
-			.Subscribe(t =>
-			{
-				L.Write("    ", 0);
-				L.Write($"[{t.StateName}]".PadRight(20), 0xfff14b);
-				var hotspotsStr = t.Hotspots.Select(e => $"{e}  ").JoinText("");
-				foreach (var hotspot in t.Hotspots)
-					L.Write($"{hotspot}  ", hotspot == t.ActiveHotspot ? 0x58e856 : 0x1b6b1a);
-				L.Write(new string(' ', Math.Max(0, 35 - hotspotsStr.Length)));
-				L.WriteLine(t.Actions.JoinText("  "), 0x803299);
-			});
-	*/
-
-
 	private static (IRoVar<ToolState>, Action<ToolStateFun>, Action) TrackState(
 		ToolStateFun initStateFun,
 		IObservable<Unit> whenUndoRedo,
@@ -102,7 +78,15 @@ public static class CmdRunner
 	)
 	{
 		var curStateFun = Var.Make(initStateFun, d);
-		whenUndoRedo.Subscribe(_ => curStateFun.V = initStateFun).D(d);
+		whenUndoRedo
+			/* Delay needed otherise:
+			 *	- create curve
+			 *  - switch tool to select (cancels the curve)
+			 *  - while the PtrKidCreate unregisters itself it also wrong .WhenUndoRedo event
+			 *  - and setting the state here will cause the tool to be reset before the kid finished unregistering
+			 */
+			.Delay(TimeSpan.Zero, Rx.Sched)
+			.Subscribe(_ => curStateFun.V = initStateFun).D(d);
 		var curStateSerDisp = new SerDisp().D(d);
 		var curState = curStateFun.Select(maker => maker(curStateSerDisp.GetNewD())).ToVar(d);
 		void Set(ToolStateFun maker) => curStateFun.V = maker;
@@ -125,19 +109,27 @@ public static class CmdRunner
 
 	private static void InvokeActions(
 		IObservable<ICmdEvt> cmdEvt,
+		IRoVar<Option<Pt>> mouse,
 		IRoVar<HotspotNfoResolved> curHotspot,
 		Action<ToolStateFun> curStateSet,
 		Action curStateReset,
 		Disp d
 	)
 	{
-		curHotspot
-			.Subscribe(t =>
-			{
-				t.Hotspot.HoverAction();
-			}).D(d);
+		IDisposable? dragActionD = null;
 
-		Action? curDragFinishAction = null;
+		ISubject<Unit> whenDisposeHover = new Subject<Unit>().D(d);
+		var WhenDisposeHover = whenDisposeHover.AsObservable();
+
+
+		curHotspot
+			.Where(_ => dragActionD == null)
+			.Select(t => t.Hotspot.HoverAction)
+			//.DoLogThread("CurHotspot")
+			.Select<Func<IRoVar<Option<Pt>>, IDisposable>, Func<IDisposable>>(e => () => e(mouse))
+			.ObserveOnUI()
+			//.DoLogThread("CurHotspot->UI")
+			.DisposePreviousSequentiallyOrWhen(WhenDisposeHover, d);
 
 		cmdEvt
 			.ObserveOnUI()
@@ -148,7 +140,8 @@ public static class CmdRunner
 					case DragStartCmdEvt { HotspotCmd: var cmd, PtStart: var ptStart }:
 					{
 						var dragCmd = (DragHotspotCmd)cmd;
-						curDragFinishAction = dragCmd.Action(ptStart);
+						whenDisposeHover.OnNext(Unit.Default);
+						dragActionD = dragCmd.DragAction(ptStart, mouse);
 						break;
 					}
 
@@ -157,11 +150,12 @@ public static class CmdRunner
 						switch (cmd)
 						{
 							case ClickHotspotCmd clickCmd:
-								clickCmd.Action().Match(curStateSet, curStateReset);
+								clickCmd.ClickAction().Match(curStateSet, curStateReset);
 								break;
 							case DragHotspotCmd dragCmd:
-								curDragFinishAction?.Invoke();
-								curDragFinishAction = null;
+								dragActionD?.Dispose();
+								//dragActionD = Disposable.Empty;
+								dragActionD = null;
 								curStateReset();
 								break;
 						}
@@ -176,6 +170,56 @@ public static class CmdRunner
 					}
 				}
 			}).D(d);
+
+
+
+		/*
+		curHotspot
+			.Select(t => t.Hotspot.HoverAction)
+			.Select<Func<IRoVar<Option<Pt>>, IDisposable>, Func<IDisposable>>(e => () => e(mouse))
+			.DisposePrevious()
+			.MakeHot(d);
+
+		var dragActionD = Disposable.Empty;
+
+		cmdEvt
+			.ObserveOnUI()
+			.Subscribe(e =>
+			{
+				switch (e)
+				{
+					case DragStartCmdEvt { HotspotCmd: var cmd, PtStart: var ptStart }:
+					{
+						var dragCmd = (DragHotspotCmd)cmd;
+						dragActionD = dragCmd.DragAction(ptStart, mouse);
+						break;
+					}
+
+					case ConfirmCmdEvt { HotspotCmd: var cmd, Pt: var pt }:
+					{
+						switch (cmd)
+						{
+							case ClickHotspotCmd clickCmd:
+								clickCmd.ClickAction().Match(curStateSet, curStateReset);
+								break;
+							case DragHotspotCmd dragCmd:
+								dragActionD.Dispose();
+								dragActionD = Disposable.Empty;
+								curStateReset();
+								break;
+						}
+
+						break;
+					}
+
+					case ShortcutCmdEvt { ShortcutNfo: var shortcutNfo }:
+					{
+						shortcutNfo.Action();
+						break;
+					}
+				}
+			}).D(d);
+		*/
 	}
 
 	private static IObservable<IRunEvt> GetRunEvents(

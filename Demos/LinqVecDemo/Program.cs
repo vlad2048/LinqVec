@@ -16,6 +16,7 @@ static class Program
 		ApplicationConfiguration.Initialize();
 
 		ConUtils.Init();
+		LT.IdentifyMainThread();
 
 		Application.Run(new MainWin().Track());
 

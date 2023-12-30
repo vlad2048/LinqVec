@@ -12,7 +12,17 @@ namespace VectorEditor.Tools.Curve_.Mods;
 
 static class CurveMods
 {
-	public static Func<Pt, Mod<Curve>> MovePoint_Drag(IRoVar<Option<Pt>> mouse, PointId pointId, Disp d) =>
+	public static Curve MovePoint(this Curve curve, PointId pointId, Pt ptEnd) =>
+		curve with {
+			Pts = curve.Pts.SetIdxArr(pointId.Idx, e => e.Move(pointId.Type, ptEnd))
+		};
+
+	public static Curve AddPoint(this Curve curve, Pt ptStart, Pt ptEnd) =>
+		curve with {
+			Pts = curve.Pts.AddArr(CurvePt.Make(ptStart, ptEnd))
+		};
+
+	/*public static Func<Pt, Mod<Curve>> MovePoint_Drag(IRoVar<Option<Pt>> mouse, PointId pointId, Disp d) =>
 		startPt =>
 			new(
 				nameof(MovePoint_Drag),
@@ -25,6 +35,22 @@ static class CurveMods
 						}))
 					.ToVar(d)
 			);
+
+	public static Func<Pt, Mod<Curve>> AddPoint_Drag(IRoVar<Option<Pt>> mouse, Disp d) =>
+		startPt =>
+			new(
+				nameof(AddPoint_Drag),
+				true,
+				mouse
+					.WhereSome()
+					.Select(m => Mk(curve =>
+						curve with
+						{
+							Pts = curve.Pts.AddArr(CurvePt.Make(startPt, m))
+						}))
+					.ToVar(d)
+			);*/
+
 
 
 	public static Mod<Curve> AddPoint_Hover(IRoVar<Option<Pt>> mouse, Disp d) =>
@@ -40,19 +66,6 @@ static class CurveMods
 				.ToVar(d)
 		);
 
-	public static Func<Pt, Mod<Curve>> AddPoint_Drag(IRoVar<Option<Pt>> mouse, Disp d) =>
-		startPt =>
-			new(
-				nameof(AddPoint_Drag),
-				true,
-				mouse
-					.WhereSome()
-					.Select(m => Mk(curve =>
-						curve with {
-							Pts = curve.Pts.AddArr(CurvePt.Make(startPt, m))
-						}))
-					.ToVar(d)
-			);
 
 	private static Func<Curve, Curve> Mk(Func<Curve, Curve> f) => f;
 

@@ -1,8 +1,10 @@
-﻿using ReactiveVars;
+﻿using System.Reactive.Linq;
+using ReactiveVars;
 
 namespace PtrLib;
 
-public sealed class PtrDad<Dad> : PtrBase<Dad>
+
+sealed class PtrDad<Dad> : PtrBase<Dad>, IPtr<Dad>
 {
 	private readonly IRwVar<Option<IPtrKid>> kid;
 
@@ -48,7 +50,6 @@ public sealed class PtrDad<Dad> : PtrBase<Dad>
 		// Dispose
 		// =======
 		kidVal.Dispose();
-		kid.V = None;
 	}
 
 	internal void KidEdit_Update<Kid>(PtrKidEdit<Dad, Kid> kidVal)
@@ -58,37 +59,83 @@ public sealed class PtrDad<Dad> : PtrBase<Dad>
 	}
 
 
-	public PtrKidCreate<Dad, Kid> Create<Kid>(
+	public IPtrRegular<Kid> Edit<Kid>(
 		Kid init,
 		Func<Dad, Kid, Dad> setFun,
-		Func<Kid, bool> validFun
-	)
-	{
-		var kidVal = new PtrKidCreate<Dad, Kid>(
-			init,
-			setFun,
-			validFun,
-			this
-		);
-		SetKid(kidVal);
-		return kidVal;
-	}
-
-	public PtrKidEdit<Dad, Kid> Edit<Kid>(
-		Kid init,
-		Func<Dad, Kid, Dad> setFun,
-		Func<Dad, Kid, Dad> removeFun
+		Func<Dad, Kid, Dad> removeFun,
+		Disp d
 	)
 	{
 		var kidVal = new PtrKidEdit<Dad, Kid>(
 			init,
 			setFun,
 			removeFun,
-			this
+			this,
+			d
 		);
 		SetKid(kidVal);
 		return kidVal;
 	}
+
+	public IPtrCommit<Kid> Create<Kid>(
+		Kid init,
+		Func<Dad, Kid, Dad> setFun,
+		Func<Kid, bool> validFun,
+		Disp d
+	)
+	{
+		var kidVal = new PtrKidCreate<Dad, Kid>(
+			init,
+			setFun,
+			validFun,
+			this,
+			d
+		);
+		SetKid(kidVal);
+		return kidVal;
+	}
+
+
+
+	public IObservable<Unit> WhenPaintNeeded =>
+		Obs.Merge([
+			WhenPtrBasePaintNeeded,
+			kid
+				.Select(e => e.Match(
+					f => f.WhenPtrBasePaintNeeded,
+					() => Obs.Return(Unit.Default)
+				))
+				.Switch()
+		]);
+
+	public IObservable<Unit> WhenUndoRedo =>
+		Obs.Merge([
+			Undoer.Cur.WhenInner.ToUnit(),
+			kid
+				.Select(e => e.Match(
+					f => f.WhenUndoRedo,
+					() => Obs.Return(Unit.Default)
+				))
+				.Switch(),
+		]);
+
+	public void Undo() =>
+		kid.V.Match(
+			kidV =>
+			{
+				if (!kidV.Undo())
+					Undoer.Undo();
+			},
+			() => Undoer.Undo()
+		);
+
+	public void Redo()
+	{
+		if (!Undoer.Redo())
+			kid.V.IfSome(kidV => kidV.Redo());
+	}
+
+	public IObservable<Unit> WhenValueChanged => Undoer.Cur.ToUnit();
 }
 
 

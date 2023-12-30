@@ -9,3 +9,4 @@ global using static ReactiveVars.DispMaker;
 
 global using L = ReactiveVars.ReactiveVarsLogger;
 global using LC = LinqVec.Utils.ColoredLogger;
+global using LT = LinqVec.Utils.ThreadLogger;

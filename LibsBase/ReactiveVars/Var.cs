@@ -61,6 +61,9 @@ public static class Var
 			}
 		}
 
+		public void SetSafe(T v) => Subj.OnNext(v);
+
+
 		public bool IsDisposed => Subj.IsDisposed;
 
 		public RwVar(T init, bool safe)
@@ -95,6 +98,7 @@ public static class Var
 			set => SetOuter(value);
 		}
 		public bool IsDisposed => Subj.IsDisposed;
+		public void SetSafe(T v) => SetOuter(v);
 
 		// IBoundVar<T>
 		// ============

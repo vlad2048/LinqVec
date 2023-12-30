@@ -1,6 +1,4 @@
 ﻿using BrightIdeasSoftware;
-using LanguageExt.Pretty;
-using LinqVec.Logic;
 using LinqVec.Tools;
 
 namespace LinqVec;
@@ -20,8 +18,7 @@ public abstract class EditorLogic<TDoc>
 	public abstract TDoc LoadOrCreate(Option<string> file);
 
 	public abstract void Init(
-		VecEditor<TDoc> vecEditor,
-		Unmod<TDoc> doc,
+		ToolEnv<TDoc> env,
 		Disp d
 	);
 

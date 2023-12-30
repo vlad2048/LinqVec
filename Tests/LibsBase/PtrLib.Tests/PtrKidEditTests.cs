@@ -10,7 +10,7 @@ class PtrKidEditTests : TestBase
 		var dad = new PtrDad<string>("abE", D);
 		dad.CheckHistory(["abE"], [], "abE");
 
-		using (var kid = dad.Edit('E', Funs.ReplN(2), Funs.DelN(2)))
+		using (var kid = (PtrBase<char>)dad.Edit('E', Funs.ReplN(2), Funs.DelN(2), MkD()))
 		{
 			dad.CheckHistory(["abE"], [], "ab");
 			kid.CheckHistory(['E'], [], 'E');

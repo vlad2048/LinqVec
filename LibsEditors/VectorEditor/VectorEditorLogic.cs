@@ -32,15 +32,14 @@ public sealed class VectorEditorLogic : EditorLogic<Doc>
 	);
 
 	public override void Init(
-		VecEditor<Doc> vecEditor,
-		Unmod<Doc> doc,
+		ToolEnv<Doc> env,
 		Disp d
 	)
 	{
-		vecEditor.drawPanel.WhenPaint
+		env.WhenPaint
 			.Subscribe(gfx =>
 			{
-				var m = doc.VModded;
+				var m = env.Doc.VModded;
 				foreach (var layer in m.Layers)
 				foreach (var obj in layer.Objects)
 				{

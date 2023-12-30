@@ -6,7 +6,6 @@ using LinqVec.Utils;
 using ReactiveVars;
 using Geom;
 using VectorEditor.Model;
-using LinqVec.Logic.Utils;
 
 namespace VectorEditor.Tools.Select_;
 
@@ -44,7 +43,7 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 				States.Neutral,
 				CBase.Cursors.BlackArrow,
 				[
-					Hotspots.Object(doc)
+					Hotspots.Object(doc.V)
 						.Do(objId => [
 								Cmd.Click(
 									Cmds.Select,
@@ -60,7 +59,8 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 									? new[] {
 										Cmd.Drag(
 											Cmds.MoveSelection,
-											doc.DragMod(DocMods.MoveSelection(evt.MousePos, curSel.V, d))
+											//doc.DragMod(DocMods.MoveSelection(evt.MousePos, curSel.V, d))
+											doc.ModSetDrag(Cmds.MoveSelection, (ptStart, ptEnd, docV) => docV.MoveSelection(curSel.V, ptEnd - ptStart))
 										)
 									}
 									: [],
@@ -79,7 +79,7 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 					Kbd.Make(
 						Cmds.Delete,
 						Keys.Delete,
-						() => doc.Cur.V = doc.Cur.V.DeleteObjects(curSel.V)
+						() => doc.V = doc.V.DeleteObjects(curSel.V)
 					)
 				]
 			);

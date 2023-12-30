@@ -35,4 +35,13 @@ public static class ReactiveVarsLogger
 			d.Dispose();
 		});
 	};
+
+	public static IDisposable Log(this IDisposable d, string name)
+	{
+		WriteLine($"[{name}].ctor()");
+		var wrapD = MkD();
+		d.D(wrapD);
+		Disposable.Create(() => WriteLine($"[{name}].Dispose()")).D(wrapD);
+		return wrapD;
+	}
 }

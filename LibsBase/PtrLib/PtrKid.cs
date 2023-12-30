@@ -3,46 +3,21 @@ using ReactiveVars;
 
 namespace PtrLib;
 
-interface IPtrKid : IHasDisp;
+interface IPtrKid : IHasDisp
+{
+	IObservable<Unit> WhenPtrBasePaintNeeded { get; }
+	IObservable<Unit> WhenUndoRedo { get; }
+	bool Undo();
+	bool Redo();
+}
 interface IPtrKidCreate : IPtrKid;
 interface IPtrKidEdit<Dad> : IPtrKid
 {
 	Dad RemoveFromDad(Dad v);
 }
 
-public sealed class PtrKidCreate<Dad, Kid> : PtrBase<Kid>, IPtrKidCreate
-{
-	private readonly PtrDad<Dad> dad;
-	internal Func<Dad, Kid, Dad> SetFun { get; }
-	internal Func<Kid, bool> ValidFun { get; }
 
-	public PtrKidCreate(
-		Kid init,
-		Func<Dad, Kid, Dad> setFun,
-		Func<Kid, bool> validFun,
-		PtrDad<Dad> dad
-	)
-		: base(init, MkD())
-	{
-		this.dad = dad;
-		SetFun = setFun;
-		ValidFun = validFun;
-
-		Disposable.Create(() =>
-		{
-			dad.Kid_Disposed(this);
-		}).D(D);
-	}
-
-	public void CommitDispose()
-	{
-		dad.KidCreate_Commit(this);
-		//Dispose();	(done by the dad)
-	}
-}
-
-
-public sealed class PtrKidEdit<Dad, Kid> : PtrBase<Kid>, IPtrKidEdit<Dad>
+sealed class PtrKidEdit<Dad, Kid> : PtrBase<Kid>, IPtrKidEdit<Dad>, IPtrRegular<Kid>
 {
 	private readonly Func<Dad, Kid, Dad> setFun;
 	private readonly Func<Dad, Kid, Dad> removeFun;
@@ -51,9 +26,10 @@ public sealed class PtrKidEdit<Dad, Kid> : PtrBase<Kid>, IPtrKidEdit<Dad>
 		Kid init,
 		Func<Dad, Kid, Dad> setFun,
 		Func<Dad, Kid, Dad> removeFun,
-		PtrDad<Dad> dad
+		PtrDad<Dad> dad,
+		Disp d
 	)
-		: base(init, MkD())
+		: base(init, d)
 	{
 		this.setFun = setFun;
 		this.removeFun = removeFun;
@@ -70,4 +46,45 @@ public sealed class PtrKidEdit<Dad, Kid> : PtrBase<Kid>, IPtrKidEdit<Dad>
 
 	public Dad SetUpdatedValueInDad(Dad v) => setFun(v, V);
 	public Dad RemoveFromDad(Dad v) => removeFun(v, V);
+
+	public IObservable<Unit> WhenUndoRedo => Undoer.Cur.WhenInner.ToUnit();
+	public bool Undo() => false;
+	public bool Redo() => false;
+}
+
+
+sealed class PtrKidCreate<Dad, Kid> : PtrBase<Kid>, IPtrKidCreate, IPtrCommit<Kid>
+{
+	private readonly PtrDad<Dad> dad;
+	internal Func<Dad, Kid, Dad> SetFun { get; }
+	internal Func<Kid, bool> ValidFun { get; }
+
+	public PtrKidCreate(
+		Kid init,
+		Func<Dad, Kid, Dad> setFun,
+		Func<Kid, bool> validFun,
+		PtrDad<Dad> dad,
+		Disp d
+	)
+		: base(init, d)
+	{
+		this.dad = dad;
+		SetFun = setFun;
+		ValidFun = validFun;
+
+		Disposable.Create(() =>
+		{
+			dad.Kid_Disposed(this);
+		}).D(D);
+	}
+
+	public void Commit()
+	{
+		dad.KidCreate_Commit(this);
+		Dispose();
+	}
+
+	public IObservable<Unit> WhenUndoRedo => Undoer.Cur.WhenInner.ToUnit();
+	public bool Undo() => Undoer.Undo();
+	public bool Redo() => Undoer.Redo();
 }

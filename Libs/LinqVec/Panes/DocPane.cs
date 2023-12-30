@@ -1,6 +1,7 @@
 ﻿using LinqVec.Logic;
 using ReactiveVars;
 using System.Reactive.Linq;
+using PtrLib;
 using UILib;
 using WeifenLuo.WinFormsUI.Docking;
 
@@ -9,17 +10,18 @@ namespace LinqVec.Panes
 	public partial class DocPane<TDoc> : DockContent where TDoc : class
 	{
 		public IRwVar<Option<string>> Filename { get; }
-		public Unmod<TDoc> Doc { get; }
+		public IPtr<TDoc> Doc { get; }
 
 		public DocPane(EditorLogic<TDoc> editorLogic, Option<string> file)
 		{
+			KeyPreview = true; // otherwise not getting the key events below
 			var ctrlD = this.GetD();
 			Filename = Var.Make(file, ctrlD);
-			Doc = new Unmod<TDoc>(editorLogic.LoadOrCreate(file), ctrlD);
+			Doc = Ptr.Make(editorLogic.LoadOrCreate(file), ctrlD);
 
 			InitializeComponent(Doc, editorLogic.Tools);
 
-			editorLogic.Init(vecEditor, Doc, ctrlD);
+			editorLogic.Init(vecEditor.Env, ctrlD);
 
 			this.InitRX(d =>
 			{

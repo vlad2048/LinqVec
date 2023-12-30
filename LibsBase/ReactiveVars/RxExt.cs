@@ -11,31 +11,56 @@ public interface IHasDisp : IDisposable
 
 public static class RxExt
 {
-	public static IObservable<T> DisposePrevious<T>(this IObservable<T> source) where T : IDisposable =>
-		Obs.Using(
-			() => new SerialDisposable(),
-			serD => source.Do(e => serD.Disposable = e)
+	public static IObservable<T> DupWhen<T>(this IObservable<T> source, IObservable<Unit> whenDup) =>
+		Obs.Merge(
+			whenDup.WithLatestFrom(source, (_, v) => v),
+			source
 		);
+
+	public static void DisposePreviousSequentiallyOrWhen(
+		this IObservable<Func<IDisposable>> source,
+		IObservable<Unit> whenDispose,
+		Disp d
+	) =>
+		Obs.Using(
+				() => new SequentialSerialDisposable(),
+				serD =>
+					Obs.Merge(
+						source.Do(e => serD.DisposableFun = e).ToUnit(),
+						whenDispose.Do(_ => serD.DisposableFun = null)
+					)
+			)
+			.MakeHot(d);
 
 
 	public static IObservable<Unit> ToUnit<T>(this IObservable<T> source) => source.Select(_ => Unit.Default);
 
-	public static IObservable<T> WhenDisposed<T>(this IRoVar<Option<T>> varOpt, Disp d) where T : IHasDisp =>
-		varOpt
-			.Select(opt => opt.Match(
-				v => v.WhenDisposed(d).Select(_ => v),
-				Obs.Never<T>
+
+
+
+
+
+	public static IObservable<Unit> WhenDisposed<T>(this IObservable<Option<T>> source) where T : IHasDisp =>
+		source
+			.Select(e => e.Match(
+				f => f.WhenDisposed(),
+				Obs.Never<Unit>
 			))
 			.Switch();
-
-	private static IObservable<Unit> WhenDisposed(this IHasDisp hasD, Disp d)
-	{
-		ISubject<Unit> when = new AsyncSubject<Unit>().D(d);
-		Disposable.Create(() =>
-		{
-			when.OnNext(Unit.Default);
-			when.OnCompleted();
-		}).D(hasD.D);
-		return when.AsObservable();
-	}
+	public static IObservable<Unit> WhenDisposed<T>(this IObservable<T> source) where T : IHasDisp => source.Select(e => e.WhenDisposed()).Switch();
+	public static IObservable<Unit> WhenDisposed<T>(this T hasD) where T : IHasDisp => hasD.D.WhenDisposed();
+	public static IObservable<Unit> WhenDisposed(this Disp d) =>
+		Obs.Using(
+			() => new Disp(),
+			obsD =>
+			{
+				ISubject<Unit> when = new AsyncSubject<Unit>().D(obsD);
+				Disposable.Create(() =>
+				{
+					when.OnNext(Unit.Default);
+					when.OnCompleted();
+				}).D(d).D(obsD);
+				return when.AsObservable();
+			}
+		);
 }

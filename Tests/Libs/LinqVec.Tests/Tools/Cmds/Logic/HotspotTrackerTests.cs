@@ -1,4 +1,5 @@
 ﻿using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Geom;
 using LinqVec.Tools.Cmds;
@@ -23,9 +24,9 @@ class HotspotTrackerTests
 					>= 0 and < 25 => Option<H>.Some("A"),
 					>= 25 and < 50 => Option<H>.Some("B"),
 					_ => None
-				}, null, () => {}),
+				}, null, _ => Disposable.Empty),
 				_ => [
-					new DragHotspotCmd("Drag", Gesture.Drag, _ => () => {}),
+					new DragHotspotCmd("Drag", Gesture.Drag, (_, _) => Disposable.Empty),
 					new ClickHotspotCmd("Click", Gesture.Click, () => None),
 				]
 			),
@@ -34,9 +35,9 @@ class HotspotTrackerTests
 					>= 50 and < 75 => Option<H>.Some("C"),
 					>= 75 and < 100 => Option<H>.Some("D"),
 					_ => None
-				}, null, () => {}),
+				}, null, _ => Disposable.Empty),
 				_ => [
-					new DragHotspotCmd("Drag", Gesture.Drag, _ => () => {}),
+					new DragHotspotCmd("Drag", Gesture.Drag, (_, _) => Disposable.Empty),
 					new ClickHotspotCmd("Click", Gesture.Click, () => None),
 				]
 			),

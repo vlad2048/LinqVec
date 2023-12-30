@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Disposables;
 using Geom;
 using LinqVec.Tools.Cmds.Enums;
+using ReactiveVars;
 using H = System.Object;
 
 namespace LinqVec.Tools.Cmds;
@@ -72,10 +73,10 @@ public sealed record Hotspot(
 	string Name,
 	Func<Pt, Option<H>> Fun,
 	Cursor? Cursor,
-	Action HoverAction
+	Func<IRoVar<Option<Pt>>, IDisposable> HoverAction
 )
 {
-	public static readonly Hotspot Empty = new("Empty", _ => None, null, () => { });
+	public static readonly Hotspot Empty = new("Empty", _ => None, null, _ => Disposable.Empty);
 }
 
 public interface IHotspotCmd
@@ -86,12 +87,12 @@ public interface IHotspotCmd
 public sealed record ClickHotspotCmd(
 	string Name,
 	Gesture Gesture,
-	Func<Option<ToolStateFun>> Action
+	Func<Option<ToolStateFun>> ClickAction
 ) : IHotspotCmd;
 public sealed record DragHotspotCmd(
 	string Name,
 	Gesture Gesture,
-	Func<Pt, Action> Action
+	Func<Pt, IRoVar<Option<Pt>>, IDisposable> DragAction
 ) : IHotspotCmd;
 
 
@@ -119,10 +120,10 @@ public sealed record Hotspot<TH>(
 )
 {
 	public Cursor? Cursor { get; init; }
-	public Action HoverAction { get; init; } = () => { };
+	public Func<IRoVar<Option<Pt>>, IDisposable> HoverAction { get; init; } = _ => Disposable.Empty;
 }
 
-public sealed record HotspotActs<TH>(
+public sealed record HotspotNfo<TH>(
 	Hotspot<TH> Hotspot,
 	Func<TH, IHotspotCmd[]> ActFuns
 );
@@ -134,15 +135,14 @@ public static class HotspotExt
 	public static HotspotNfo Do<TH>(
 		this Hotspot<TH> hotspot,
 		Func<TH, IHotspotCmd[]> actFuns
-	) => new HotspotActs<TH>(
+	) => new HotspotNfo<TH>(
 		hotspot,
 		actFuns
 	).ToNonGeneric();
 
 	public static Hotspot<TH> WithCursor<TH>(this Hotspot<TH> hotspot, Cursor cursor) => hotspot with { Cursor = cursor };
-	public static Hotspot<TH> OnHover<TH>(this Hotspot<TH> hotspot, Action hoverAction) => hotspot with { HoverAction = hoverAction };
 
-	private static HotspotNfo ToNonGeneric<TH>(this HotspotActs<TH> set) => new(
+	private static HotspotNfo ToNonGeneric<TH>(this HotspotNfo<TH> set) => new(
 		set.Hotspot.ToNonGeneric(),
 		o => set.ActFuns((TH)o)
 	);

@@ -1,7 +1,6 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LinqVec.Controls;
-using LinqVec.Drawing;
 using LinqVec.Structs;
 using LinqVec.Utils.WinForms_;
 using LinqVec.Logic;
@@ -12,6 +11,7 @@ using UILib;
 using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.Rx;
 using ReactiveVars;
+using PtrLib;
 
 namespace LinqVec;
 
@@ -20,7 +20,7 @@ public partial class VecEditor<TDoc> : UserControl
 {
 	public ToolEnv<TDoc> Env { get; }
 
-	public VecEditor(Unmod<TDoc> doc, ITool<TDoc>[] tools)
+	public VecEditor(IPtr<TDoc> doc, ITool<TDoc>[] tools)
 	{
 		var ctrlD = this.GetD();
 		var transform = Var.Make(Transform.Id, ctrlD);
@@ -54,9 +54,13 @@ public partial class VecEditor<TDoc> : UserControl
 
 			doc.WhenUndoRedo.Subscribe(_ => Env.TriggerUndoRedo()).D(d);
 
-			editorEvt.WhenKeyDown(Keys.D1).Subscribe(_ => Cursor = Cursors.Default).D(d);
-			editorEvt.WhenKeyDown(Keys.D2).Subscribe(_ => Cursor = CBase.Cursors.Pen).D(d);
-			editorEvt.WhenKeyDown(Keys.D3).Subscribe(_ => Cursor = CBase.Cursors.BlackArrowSmall).D(d);
+			/*editorEvt.WhenKeyDown(Keys.D1).ObserveOnUI().Subscribe(_ => LT.Log("KeyDown")).D(d);
+			editorEvt.WhenKeyUp(Keys.D1).ObserveOnUI().Subscribe(_ => LT.Log("KeyUp")).D(d);
+			editorEvt.WhenMouseMove().ObserveOnUI().Subscribe(_ => LT.Log("MouseMove")).D(d);
+			editorEvt.WhenMouseDown().ObserveOnUI().Subscribe(_ => LT.Log("MouseDown")).D(d);
+			editorEvt.WhenMouseUp().ObserveOnUI().Subscribe(_ => LT.Log("MouseUp")).D(d);
+			editorEvt.WhenMouseWheel().ObserveOnUI().Subscribe(_ => LT.Log("MouseWheel")).D(d);*/
+
 
 			VecEditorUtils.RunTools(curTool, Env, d);
 
@@ -146,7 +150,24 @@ file static class VecEditorUtils
 		Disp d
 	)
 	{
-		var serDisp = new SerDisp().D(d);
+		var serDisp = new SequentialSerialDisposable().D(d);
+		ISubject<Unit> whenReset = new Subject<Unit>().D(d);
+		IObservable<Unit> WhenReset = whenReset.AsObservable();
+
+		curTool
+			.DupWhen(WhenReset)
+			.Subscribe(tool =>
+			{
+				LT.Log($"Reset({tool.GetType().Name})");
+				var toolActions = new ToolActions(
+					() => whenReset.OnNext(Unit.Default)
+				);
+				serDisp.DisposableFun = () => tool.Run(env, toolActions);
+			}).D(d);
+
+
+
+		/*var serDisp = new SerDisp().D(d);
 
 		curTool
 			.Subscribe(tool =>
@@ -163,7 +184,7 @@ file static class VecEditorUtils
 					tool.Run(env, toolActions).D(resetD);
 				}
 				Reset();
-			}).D(d);
+			}).D(d);*/
 	}
 
 

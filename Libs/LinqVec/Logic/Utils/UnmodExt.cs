@@ -1,4 +1,5 @@
-﻿using Geom;
+﻿/*
+using Geom;
 using LinqVec.Logic.Structs;
 
 namespace LinqVec.Logic.Utils;
@@ -22,3 +23,4 @@ public static class UnmodExt
         return unmod.ModFlush;
     };
 }
+*/

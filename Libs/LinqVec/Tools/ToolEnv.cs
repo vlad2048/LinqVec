@@ -1,12 +1,11 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using LanguageExt.Pretty;
 using LinqVec.Controls;
-using LinqVec.Logic;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.WinForms_;
+using PtrLib;
 using ReactiveVars;
 
 namespace LinqVec.Tools;
@@ -24,7 +23,7 @@ public sealed class ToolEnv<TDoc> : IDisposable
 	private IObservable<Unit> WhenUndoRedo => whenUndoRedo.AsObservable();
 
 	public ToolEnv(
-		Unmod<TDoc> doc,
+		IPtr<TDoc> doc,
 		IRoVar<ITool<TDoc>> curTool,
 		Action<ITool<TDoc>> setCurTool,
 		DrawPanel drawPanel,
@@ -49,7 +48,7 @@ public sealed class ToolEnv<TDoc> : IDisposable
 
 	internal void TriggerUndoRedo() => whenUndoRedo.OnNext(Unit.Default);
 
-	public Unmod<TDoc> Doc { get; }
+	public IPtr<TDoc> Doc { get; }
 	public IRoVar<ITool<TDoc>> CurTool { get; }
 	public void SetCurTool(ITool<TDoc> tool) => setCurTool(tool);
 	public ICurs Curs { get; }

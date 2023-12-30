@@ -1,5 +1,4 @@
-﻿using LinqVec.Logic;
-using LinqVec.Utils;
+﻿using LinqVec.Utils;
 using LinqVec.Tools.Cmds;
 using VectorEditor.Model;
 using VectorEditor.Tools.Curve_.Structs;
@@ -16,12 +15,21 @@ static class Hotspots
 		_ => Unit.Default
 	);
 
-	public static Hotspot<PointId> CurvePoint(Unmod<Curve> curve, bool excludeLast) => new(
+	public static readonly Hotspot<Unit> AnywhereNeg = new(
+		AnywhereId,
+		pt => pt.X switch
+		{
+			< 0 => Unit.Default,
+			_ => None
+		}
+	);
+
+	public static Hotspot<PointId> CurvePoint(Curve curve, bool excludeLast) => new(
 		CurvePointId,
 		p => excludeLast switch
 		{
-			false => curve.Cur.V.GetClosestPointTo(p, C.ActivateMoveMouseDistance),
-			true => curve.Cur.V.GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
+			false => curve.GetClosestPointTo(p, C.ActivateMoveMouseDistance),
+			true => curve.GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
 		}
 	);
 
@@ -30,14 +38,14 @@ static class Hotspots
 		p => doc.Cur.V.GetObjectAt(p).OfType<IObj, Curve>()
 	);*/
 
-	public static Hotspot<Guid> Object(Unmod<Doc> doc) => new(
+	public static Hotspot<Guid> Object(Doc doc) => new(
 		nameof(Object),
-		p => doc.Cur.V.GetObjectAt(p).Map(e => e.Id)
+		p => doc.GetObjectAt(p).Map(e => e.Id)
 	);
 
-	public static Hotspot<Guid> Object<T>(Unmod<Doc> doc) where T : IObj => new(
+	public static Hotspot<Guid> Object<T>(Doc doc) where T : IObj => new(
 		$"{nameof(Object)}<{typeof(T).Name}>",
-		p => doc.Cur.V.GetObjectAt(p).OfType<IObj, T>().Map(e => e.Id)
+		p => doc.GetObjectAt(p).OfType<IObj, T>().Map(e => e.Id)
 	);
 
 

@@ -10,6 +10,7 @@ global using static ReactiveVars.DispMaker;
 global using static LinqVec.Utils.CommonMakers;
 global using L = ReactiveVars.ReactiveVarsLogger;
 global using LC = LinqVec.Utils.ColoredLogger;
+global using LT = LinqVec.Utils.ThreadLogger;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;

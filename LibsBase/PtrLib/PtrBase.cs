@@ -1,11 +1,13 @@
 ﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using PtrLib.Components;
-using PtrLib.Structs;
+using PtrLib.Utils;
 using ReactiveVars;
 
 namespace PtrLib;
 
-public class PtrBase<T> : IHasDisp
+
+class PtrBase<T> : IHasDisp
 {
 	public Disp D { get; }
 	protected void EnsureNotDisp() => ObjectDisposedException.ThrowIf(IsDisposed, this);
@@ -31,10 +33,20 @@ public class PtrBase<T> : IHasDisp
 	public IDisposable ModSet(Mod<T> modVal)
 	{
 		EnsureNotDisp();
+
 		if (mod.V.IsSome) throw new ObjectDisposedException("Previous mod should have been disposed first");
+		/*mod.V.IfSome(modV =>
+		{
+			if (modV.Apply)
+				V = V.Apply(modV);
+		});*/
+
+
 		mod.V = modVal;
 		return Disposable.Create(() =>
 		{
+			if (IsDisposed) return;
+
 			// This should never happen
 			if (mod.V != modVal) throw new ObjectDisposedException("Mod has been changed before it could be disposed");
 			if (modVal.Apply)
@@ -42,6 +54,17 @@ public class PtrBase<T> : IHasDisp
 			mod.V = None;
 		});
 	}
+
+	public IObservable<Unit> WhenPtrBasePaintNeeded =>
+		Obs.Merge([
+			Undoer.Cur.ToUnit(),
+			mod
+				.Select(e => e.Match(
+					f => f.Fun.ToUnit(),
+					() => Obs.Return(Unit.Default)
+				))
+				.Switch(),
+		]);
 }
 
 

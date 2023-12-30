@@ -13,12 +13,12 @@ class PtrKidCreateTests : TestBase
 		var dad = new PtrDad<string>("ab", D);
 		dad.CheckHistory(["ab"], [], "ab");
 
-		using (var kid = dad.Create('K', Funs.SetCharN(2), _ => true))
+		using (var kid = (PtrBase<char>)dad.Create('K', Funs.SetCharN(2), _ => true, MkD()))
 		{
 			dad.CheckHistory(["ab"], [], "ab");
 			kid.CheckHistory(['K'], [], 'K');
 
-			Should.Throw<ObjectDisposedException>(() => dad.Create('L', Funs.SetCharN(3), _ => true));
+			Should.Throw<ObjectDisposedException>(() => (PtrBase<char>)dad.Create('L', Funs.SetCharN(3), _ => true, MkD()));
 		}
 	}
 
@@ -28,14 +28,14 @@ class PtrKidCreateTests : TestBase
 		var dad = new PtrDad<string>("ab", D);
 		dad.CheckHistory(["ab"], [], "ab");
 
-		using (var kid = dad.Create('K', Funs.SetCharN(2), _ => true))
+		using (var kid = (PtrBase<char>)dad.Create('K', Funs.SetCharN(2), _ => true, MkD()))
 		{
 			dad.CheckHistory(["ab"], [], "ab");
 			kid.CheckHistory(['K'], [], 'K');
 		}
 		dad.CheckHistory(["ab"], [], "ab");
 
-		using (var kid = dad.Create('L', Funs.SetCharN(3), _ => true))
+		using (var kid = (PtrBase<char>)dad.Create('L', Funs.SetCharN(3), _ => true, MkD()))
 		{
 			dad.CheckHistory(["ab"], [], "ab");
 			kid.CheckHistory(['L'], [], 'L');
@@ -49,16 +49,16 @@ class PtrKidCreateTests : TestBase
 		var dad = new PtrDad<string>("ab", D);
 		dad.CheckHistory(["ab"], [], "ab");
 
-		var kid = dad.Create('K', Funs.SetCharN(2), _ => true);
+		var kid = (PtrBase<char>)dad.Create('K', Funs.SetCharN(2), _ => true, MkD());
 		dad.CheckHistory(["ab"], [], "ab");
 		kid.CheckHistory(['K'], [], 'K');
 
-		kid.CommitDispose();
+		((IPtrCommit<char>)kid).Commit();
 		kid.IsDisposed.ShouldBe(true);
 
 		dad.CheckHistory(["ab", "abK"], [], "abK");
 
-		using (var kid2 = dad.Create('L', Funs.SetCharN(3), _ => true))
+		using (var kid2 = (PtrBase<char>)dad.Create('L', Funs.SetCharN(3), _ => true, MkD()))
 		{
 			dad.CheckHistory(["ab", "abK"], [], "abK");
 			kid2.CheckHistory(['L'], [], 'L');

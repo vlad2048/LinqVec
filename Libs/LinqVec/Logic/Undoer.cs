@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿/*
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReactiveVars;
 using System.Reactive.Subjects;
@@ -8,10 +9,10 @@ using PowBasics.CollectionsExt;
 namespace LinqVec.Logic;
 
 
-/*
-	Cur.WhenOuter	<=>	WhenDo
-	Cur.WhenInner	<=>	Obs.Merge(WhenUndo, WhenRedo)
-*/
+//
+//	Cur.WhenOuter	<=>	WhenDo
+//	Cur.WhenInner	<=>	Obs.Merge(WhenUndo, WhenRedo)
+//
 public class Undoer<T> : IDisposable
 {
 	public Disp D { get; }
@@ -148,3 +149,4 @@ public class Undoer<T> : IDisposable
 			L.WriteLine();
 		}).D(D);
 }
+*/

@@ -1,5 +1,6 @@
 ﻿using LinqVec.Logic;
 using LinqVec.Tools;
+using PtrLib;
 
 namespace LinqVec.Panes
 {
@@ -29,7 +30,7 @@ namespace LinqVec.Panes
 		/// Required method for Designer support - do not modify
 		/// the contents of this method with the code editor.
 		/// </summary>
-		private void InitializeComponent(Unmod<TDoc> doc, ITool<TDoc>[] tools)
+		private void InitializeComponent(IPtr<TDoc> doc, ITool<TDoc>[] tools)
 		{
 			vecEditor = new VecEditor<TDoc>(doc, tools);
 			SuspendLayout();

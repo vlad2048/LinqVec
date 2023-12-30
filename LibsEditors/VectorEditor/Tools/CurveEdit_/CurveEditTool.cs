@@ -36,7 +36,7 @@ sealed class CurveEditTool(Keys shortcut) : ITool<Doc>
 			States.Neutral,
 			CBase.Cursors.BlackArrow,
 			[
-				Hotspots.Object<Curve>(doc)
+				Hotspots.Object<Curve>(doc.V)
 					.Do(curveId => [
 
 					]),

@@ -11,7 +11,7 @@ namespace VectorEditor.Model;
 
 static class DocMods
 {
-	public static Func<Pt, Mod<Doc>> MoveSelection(IRoVar<Option<Pt>> mouse, Guid[] selObjIds, Disp d) =>
+	/*public static Func<Pt, Mod<Doc>> MoveSelection(IRoVar<Option<Pt>> mouse, Guid[] selObjIds, Disp d) =>
 		startPt =>
 			new(
 				nameof(MoveSelection),
@@ -22,9 +22,9 @@ static class DocMods
 					.ToVar(d)
 			);
 
-	private static Func<Doc, Doc> Mk(Func<Doc, Doc> f) => f;
+	private static Func<Doc, Doc> Mk(Func<Doc, Doc> f) => f;*/
 
-	private static Doc MoveSelection(Doc doc, Guid[] selObjIds, Pt delta) =>
+	public static Doc MoveSelection(this Doc doc, Guid[] selObjIds, Pt delta) =>
 		selObjIds.Aggregate(
 			doc,
 			(acc, id) => MoveSelection(acc, id, delta)

@@ -119,7 +119,7 @@ static class DocLogic
 	private static void Save(bool saveAs, IRoVar<Option<DocPane<TDoc>>> curDoc)
 	{
 		var doc = curDoc.V.IfNone(() => throw new ArgumentException());
-		var m = doc.Doc.CurReadOnly;
+		var docV = doc.Doc.V;
 
 		if (saveAs || doc.Filename.V.IsNone)
 		{
@@ -131,14 +131,14 @@ static class DocLogic
 			};
 			if (dlg.ShowDialog() == DialogResult.OK)
 			{
-				VecJsoner.Vec.Save(dlg.FileName, m.V);
+				VecJsoner.Vec.Save(dlg.FileName, docV);
 				doc.Filename.V = dlg.FileName;
 			}
 		}
 		else
 		{
 			var filename = doc.Filename.V.IfNone(() => throw new ArgumentException());
-			VecJsoner.Vec.Save(filename, m.V);
+			VecJsoner.Vec.Save(filename, docV);
 		}
 	}
 

@@ -1,5 +1,4 @@
-﻿using PtrLib.Structs;
-using ReactiveVars;
+﻿using ReactiveVars;
 
 namespace PtrLib.Tests.TestSupport;
 

@@ -72,7 +72,7 @@ static class PanesLogic
 		var docObs =
 			doc
 				.Select(e => e.Match(
-					f => f.Doc.CurReadOnly.Select(Some),
+					f => f.Doc.WhenValueChanged.Select(_ => Some(f.Doc.V)),
 					() => Obs.Return(Option<TDoc>.None)
 				))
 				.Switch();

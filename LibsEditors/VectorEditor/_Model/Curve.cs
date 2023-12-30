@@ -40,6 +40,8 @@ static class CurveFuns
 
 	public static bool Create_ValidFun(Curve curve) => curve.Pts.Length > 1;
 
+	public static Doc Edit_RemoveFun(Doc doc, Curve curve) => doc.DeleteObjects([curve.Id]);
+
 	private static Layer SetCurve(Layer layer, Curve curve) => layer with { Objects = layer.Objects.AddSet(curve) };
 
 	private static T[] AddSet<T>(this T[] xs, T x) where T : IId

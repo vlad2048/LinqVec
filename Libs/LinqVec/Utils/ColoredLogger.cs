@@ -1,7 +1,4 @@
-﻿using System.Reactive.Disposables;
-using System.Runtime.CompilerServices;
-using LinqVec.Utils.WinForms_;
-using ReactiveVars;
+﻿using ReactiveVars;
 
 namespace LinqVec.Utils;
 

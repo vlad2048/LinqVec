@@ -163,27 +163,6 @@ file static class VecEditorUtils
 				);
 				serDisp.DisposableFun = () => tool.Run(env, toolActions);
 			}).D(d);
-
-
-
-		/*var serDisp = new SerDisp().D(d);
-
-		curTool
-			.Subscribe(tool =>
-			{
-				var toolD = serDisp.GetNewD();
-
-				var resetDisp = new SerDisp().D(toolD);
-				void Reset()
-				{
-					var resetD = resetDisp.GetNewD();
-					var toolActions = new ToolActions(
-						Reset
-					);
-					tool.Run(env, toolActions).D(resetD);
-				}
-				Reset();
-			}).D(d);*/
 	}
 
 

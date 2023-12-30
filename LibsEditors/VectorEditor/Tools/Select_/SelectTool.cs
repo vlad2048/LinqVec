@@ -38,7 +38,7 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 
 		var curSel = Var.Make<Guid[]>([], d);
 
-		ToolStateFun ModeNeutral(Unit _) => _ =>
+		ToolStateFun ModeNeutral() => _ =>
 			new ToolState(
 				States.Neutral,
 				CBase.Cursors.BlackArrow,
@@ -59,7 +59,6 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 									? new[] {
 										Cmd.Drag(
 											Cmds.MoveSelection,
-											//doc.DragMod(DocMods.MoveSelection(evt.MousePos, curSel.V, d))
 											doc.ModSetDrag(Cmds.MoveSelection, (ptStart, ptEnd, docV) => docV.MoveSelection(curSel.V, ptEnd - ptStart))
 										)
 									}
@@ -85,7 +84,7 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 			);
 
 		
-		ModeNeutral(Unit.Default)
+		ModeNeutral()
 			.Run(evt, Env.Invalidate, d);
 
 		

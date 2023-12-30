@@ -14,7 +14,7 @@ public static class Cmd
 
 	public static readonly Func<IRoVar<Option<Pt>>, IDisposable> EmptyHoverAction = _ => Disposable.Empty;
 
-	public static ClickHotspotCmd Click(
+	public static ClickHotspotCmd ClickRet(
 		string name,
 		ClickGesture gesture,
 		Func<Option<ToolStateFun>> clickAction

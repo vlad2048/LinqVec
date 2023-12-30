@@ -44,4 +44,9 @@ static class Hotspots
 		$"{nameof(Object)}<{typeof(T).Name}>",
 		p => doc.GetObjectAt(p).OfType<IObj, T>().Map(e => e.Id)
 	);
+
+	public static Hotspot<Unit> Object(Doc doc, Guid objId) => new(
+		nameof(Object),
+		p => doc.GetObjectAt(p).FirstOrOption(e => e.Id == objId).Map(_ => Unit.Default)
+	);
 }

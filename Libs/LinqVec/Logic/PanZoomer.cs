@@ -17,7 +17,7 @@ static class PanZoomer
 		Disp d
 	)
 	{
-		var isOn = evt.IsKeyDown(C.KeyMap.PanZoom, d);
+		var isOn = evt.IsKeyDown(C.KeyMap.PanZoom);
 
 		isOn.Subscribe(e => ctrl.Cursor = e ? CBase.Cursors.HandOpened : Cursors.Default).D(d);
 

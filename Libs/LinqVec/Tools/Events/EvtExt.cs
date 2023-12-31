@@ -118,14 +118,14 @@ public static class EvtExt
 
 	// Is Key Down
 	// ===========
-	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key, Disp d) =>
+	public static IRoVar<bool> IsKeyDown(this IObservable<IEvt> src, Keys key) =>
 		Obs.Merge(
 				src.WhenKeyDown(key).Select(_ => true),
 				src.WhenKeyUp(key).Select(_ => false)
 			)
 			.Prepend(false)
 			.DistinctUntilChanged()
-			.ToVar(d);
+			.ToVar();
 
 	// Key Repeat
 	// ==========

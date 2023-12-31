@@ -3,6 +3,7 @@ using LinqVec.Tools.Cmds;
 using VectorEditor._Model;
 using VectorEditor._Model.Interfaces;
 using VectorEditor._Model.Structs;
+using VectorEditor._Model.Structs.Enums;
 
 namespace VectorEditor.Tools;
 
@@ -33,6 +34,15 @@ static class Hotspots
 			true => curve.GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
 		}
 	);
+
+	public static Hotspot<StartOrEnd> CurveExtremity(Doc doc, Guid curveId) => new(
+		nameof(CurveExtremity),
+		p =>
+			from curve in doc.GetObject<Curve>(curveId)
+			from extremity in curve.GetExtremityAt(p, C.ActivateMoveMouseDistance)
+			select extremity
+	);
+
 
 
 	public static Hotspot<Guid> Object(Doc doc) => new(

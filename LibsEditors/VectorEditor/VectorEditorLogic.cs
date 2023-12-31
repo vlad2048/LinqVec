@@ -9,6 +9,7 @@ using PowBasics.CollectionsExt;
 using PowBasics.Json_;
 using PtrLib;
 using ReactiveVars;
+using Geom;
 using UILib.Utils;
 using VectorEditor._Model;
 using VectorEditor.Tools.Curve_;
@@ -17,24 +18,11 @@ using VectorEditor.Tools.Select_;
 
 namespace VectorEditor;
 
-
-public sealed record EditorState(
-	Arr<Guid> Selection
-)
-{
-	public static readonly EditorState Empty = new([]);
-}
-
-
-
 public sealed class VectorEditorLogicMaker : EditorLogicMaker
 {
 	public override EditorLogicCaps Caps => EditorLogicCaps.SupportLayoutPane;
-
 	public override VectorEditorLogic Make(Option<string> filename, ToolEnv env, Disp d) => new(filename, env, d);
-
 	private VectorEditorLogicMaker() {}
-
 	public static readonly VectorEditorLogicMaker Instance = new();
 }
 
@@ -64,12 +52,14 @@ public sealed class VectorEditorLogic : EditorLogic
 		var ctx = new Ctx(Doc, state, env);
 		Tools = [
 			new SelectTool(ctx),
-			new CurveTool(ctx),
 			new CurveEditTool(ctx),
+			new CurveTool(ctx),
 		];
 
 
 		state.Subscribe(_ => env.Invalidate()).D(d);
+
+		G.Cfg.RunWhen(e => e.Log.EditorState, d, () => state.LogD("State"));
 
 
 		env.WhenPaint
@@ -85,8 +75,15 @@ public sealed class VectorEditorLogic : EditorLogic
 							break;
 					}
 				}
+
+				var bboxOpt =
+					Doc.VModded.GetObjects(state.V.Selection)
+						.Select(e => e.BoundingBox)
+						.Union();
+				Painter.PaintSelectRectangle(gfx, bboxOpt);
 			}).D(d);
 	}
+
 
 	public override void Save(string filename) => VecJsoner.Vec.Save(filename, Doc.V);
 
@@ -104,38 +101,6 @@ public sealed class VectorEditorLogic : EditorLogic
 				tree.ExpandAll();
 			}).D(d);
 	}
-
-
-	/*
-	public override Doc LoadOrCreate(Option<string> file) => file.Match(
-		VecJsoner.Vec.Load<Doc>,
-		Doc.Empty
-	);
-	public override void Save(string file, Doc doc) => VecJsoner.Vec.Save(file, doc);
-
-
-	public override void Init(
-		ToolEnv<Doc, EditorState> env,
-		Disp d
-	)
-	{
-		env.WhenPaint
-			.Subscribe(gfx =>
-			{
-				var m = env.Doc.VModded;
-				foreach (var layer in m.Layers)
-				foreach (var obj in layer.Objects)
-				{
-					switch (obj)
-					{
-						case Curve curve:
-							Painter.PaintCurve(gfx, curve, CurveGfxState.None);
-							break;
-					}
-				}
-			}).D(d);
-	}
-	*/
 }
 
 

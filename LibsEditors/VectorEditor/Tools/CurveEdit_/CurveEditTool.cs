@@ -11,7 +11,7 @@ sealed class CurveEditTool(Ctx ctx) : ITool
 	public ToolNfo Nfo { get; } = new(
 		"E",
 		Resource.toolicon_CurveEdit,
-		Keys.E
+		Keys.F2
 	);
 
 	private static class States

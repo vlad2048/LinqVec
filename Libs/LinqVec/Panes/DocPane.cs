@@ -32,5 +32,9 @@ public partial class DocPane : DockContent
 		});
 	}
 
-	public void Save(string filename) => Logic.Save(filename);
+	public void Save(string filename)
+	{
+		Logic.Save(filename);
+		Filename.V = filename;
+	}
 }

@@ -7,6 +7,7 @@ using PtrLib;
 using ReactiveVars;
 using VectorEditor._Model.Interfaces;
 using VectorEditor._Model.Structs;
+using VectorEditor._Model.Structs.Enums;
 
 namespace VectorEditor._Model;
 
@@ -72,7 +73,7 @@ static class CurveMods
 			Pts = curve.Pts.AddArr(CurvePt.Make(ptStart, ptEnd))
 		};
 
-	public static Mod<Curve> AddPoint_Hover(IRoVar<Option<Pt>> mouse, Disp d) =>
+	public static Mod<Curve> AddPoint_Hover(IRoVar<Option<Pt>> mouse) =>
 		new(
 			nameof(AddPoint_Hover),
 			false,
@@ -83,7 +84,7 @@ static class CurveMods
 					{
 						Pts = curve.Pts.AddArr(CurvePt.Make(m, m))
 					}))
-				.ToVar(d)
+				.ToVar()
 		);
 
 
@@ -175,4 +176,13 @@ static class CurveUtils
 			.Skip(1)
 			.SkipLast(1)
 			.ToArray();
+
+
+	public static Option<StartOrEnd> GetExtremityAt(this Curve curve, Pt p, double threshold) =>
+		from pointId in curve.GetClosestPointTo(p, threshold)
+		where pointId.Idx == 0 || pointId.Idx == curve.Pts.Length - 1
+		select pointId.Idx switch {
+			0 => StartOrEnd.Start,
+			_ => StartOrEnd.End
+		};
 }

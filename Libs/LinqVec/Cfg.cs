@@ -8,6 +8,7 @@ public record struct CfgLogCmd(
 public record struct CfgLog(
 	bool UndoRedo,
 	bool CurTool,
+	bool EditorState,
 	CfgLogCmd LogCmd
 );
 

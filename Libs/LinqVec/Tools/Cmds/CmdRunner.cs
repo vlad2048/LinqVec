@@ -1,11 +1,9 @@
 ﻿using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Geom;
 using LinqVec.Tools.Cmds.Logic;
 using LinqVec.Tools.Events;
-using LinqVec.Utils;
 using LinqVec.Utils.Rx;
 using ReactiveVars;
 
@@ -88,7 +86,7 @@ public static class CmdRunner
 			.Delay(TimeSpan.Zero, Rx.Sched)
 			.Subscribe(_ => curStateFun.V = initStateFun).D(d);
 		var curStateSerDisp = new SerDisp().D(d);
-		var curState = curStateFun.Select(maker => maker(curStateSerDisp.GetNewD())).ToVar(d);
+		var curState = curStateFun.Select(maker => maker(curStateSerDisp.GetNewD())).ToVar();
 		void Set(ToolStateFun maker) => curStateFun.V = maker;
 		void Reset() => curStateFun.V = curStateFun.V;
 

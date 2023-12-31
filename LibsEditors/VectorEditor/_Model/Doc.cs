@@ -34,7 +34,7 @@ public sealed record Doc(
 // ********
 static class DocMods
 {
-	public static Doc MoveSelection(this Doc doc, Guid[] selObjIds, Pt delta) =>
+	public static Doc MoveSelection(this Doc doc, Arr<Guid> selObjIds, Pt delta) =>
 		selObjIds.Aggregate(
 			doc,
 			(acc, id) => MoveSelection(acc, id, delta)
@@ -78,14 +78,17 @@ static class DocMods
 // *********
 static class DocUtils
 {
-	public static IObj[] GetObjects(this Doc doc, Guid[] objIds) => (
+	public static Option<T> GetObject<T>(this Doc doc, Guid objId) where T : IObj =>
+		doc.GetObjects(new[] { objId }).FirstOrOption().OfType<IObj, T>();
+
+	public static IObj[] GetObjects(this Doc doc, Arr<Guid> objIds) => (
 		from layer in doc.Layers
 		from obj in layer.Objects
 		where objIds.Contains(obj.Id)
 		select obj
 	).ToArray();
 
-	public static Doc DeleteObjects(this Doc doc, Guid[] objIds) =>
+	public static Doc DeleteObjects(this Doc doc, Arr<Guid> objIds) =>
 		doc with
 		{
 			Layers = doc.Layers.SelectToArray(

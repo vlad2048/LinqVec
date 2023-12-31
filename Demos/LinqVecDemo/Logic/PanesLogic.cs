@@ -72,8 +72,8 @@ static class PanesLogic
 	}
 	private static DockContent MakeToolsPane(Ctx ctx)
 	{
-		var toolSet = ctx.Doc.GetToolSet(ctx.D);
-		var (curTool, setCurTool) = ctx.Doc.GetCurTool(ctx.D);
+		var toolSet = ctx.Doc.GetToolSet();
+		var (curTool, setCurTool) = ctx.Doc.GetCurTool();
 		var pane = new ToolsPane(toolSet, curTool, setCurTool);
 		return pane;
 	}
@@ -90,15 +90,15 @@ static class PanesLogic
 
 file static class DocExt
 {
-	public static IRoVar<ITool[]> GetToolSet(this IRoVar<Option<DocPane>> doc, Disp d) =>
+	public static IRoVar<ITool[]> GetToolSet(this IRoVar<Option<DocPane>> doc) =>
 		doc
 			.Select(e => e.Match(
 				f => f.Logic.Tools,
 				() => [EmptyTool.Instance]
 			))
-			.ToVar(d);
+			.ToVar();
 
-	public static (IRoVar<ITool>, Action<ITool>) GetCurTool(this IRoVar<Option<DocPane>> doc, Disp d)
+	public static (IRoVar<ITool>, Action<ITool>) GetCurTool(this IRoVar<Option<DocPane>> doc)
 	{
 		var curTool =
 			doc
@@ -107,7 +107,7 @@ file static class DocExt
 					() => Obs.Return(EmptyTool.Instance)
 				))
 				.Switch()
-				.ToVar(d);
+				.ToVar();
 
 		void setCurTool(ITool v) => doc.V.IfSome(e => e.Env.CurTool.V = v);
 

@@ -11,12 +11,12 @@ namespace VectorEditor.Tools.Select_;
 
 
 
-sealed class SelectTool(Ctx ctx) : ITool
+sealed class SelectTool(Ctx c) : ITool
 {
 	public ToolNfo Nfo { get; } = new(
 		"S",
 		Resource.toolicon_Select,
-		Keys.Q
+		Keys.F1
 	);
 
 	private static class States
@@ -34,33 +34,31 @@ sealed class SelectTool(Ctx ctx) : ITool
 
 	public void Run(Disp d)
 	{
-		var doc = ctx.Doc;
-		var evt = ctx.Env.GetEvtForTool(this, true, d);
+		var evt = c.Env.GetEvtForTool(this, true, d);
 
-		var curSel = Var.Make<Guid[]>([], d);
 
 		ToolStateFun ModeNeutral() => _ =>
 			new ToolState(
 				States.Neutral,
 				CBase.Cursors.BlackArrow,
 				[
-					Hotspots.Object(doc.V)
+					Hotspots.Object(c.Doc.V)
 						.Do(objId => [
 								Cmd.Click(
 									Cmds.Select,
 									ClickGesture.Click,
-									() => curSel.V = [objId]
+									() => c.State.Select([objId])
 								),
 								Cmd.Click(
 									Cmds.ShiftSelect,
 									ClickGesture.ShiftClick,
-									() => curSel.V = curSel.V.ToggleArr(objId)
+									() => c.State.SelectF(e => e.Toggle(objId))
 								),
-								.. curSel.V.Contains(objId)
+								.. c.State.V.Selection.Contains(objId)
 									? new[] {
 										Cmd.Drag(
 											Cmds.MoveSelection,
-											doc.ModSetDrag(Cmds.MoveSelection, (ptStart, ptEnd, docV) => docV.MoveSelection(curSel.V, ptEnd - ptStart))
+											c.Doc.ModSetDrag(Cmds.MoveSelection, (ptStart, ptEnd, docV) => docV.MoveSelection(c.State.V.Selection, ptEnd - ptStart))
 										)
 									}
 									: [],
@@ -70,8 +68,8 @@ sealed class SelectTool(Ctx ctx) : ITool
 						.Do(_ => [
 							Cmd.Click(
 								Cmds.UnselectAll,
-								ClickGesture.Click,
-								() => curSel.V = []
+							ClickGesture.Click,
+								() => c.State.Select([])
 							),
 						]),
 				],
@@ -79,23 +77,13 @@ sealed class SelectTool(Ctx ctx) : ITool
 					Kbd.Make(
 						Cmds.Delete,
 						Keys.Delete,
-						() => doc.V = doc.V.DeleteObjects(curSel.V)
+						() => c.Doc.V = c.Doc.V.DeleteObjects(c.State.V.Selection)
 					)
 				]
 			);
 
 		
 		ModeNeutral()
-			.Run(evt, ctx.Env.Invalidate, d);
-
-
-		ctx.Env.WhenPaint.Subscribe(gfx =>
-		{
-			var bboxOpt =
-				ctx.Doc.VModded.GetObjects(curSel.V)
-					.Select(e => e.BoundingBox)
-					.Union();
-			Painter.PaintSelectRectangle(gfx, bboxOpt);
-		}).D(d);
+			.Run(evt, c.Env.Invalidate, d);
 	}
 }

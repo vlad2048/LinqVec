@@ -42,7 +42,7 @@ static class HotspotTracker
 								.Delay(TimeSpan.Zero, scheduler) // without this delay, the Hotspot can change before the user release the mouse button
 						)
 						.Prepend(false)
-						.ToVar(d);
+						.ToVar(d);	// !!! we never subscribe to it other than accessing .V (instant subscribe/unsubscribe) so it'll lose its state all the time because of the RefCount()
 
 
 				evt
@@ -76,7 +76,7 @@ static class HotspotTracker
 				return obsD;
 			})
 			.DistinctUntilChanged(e => (e.Hotspot.Name, e.HotspotValue, e.RepeatFlag))
-			.ToVar(d);
+			.ToVar();
 
 
 	private static Option<IHotEvt> ToHotEvt(this IEvt evt) =>

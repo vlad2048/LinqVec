@@ -32,16 +32,16 @@ public sealed partial class ToolsPane : DockContent
 				this.Events().MouseMove
 					.Select(e => new Pt(e.X, e.Y))
 					.Prepend(new Pt(-1, -1))
-					.ToVar(d);
+					.ToVar();
 			var isDown =
 				Obs.Merge(
 						this.Events().MouseDown.Select(_ => true),
 						this.Events().MouseUp.Select(_ => false)
 					)
 					.Prepend(false)
-					.ToVar(d);
+					.ToVar();
 
-			var tools = toolSet.Select(e => e.Select((f, idx) => new ToolGfx(f, PaintUtils.GetR(idx))).ToArr()).ToVar(d);
+			var tools = toolSet.Select(e => e.Select((f, idx) => new ToolGfx(f, PaintUtils.GetR(idx))).ToArr()).ToVar();
 
 			var hoveredTool =
 				Obs.CombineLatest(
@@ -52,7 +52,7 @@ public sealed partial class ToolsPane : DockContent
 					.Select(t => t.tools_.FirstOrOption(e => e.R.Contains(t.mousePos_)))
 					.Prepend(None)
 					.DistinctUntilChanged()
-					.ToVar(d);
+					.ToVar();
 
 			hoveredTool.Subscribe(e => e.Match(
 				t =>
@@ -94,7 +94,7 @@ public sealed partial class ToolsPane : DockContent
 					)
 					.Prepend(new HashMap<ToolGfx, ToolIconState>())
 					.DistinctUntilChanged()
-					.ToVar(d);
+					.ToVar();
 
 			stateMap.Subscribe(_ => Invalidate()).D(d);
 

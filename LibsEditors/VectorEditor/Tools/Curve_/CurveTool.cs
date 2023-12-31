@@ -2,20 +2,20 @@
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Events;
-using LinqVec.Utils;
 using LinqVec.Utils.Rx;
+using PtrLib;
 using ReactiveVars;
 using VectorEditor._Model;
 
 namespace VectorEditor.Tools.Curve_;
 
 
-sealed class CurveTool(Ctx ctx) : ITool
+sealed class CurveTool(Ctx c) : ITool
 {
 	public ToolNfo Nfo { get; } = new(
 		"C",
 		Resource.toolicon_CurveCreate,
-		Keys.P
+		Keys.F3
 	);
 
 	private static class States
@@ -26,18 +26,31 @@ sealed class CurveTool(Ctx ctx) : ITool
 	{
 		public const string MovePoint = nameof(MovePoint);
 		public const string AddPoint = nameof(AddPoint);
+		public const string ContinueCurve = nameof(ContinueCurve);
+	}
+
+	private static bool DoesSelectionContainExactlyOneCurve(IRoVar<EditorState> state, IPtr<Doc> doc, out Guid curveId)
+	{
+		curveId = Guid.Empty;
+		var sel = state.V.Selection;
+		if (sel.Length != 1) return false;
+		if (doc.V.GetObject<Curve>(sel[0]).IsSome)
+		{
+			curveId = sel[0];
+			return true;
+		}
+		return false;
 	}
 
 	public void Run(Disp d)
 	{
-		var doc = ctx.Doc;
-		var evt = ctx.Env.GetEvtForTool(this, true, d);
+		var evt = c.Env.GetEvtForTool(this, true, d);
 
-		var curve = doc.Create(Curve.Empty(), CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun, d);
+		var curve = c.Doc.Create(Curve.Empty(), CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun, d);
 
 		var gizmo = CurveGfxState.AddPoint;
 		Action<Func<CurveGfxState, CurveGfxState>> gizmoApply = f => gizmo = f(gizmo);
-		gizmoApply = gizmoApply.Log("CurveTool");
+		//gizmoApply = gizmoApply.Log("CurveTool");
 
 
 		evt.WhenKeyDown(Keys.Enter)
@@ -45,7 +58,7 @@ sealed class CurveTool(Ctx ctx) : ITool
 			.Subscribe(_ =>
 			{
 				curve.Commit();
-				ctx.Env.ToolReset();
+				c.Env.ToolReset();
 			}).D(d);
 
 		ToolStateFun ModeNeutral() => _ => new ToolState(
@@ -64,6 +77,18 @@ sealed class CurveTool(Ctx ctx) : ITool
 								.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
 						)
 					]),
+
+				/*.. DoesSelectionContainExactlyOneCurve(c.State, c.Doc, out var curveId)
+				? new[] {
+					Cmd.Drag(
+						Cmds.ContinueCurve,
+
+					)
+				}
+				: [],*/
+
+
+
 				Hotspots.Anywhere
 					.OnHover(
 						curve.ModSetHover("Curve_AddPoint_Hover", (pt, curveV) => curveV.AddPoint(pt, pt))
@@ -81,11 +106,11 @@ sealed class CurveTool(Ctx ctx) : ITool
 
 
 		ModeNeutral()
-			.Run(evt, ctx.Env.Invalidate, d);
+			.Run(evt, c.Env.Invalidate, d);
 
 
 
-		ctx.Env.WhenPaint.Subscribe(gfx =>
+		c.Env.WhenPaint.Subscribe(gfx =>
 		{
 			Painter.PaintCurve(gfx, curve.VModded, gizmo);
 		}).D(d);

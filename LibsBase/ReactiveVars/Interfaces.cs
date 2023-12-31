@@ -13,7 +13,7 @@ public interface IRwVar<T> : IRoVar<T>
 	// if V itself is disposed
 	//   -> it will try to access the V getter
 	//   -> which in turns calls Subj.Value		(BehaviorSubject<T>)
-	void SetSafe(T v);
+	//void SetSafe(T v);
 }
 
 /*								IObservable		WhenOuter	WhenInner

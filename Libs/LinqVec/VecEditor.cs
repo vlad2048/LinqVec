@@ -9,18 +9,17 @@ using LinqVec.Tools;
 using LinqVec.Tools.Events;
 using UILib;
 using LinqVec.Tools.Events.Utils;
-using LinqVec.Utils.Rx;
 using ReactiveVars;
 using PtrLib;
 
 namespace LinqVec;
 
 
-public partial class VecEditor<TDoc> : UserControl
+public partial class VecEditor<TDoc, TState> : UserControl
 {
-	public ToolEnv<TDoc> Env { get; }
+	public ToolEnv<TDoc, TState> Env { get; }
 
-	public VecEditor(IPtr<TDoc> doc, ITool<TDoc>[] tools)
+	public VecEditor(TDoc docInit, EditorLogic<TDoc, TState> editorLogic)
 	{
 		var ctrlD = this.GetD();
 		var transform = Var.Make(Transform.Id, ctrlD);
@@ -28,12 +27,13 @@ public partial class VecEditor<TDoc> : UserControl
 		InitializeComponent(transform);
 
 		var ctrl = new Ctrl(drawPanel);
-		var (curTool, setCurTool, editorEvt) = VecEditorUtils.TrackUserEventsAndCurTool(drawPanel, tools, ctrlD);
+		var (curTool, setCurTool, editorEvt) = VecEditorUtils.TrackUserEventsAndCurTool(drawPanel, editorLogic.Tools, ctrlD);
 
 		var isPanZoom = PanZoomer.Setup(editorEvt, ctrl, transform, ctrlD);
 
-		Env = new ToolEnv<TDoc>(
-			doc,
+		Env = new ToolEnv<TDoc, TState>(
+			editorLogic,
+			docInit,
 			curTool,
 			setCurTool,
 			drawPanel,
@@ -52,7 +52,7 @@ public partial class VecEditor<TDoc> : UserControl
 				return;
 			}
 
-			doc.WhenUndoRedo.Subscribe(_ => Env.TriggerUndoRedo()).D(d);
+			Env.Doc.WhenUndoRedo.Subscribe(_ => Env.TriggerUndoRedo()).D(d);
 
 			/*editorEvt.WhenKeyDown(Keys.D1).ObserveOnUI().Subscribe(_ => LT.Log("KeyDown")).D(d);
 			editorEvt.WhenKeyUp(Keys.D1).ObserveOnUI().Subscribe(_ => LT.Log("KeyUp")).D(d);
@@ -62,11 +62,11 @@ public partial class VecEditor<TDoc> : UserControl
 			editorEvt.WhenMouseWheel().ObserveOnUI().Subscribe(_ => LT.Log("MouseWheel")).D(d);*/
 
 
-			VecEditorUtils.RunTools(curTool, Env, d);
+			VecEditorUtils.RunTools<TDoc, TState>(curTool, Env, d);
 
 			var isMouseDown = editorEvt.IsMouseDown();
-			editorEvt.WhenKeyDown(Keys.Z, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Undo()).D(d);
-			editorEvt.WhenKeyDown(Keys.Y, true).Where(_ => !isMouseDown.V).Subscribe(_ => doc.Redo()).D(d);
+			editorEvt.WhenKeyDown(Keys.Z, true).Where(_ => !isMouseDown.V).Subscribe(_ => Env.Doc.Undo()).D(d);
+			editorEvt.WhenKeyDown(Keys.Y, true).Where(_ => !isMouseDown.V).Subscribe(_ => Env.Doc.Redo()).D(d);
 
 			statusStrip.AddLabel("panzoom", isPanZoom).D(d);
 			statusStrip.AddLabel("zoom", transform.Select(e => $"{C.ZoomLevels[e.ZoomIndex]:P}")).D(d);
@@ -74,7 +74,7 @@ public partial class VecEditor<TDoc> : UserControl
 			statusStrip.AddLabel("tool", curTool.Select(GetToolName)).D(d);
 
 			Obs.Merge(
-					doc.WhenPaintNeeded,
+					Env.Doc.WhenPaintNeeded,
 					transform.ToUnit()
 				)
 				.Subscribe(_ => drawPanel.Invalidate()).D(d);
@@ -83,7 +83,7 @@ public partial class VecEditor<TDoc> : UserControl
 		});
 	}
 
-	private static string GetToolName(ITool<TDoc> tool) => tool.GetType().Name[..^4];
+	private static string GetToolName(ITool<TDoc, TState> tool) => tool.GetType().Name[..^4];
 }
 
 
@@ -92,16 +92,16 @@ public partial class VecEditor<TDoc> : UserControl
 file static class VecEditorUtils
 {
 	public static (
-		IRoVar<ITool<TDoc>>,
-		Action<ITool<TDoc>>,
+		IRoVar<ITool<TDoc, TState>>,
+		Action<ITool<TDoc, TState>>,
 		IObservable<IEvt>
-	) TrackUserEventsAndCurTool<TDoc>(
+	) TrackUserEventsAndCurTool<TDoc, TState>(
 		DrawPanel drawPanel,
-		ITool<TDoc>[] tools,
+		ITool<TDoc, TState>[] tools,
 		Disp d
 	)
 	{
-		var (setCurTool, whenSetCurTool) = RxEventMaker.Make<ITool<TDoc>>(d);
+		var (setCurTool, whenSetCurTool) = RxEventMaker.Make<ITool<TDoc, TState>>(d);
 		var (repeatLastMouseMove, whenRepeatLastMouseMove) = RxEventMaker.Make(d);
 		var editorEvt = EvtMaker.MakeForControl(drawPanel, whenRepeatLastMouseMove);
 		var curTool = TrackCurTool(editorEvt, tools, whenSetCurTool, d);
@@ -114,10 +114,10 @@ file static class VecEditorUtils
 	}
 
 
-	private static IRoVar<ITool<TDoc>> TrackCurTool<TDoc>(
+	private static IRoVar<ITool<TDoc, TState>> TrackCurTool<TDoc, TState>(
 		IObservable<IEvt> whenEvt,
-		ITool<TDoc>[] tools,
-		IObservable<ITool<TDoc>> whenSetCurTool,
+		ITool<TDoc, TState>[] tools,
+		IObservable<ITool<TDoc, TState>> whenSetCurTool,
 		Disp d
 	) =>
 		Obs.Merge(
@@ -128,7 +128,7 @@ file static class VecEditorUtils
 					.Merge(),
 				whenSetCurTool
 			)
-			.Prepend(EmptyTool<TDoc>.Instance)
+			.Prepend(EmptyTool<TDoc, TState>.Instance)
 			.ToVar(d);
 
 
@@ -144,9 +144,9 @@ file static class VecEditorUtils
 		}).D(d);
 	}
 
-	public static void RunTools<TDoc>(
-		IRoVar<ITool<TDoc>> curTool,
-		ToolEnv<TDoc> env,
+	public static void RunTools<TDoc, TState>(
+		IRoVar<ITool<TDoc, TState>> curTool,
+		ToolEnv<TDoc, TState> env,
 		Disp d
 	)
 	{
@@ -166,7 +166,7 @@ file static class VecEditorUtils
 	}
 
 
-	public static IDisposable Log<TDoc>(this IRoVar<ITool<TDoc>> curTool) =>
+	public static IDisposable Log<TDoc, TState>(this IRoVar<ITool<TDoc, TState>> curTool) =>
 		curTool
 			.Select(e => $"Tool <- {e.GetType().Name.RemoveSuffixIFP("Tool")}")
 			.Subscribe(e => LC.WriteLine(e, 0xfd5c5b));

@@ -10,22 +10,23 @@ using ReactiveVars;
 
 namespace LinqVec.Tools;
 
-public sealed class ToolEnv<TDoc> : IDisposable
+public sealed class ToolEnv<TDoc, TState> : IDisposable
 {
 	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
 	private readonly DrawPanel drawPanel;
 	private readonly IRoVar<bool> isPanZoom;
-	private readonly Action<ITool<TDoc>> setCurTool;
+	private readonly Action<ITool<TDoc, TState>> setCurTool;
 	private readonly IObservable<IEvt> editorEvt;
 	private readonly ISubject<Unit> whenUndoRedo;
 	private IObservable<Unit> WhenUndoRedo => whenUndoRedo.AsObservable();
 
 	public ToolEnv(
-		IPtr<TDoc> doc,
-		IRoVar<ITool<TDoc>> curTool,
-		Action<ITool<TDoc>> setCurTool,
+		EditorLogic<TDoc, TState> editorLogic,
+		TDoc docInit,
+		IRoVar<ITool<TDoc, TState>> curTool,
+		Action<ITool<TDoc, TState>> setCurTool,
 		DrawPanel drawPanel,
 		ICurs curs,
 		IRoVar<bool> isPanZoom,
@@ -37,7 +38,7 @@ public sealed class ToolEnv<TDoc> : IDisposable
 		this.isPanZoom = isPanZoom;
 		this.editorEvt = editorEvt;
 		this.setCurTool = setCurTool;
-		Doc = doc;
+		Doc = Ptr.Make(docInit, d);
 		CurTool = curTool;
 		Curs = curs;
 		Transform = transform;
@@ -49,15 +50,15 @@ public sealed class ToolEnv<TDoc> : IDisposable
 	internal void TriggerUndoRedo() => whenUndoRedo.OnNext(Unit.Default);
 
 	public IPtr<TDoc> Doc { get; }
-	public IRoVar<ITool<TDoc>> CurTool { get; }
-	public void SetCurTool(ITool<TDoc> tool) => setCurTool(tool);
+	public IRoVar<ITool<TDoc, TState>> CurTool { get; }
+	public void SetCurTool(ITool<TDoc, TState> tool) => setCurTool(tool);
 	public ICurs Curs { get; }
     public IRoVar<Transform> Transform { get; }
     public IObservable<Gfx> WhenPaint { get; }
     public void Invalidate() => drawPanel.Invalidate();
 
     public IObservable<IEvt> EditorEvt => editorEvt;
-    public Evt GetEvtForTool(ITool<TDoc> tool, bool snap, Disp toolD) =>
+    public Evt GetEvtForTool(ITool<TDoc, TState> tool, bool snap, Disp toolD) =>
 	    snap switch
 	    {
             false => editorEvt

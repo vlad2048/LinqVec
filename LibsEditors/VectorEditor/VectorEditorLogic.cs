@@ -15,11 +15,19 @@ using VectorEditor.Tools.Select_;
 namespace VectorEditor;
 
 
-public sealed class VectorEditorLogic : EditorLogic<Doc>
+public sealed record EditorState(
+	Arr<Guid> Selection
+)
+{
+	public static readonly EditorState Empty = new([]);
+}
+
+
+public sealed class VectorEditorLogic : EditorLogic<Doc, EditorState>
 {
 	public override EditorLogicCaps Caps => EditorLogicCaps.SupportLayoutPane;
 
-	public override ITool<Doc>[] Tools { get; } = [
+	public override ITool<Doc, EditorState>[] Tools { get; } = [
 		new SelectTool(Keys.Q),
 		new CurveTool(Keys.P),
 		new CurveEditTool(Keys.E),
@@ -29,9 +37,11 @@ public sealed class VectorEditorLogic : EditorLogic<Doc>
 		VecJsoner.Vec.Load<Doc>,
 		Doc.Empty
 	);
+	public override void Save(string file, Doc doc) => VecJsoner.Vec.Save(file, doc);
+
 
 	public override void Init(
-		ToolEnv<Doc> env,
+		ToolEnv<Doc, EditorState> env,
 		Disp d
 	)
 	{

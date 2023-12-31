@@ -5,15 +5,15 @@ using Point = System.Drawing.Point;
 
 namespace LinqVec.Panes.ToolsPaneLogic_;
 
-sealed record IconMap<TDoc>(
-	IReadOnlyDictionary<(ITool<TDoc>, ToolIconState), Bitmap> State2Icon,
-	IReadOnlyDictionary<ITool<TDoc>, R> Tool2IconR
+sealed record IconMap<TDoc, TState>(
+	IReadOnlyDictionary<(ITool<TDoc, TState>, ToolIconState), Bitmap> State2Icon,
+	IReadOnlyDictionary<ITool<TDoc, TState>, R> Tool2IconR
 );
 
 
 static class IconMapLoader
 {
-	public static IconMap<TDoc> Load<TDoc>(ITool<TDoc>[] tools) =>
+	public static IconMap<TDoc, TState> Load<TDoc, TState>(ITool<TDoc, TState>[] tools) =>
 		new(
 			(
 				from tool in tools

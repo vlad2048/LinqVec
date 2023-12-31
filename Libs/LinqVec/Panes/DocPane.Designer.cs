@@ -4,7 +4,7 @@ using PtrLib;
 
 namespace LinqVec.Panes
 {
-	partial class DocPane<TDoc> where TDoc : class
+	partial class DocPane<TDoc, TState> where TDoc : class
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -30,9 +30,9 @@ namespace LinqVec.Panes
 		/// Required method for Designer support - do not modify
 		/// the contents of this method with the code editor.
 		/// </summary>
-		private void InitializeComponent(IPtr<TDoc> doc, ITool<TDoc>[] tools)
+		private void InitializeComponent(TDoc docInit, EditorLogic<TDoc, TState> editorLogic)
 		{
-			vecEditor = new VecEditor<TDoc>(doc, tools);
+			vecEditor = new VecEditor<TDoc, TState>(docInit, editorLogic);
 			SuspendLayout();
 			// 
 			// vecEditor
@@ -56,6 +56,6 @@ namespace LinqVec.Panes
 
 		#endregion
 
-		public VecEditor<TDoc> vecEditor;
+		public VecEditor<TDoc, TState> vecEditor;
 	}
 }

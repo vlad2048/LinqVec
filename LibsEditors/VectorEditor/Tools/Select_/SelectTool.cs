@@ -11,7 +11,7 @@ namespace VectorEditor.Tools.Select_;
 
 
 
-sealed class SelectTool(Keys shortcut) : ITool<Doc>
+sealed class SelectTool(Keys shortcut) : ITool<Doc, EditorState>
 {
 	public string Name => "S";
 	public Bitmap? Icon => Resource.toolicon_Select;
@@ -30,7 +30,7 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc>
 		public const string Delete = nameof(Delete);
 	}
 
-	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
+	public Disp Run(ToolEnv<Doc, EditorState> Env, ToolActions toolActions)
 	{
 		var d = MkD();
 		var doc = Env.Doc;

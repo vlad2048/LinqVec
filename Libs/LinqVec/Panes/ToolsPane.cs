@@ -9,12 +9,12 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace LinqVec.Panes
 {
-	public sealed partial class ToolsPane<TDoc> : DockContent
+	public sealed partial class ToolsPane<TDoc, TState> : DockContent
 	{
-		private static Lazy<IconMap<TDoc>>? iconMap;
-		private IconMap<TDoc> IconMap => (iconMap ?? throw new NullReferenceException()).Value;
+		private static Lazy<IconMap<TDoc, TState>>? iconMap;
+		private IconMap<TDoc, TState> IconMap => (iconMap ?? throw new NullReferenceException()).Value;
 
-		public ToolsPane(ITool<TDoc>[] tools, IRoVar<ITool<TDoc>> curTool, Action<ITool<TDoc>> setCurTool)
+		public ToolsPane(ITool<TDoc, TState>[] tools, IRoVar<ITool<TDoc, TState>> curTool, Action<ITool<TDoc, TState>> setCurTool)
 		{
 			iconMap ??= new(() => IconMapLoader.Load(tools));
 			DoubleBuffered = true;

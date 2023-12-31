@@ -1,6 +1,5 @@
 ﻿using System.Reactive.Linq;
 using Geom;
-using LanguageExt.Pretty;
 using LinqVec.Tools.Events.Utils;
 using ReactiveVars;
 
@@ -110,10 +109,10 @@ public static class EvtUtils
 
 
 
-	public static IObservable<IEvt> RestrictToTool<TDoc>(
+	public static IObservable<IEvt> RestrictToTool<TDoc, TState>(
 		this IObservable<IEvt> src,
-		ITool<TDoc> tool,
-		IRoVar<ITool<TDoc>> curTool,
+		ITool<TDoc, TState> tool,
+		IRoVar<ITool<TDoc, TState>> curTool,
 		IRoVar<bool> isPanZoom
 	)
 	{

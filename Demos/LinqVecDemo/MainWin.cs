@@ -1,7 +1,9 @@
-﻿using LinqVec.Utils.Rx;
+﻿using LinqVec;
+using LinqVec.Utils.Rx;
 using LinqVecDemo.Logic;
 using ReactiveVars;
 using UILib;
+using VectorEditor;
 
 namespace LinqVecDemo;
 
@@ -27,8 +29,9 @@ partial class MainWin : Form
 
 		this.InitRX(this.Events().Load.ToUnit(), (_, d) =>
 		{
-			var doc = this.InitDocLogic(d);
-			this.InitPanesLogic(doc, d);
+			var editorLogic = new VectorEditorLogic();
+			var doc = this.InitDocLogic(editorLogic, d);
+			this.InitPanesLogic(editorLogic, doc, d);
 		});
 	}
 }

@@ -6,7 +6,7 @@ using VectorEditor._Model;
 
 namespace VectorEditor.Tools.CurveEdit_;
 
-sealed class CurveEditTool(Keys shortcut) : ITool<Doc>
+sealed class CurveEditTool(Keys shortcut) : ITool<Doc, EditorState>
 {
 	public string Name => "E";
 	public Bitmap? Icon => Resource.toolicon_CurveEdit;
@@ -22,7 +22,7 @@ sealed class CurveEditTool(Keys shortcut) : ITool<Doc>
 		public const string Unselect = nameof(Unselect);
 	}
 
-	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
+	public Disp Run(ToolEnv<Doc, EditorState> Env, ToolActions toolActions)
 	{
 		var d = MkD();
 		var doc = Env.Doc;

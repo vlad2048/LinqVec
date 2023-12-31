@@ -9,16 +9,17 @@ public enum EditorLogicCaps
 	SupportLayoutPane = 1,
 }
 
-public abstract class EditorLogic<TDoc>
+public abstract class EditorLogic<TDoc, TState>
 {
 	public abstract EditorLogicCaps Caps { get; }
 
-	public abstract ITool<TDoc>[] Tools { get; }
+	public abstract ITool<TDoc, TState>[] Tools { get; }
 
 	public abstract TDoc LoadOrCreate(Option<string> file);
+	public abstract void Save(string file, TDoc doc);
 
 	public abstract void Init(
-		ToolEnv<TDoc> env,
+		ToolEnv<TDoc, TState> env,
 		Disp d
 	);
 

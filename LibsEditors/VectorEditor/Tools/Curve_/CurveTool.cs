@@ -10,7 +10,7 @@ using VectorEditor._Model;
 namespace VectorEditor.Tools.Curve_;
 
 
-sealed class CurveTool(Keys shortcut) : ITool<Doc>
+sealed class CurveTool(Keys shortcut) : ITool<Doc, EditorState>
 {
 	public string Name => "C";
 	public Bitmap? Icon => Resource.toolicon_CurveCreate;
@@ -26,7 +26,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc>
 		public const string AddPoint = nameof(AddPoint);
 	}
 
-	public Disp Run(ToolEnv<Doc> Env, ToolActions toolActions)
+	public Disp Run(ToolEnv<Doc, EditorState> Env, ToolActions toolActions)
 	{
 		var d = MkD();
 		var doc = Env.Doc;

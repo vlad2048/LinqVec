@@ -2,7 +2,6 @@
 using LinqVec;
 using LinqVec.Panes;
 using LinqVec.Tools;
-using LinqVec.Utils.Rx;
 using PowBasics.CollectionsExt;
 using ReactiveVars;
 using WeifenLuo.WinFormsUI.Docking;
@@ -11,20 +10,23 @@ namespace LinqVecDemo.Logic;
 
 static class PanesLogic
 {
-	public static void InitPanesLogic(this MainWin win, IRoVar<Option<DocPane<TDoc>>> doc, Disp d)
+	public static void InitPanesLogic(
+		this MainWin win,
+		EditorLogic<TDoc, TState> editorLogic,
+		IRoVar<Option<DocPane<TDoc, TState>>> doc,
+		Disp d
+	)
 	{
-		var editorLogic = LogicSelector.Instance;
-
 		// LayoutPane
 		// ==========
 		if (editorLogic.Caps.HasFlag(EditorLogicCaps.SupportLayoutPane))
-			HookPane<LayoutPane>(win.dockPanel, DockState.DockRight, true, win.menuViewLayout, doc, MakeLayoutPane, d);
+			HookPane<LayoutPane>(win.dockPanel, DockState.DockRight, true, win.menuViewLayout, editorLogic, doc, MakeLayoutPane, d);
 		else
 			win.menuViewLayout.Visible = false;
 
 		// ToolsPane
 		// =========
-		HookPane<ToolsPane<TDoc>>(win.dockPanel, DockState.DockLeft, true, win.menuViewTools, doc, MakeToolsPane, d);
+		HookPane<ToolsPane<TDoc, TState>>(win.dockPanel, DockState.DockLeft, true, win.menuViewTools, editorLogic, doc, MakeToolsPane, d);
 	}
 
 	private static void HookPane<T>(
@@ -32,8 +34,9 @@ static class PanesLogic
 		DockState dockState,
 		bool showOnStart,
 		ToolStripMenuItem menuItem,
-		IRoVar<Option<DocPane<TDoc>>> doc,
-		Action<DockPanel, DockState, IRoVar<Option<DocPane<TDoc>>>, Disp> makeFun,
+		EditorLogic<TDoc, TState> editorLogic,
+		IRoVar<Option<DocPane<TDoc, TState>>> doc,
+		Action<DockPanel, DockState, EditorLogic<TDoc, TState>, IRoVar<Option<DocPane<TDoc, TState>>>, Disp> makeFun,
 		Disp d
 	) where T : DockContent
 	{
@@ -44,13 +47,13 @@ static class PanesLogic
 		menuItem.Events().Click.Subscribe(_ =>
 		{
 			isDisplayed.V = IsPaneDisplayed<T>(dockPanel);
-			TogglePane<T>(dockPanel, isDisplayed, () => makeFun(dockPanel, dockState, doc, d));
+			TogglePane<T>(dockPanel, isDisplayed, () => makeFun(dockPanel, dockState, editorLogic, doc, d));
 			isDisplayed.V = IsPaneDisplayed<T>(dockPanel);
 		}).D(d);
 
 		if (showOnStart)
 		{
-			TogglePane<T>(dockPanel, isDisplayed, () => makeFun(dockPanel, dockState, doc, d));
+			TogglePane<T>(dockPanel, isDisplayed, () => makeFun(dockPanel, dockState, editorLogic, doc, d));
 			isDisplayed.V = IsPaneDisplayed<T>(dockPanel);
 		}
 	}
@@ -63,9 +66,14 @@ static class PanesLogic
 			makeFun();
 	}
 
-	private static void MakeLayoutPane(DockPanel dockPanel, DockState dockState, IRoVar<Option<DocPane<TDoc>>> doc, Disp d)
+	private static void MakeLayoutPane(
+		DockPanel dockPanel,
+		DockState dockState,
+		EditorLogic<TDoc, TState> editorLogic,
+		IRoVar<Option<DocPane<TDoc, TState>>> doc,
+		Disp d
+	)
 	{
-		var editorLogic = LogicSelector.Instance;
 		var layoutPane = new LayoutPane();
 		layoutPane.Show(dockPanel, dockState);
 
@@ -81,11 +89,16 @@ static class PanesLogic
 	}
 
 
-	private static void MakeToolsPane(DockPanel dockPanel, DockState dockState, IRoVar<Option<DocPane<TDoc>>> doc, Disp d)
+	private static void MakeToolsPane(
+		DockPanel dockPanel,
+		DockState dockState,
+		EditorLogic<TDoc, TState> editorLogic,
+		IRoVar<Option<DocPane<TDoc, TState>>> doc,
+		Disp d
+	)
 	{
-		var editorLogic = LogicSelector.Instance;
 		var (curTool, setCurTool) = doc.GetCurTool(d);
-		var toolsPane = new ToolsPane<TDoc>(editorLogic.Tools, curTool, setCurTool);
+		var toolsPane = new ToolsPane<TDoc, TState>(editorLogic.Tools, curTool, setCurTool);
 		toolsPane.Width = 64;
 		toolsPane.Show(dockPanel, dockState);
 	}
@@ -113,18 +126,18 @@ static class PanesLogic
 
 file static class DocExt
 {
-	public static (IRoVar<ITool<TDoc>>, Action<ITool<TDoc>>) GetCurTool(this IRoVar<Option<DocPane<TDoc>>> doc, Disp d)
+	public static (IRoVar<ITool<TDoc, TState>>, Action<ITool<TDoc, TState>>) GetCurTool(this IRoVar<Option<DocPane<TDoc, TState>>> doc, Disp d)
 	{
 		var curTool =
 			doc
 				.Select(e => e.Match(
 					f => f.vecEditor.Env.CurTool.AsObservable(),
-					() => Obs.Return(EmptyTool<TDoc>.Instance)
+					() => Obs.Return(EmptyTool<TDoc, TState>.Instance)
 				))
 				.Switch()
 				.ToVar(d);
 
-		void setCurTool(ITool<TDoc> v) => doc.V.IfSome(e => e.vecEditor.Env.SetCurTool(v));
+		void setCurTool(ITool<TDoc, TState> v) => doc.V.IfSome(e => e.vecEditor.Env.SetCurTool(v));
 
 		return (curTool, setCurTool);
 	}

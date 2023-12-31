@@ -6,11 +6,13 @@ using VectorEditor._Model;
 
 namespace VectorEditor.Tools.CurveEdit_;
 
-sealed class CurveEditTool(Keys shortcut) : ITool<Doc, EditorState>
+sealed class CurveEditTool(Ctx ctx) : ITool
 {
-	public string Name => "E";
-	public Bitmap? Icon => Resource.toolicon_CurveEdit;
-	public Keys Shortcut => shortcut;
+	public ToolNfo Nfo { get; } = new(
+		"E",
+		Resource.toolicon_CurveEdit,
+		Keys.E
+	);
 
 	private static class States
 	{
@@ -22,11 +24,10 @@ sealed class CurveEditTool(Keys shortcut) : ITool<Doc, EditorState>
 		public const string Unselect = nameof(Unselect);
 	}
 
-	public Disp Run(ToolEnv<Doc, EditorState> Env, ToolActions toolActions)
+	public void Run(Disp d)
 	{
-		var d = MkD();
-		var doc = Env.Doc;
-		var evt = Env.GetEvtForTool(this, true, d);
+		var doc = ctx.Doc;
+		var evt = ctx.Env.GetEvtForTool(this, true, d);
 
 		ToolStateFun ModeNeutral() => _ => new ToolState(
 			States.Neutral,
@@ -70,8 +71,6 @@ sealed class CurveEditTool(Keys shortcut) : ITool<Doc, EditorState>
 
 
 		ModeNeutral()
-			.Run(evt, Env.Invalidate, d);
-
-		return d;
+			.Run(evt, ctx.Env.Invalidate, d);
 	}
 }

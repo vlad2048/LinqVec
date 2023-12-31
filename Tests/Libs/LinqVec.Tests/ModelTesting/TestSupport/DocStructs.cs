@@ -1,4 +1,5 @@
-﻿using LinqVec.Utils;
+﻿using LinqVec.Interfaces;
+using LinqVec.Utils;
 using PowBasics.CollectionsExt;
 
 namespace LinqVec.Tests.ModelTesting.TestSupport;
@@ -9,11 +10,10 @@ interface IObj : IId;
 sealed record Doc(
 	Layer[] Layers,
 	Guid ActiveLayer
-) : IDoc
+)
 {
 	public static Doc Empty() => new([new Layer(Guid.Empty, [])], Guid.Empty);
 	public override string ToString() => "[" + Layers.SelectMany(e => e.Objects).JoinText("; ") + "]";
-	public string GetUndoRedoStr() => ToString();
 }
 
 

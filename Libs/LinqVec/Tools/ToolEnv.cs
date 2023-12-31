@@ -5,71 +5,66 @@ using LinqVec.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.WinForms_;
-using PtrLib;
 using ReactiveVars;
 
 namespace LinqVec.Tools;
 
-public sealed class ToolEnv<TDoc, TState> : IDisposable
+public sealed class ToolEnv : IDisposable
 {
 	private readonly Disp d = MkD();
 	public void Dispose() => d.Dispose();
 
-	private readonly DrawPanel drawPanel;
+	private readonly Ctrl drawPanel;
+	private readonly IRwVar<ITool> curTool;
 	private readonly IRoVar<bool> isPanZoom;
-	private readonly Action<ITool<TDoc, TState>> setCurTool;
+	private readonly IRoVar<Transform> transform;
 	private readonly IObservable<IEvt> editorEvt;
+	private readonly Action toolReset;
 	private readonly ISubject<Unit> whenUndoRedo;
 	private IObservable<Unit> WhenUndoRedo => whenUndoRedo.AsObservable();
 
-	public ToolEnv(
-		EditorLogic<TDoc, TState> editorLogic,
-		TDoc docInit,
-		IRoVar<ITool<TDoc, TState>> curTool,
-		Action<ITool<TDoc, TState>> setCurTool,
-		DrawPanel drawPanel,
-		ICurs curs,
-		IRoVar<bool> isPanZoom,
-		IRoVar<Transform> transform,
-		IObservable<IEvt> editorEvt
-	)
-	{
-		this.drawPanel = drawPanel;
+
+    public ToolEnv(
+	    Ctrl drawPanel,
+	    IRwVar<ITool> curTool,
+	    IRoVar<bool> isPanZoom,
+	    IRoVar<Transform> transform,
+	    IObservable<IEvt> editorEvt,
+		Action toolReset
+    )
+    {
+	    this.drawPanel = drawPanel;
+	    this.curTool = curTool;
 		this.isPanZoom = isPanZoom;
+		this.transform = transform;
 		this.editorEvt = editorEvt;
-		this.setCurTool = setCurTool;
-		Doc = Ptr.Make(docInit, d);
-		CurTool = curTool;
-		Curs = curs;
-		Transform = transform;
-		WhenPaint = drawPanel.WhenPaint;
+		this.toolReset = toolReset;
 		whenUndoRedo = new Subject<Unit>().D(d);
-	}
+    }
 
 
-	internal void TriggerUndoRedo() => whenUndoRedo.OnNext(Unit.Default);
+    internal void TriggerUndoRedo() => whenUndoRedo.OnNext(Unit.Default);
 
-	public IPtr<TDoc> Doc { get; }
-	public IRoVar<ITool<TDoc, TState>> CurTool { get; }
-	public void SetCurTool(ITool<TDoc, TState> tool) => setCurTool(tool);
-	public ICurs Curs { get; }
-    public IRoVar<Transform> Transform { get; }
-    public IObservable<Gfx> WhenPaint { get; }
+
+    public IRwVar<ITool> CurTool => curTool;
+    public IRoVar<Transform> Transform => transform;
+    public IObservable<Gfx> WhenPaint => drawPanel.WhenPaint;
     public void Invalidate() => drawPanel.Invalidate();
+    public void ToolReset() => toolReset();
 
-    public IObservable<IEvt> EditorEvt => editorEvt;
-    public Evt GetEvtForTool(ITool<TDoc, TState> tool, bool snap, Disp toolD) =>
+
+	public Evt GetEvtForTool(ITool tool, bool snap, Disp toolD) =>
 	    snap switch
 	    {
             false => editorEvt
 	            .RestrictToTool(tool, CurTool, isPanZoom)
 	            .ToGrid(Transform)
-	            .ToEvt(e => Curs.Cursor = e, WhenUndoRedo, toolD),
+	            .ToEvt(e => drawPanel.Cursor = e, WhenUndoRedo, toolD),
             true => editorEvt
 	            .RestrictToTool(tool, CurTool, isPanZoom)
 	            .ToGrid(Transform)
 	            .SnapToGrid()
 	            .RestrictToGrid()
-	            .ToEvt(e => Curs.Cursor = e, WhenUndoRedo, toolD),
+	            .ToEvt(e => drawPanel.Cursor = e, WhenUndoRedo, toolD),
 		};
 }

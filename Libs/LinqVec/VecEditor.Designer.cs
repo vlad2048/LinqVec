@@ -3,7 +3,7 @@ using ReactiveVars;
 
 namespace LinqVec
 {
-	partial class VecEditor<TDoc, TState>
+	partial class VecEditor
 	{
 		/// <summary> 
 		/// Required designer variable.

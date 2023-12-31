@@ -11,11 +11,13 @@ namespace VectorEditor.Tools.Select_;
 
 
 
-sealed class SelectTool(Keys shortcut) : ITool<Doc, EditorState>
+sealed class SelectTool(Ctx ctx) : ITool
 {
-	public string Name => "S";
-	public Bitmap? Icon => Resource.toolicon_Select;
-	public Keys Shortcut => shortcut;
+	public ToolNfo Nfo { get; } = new(
+		"S",
+		Resource.toolicon_Select,
+		Keys.Q
+	);
 
 	private static class States
 	{
@@ -30,11 +32,10 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc, EditorState>
 		public const string Delete = nameof(Delete);
 	}
 
-	public Disp Run(ToolEnv<Doc, EditorState> Env, ToolActions toolActions)
+	public void Run(Disp d)
 	{
-		var d = MkD();
-		var doc = Env.Doc;
-		var evt = Env.GetEvtForTool(this, true, d);
+		var doc = ctx.Doc;
+		var evt = ctx.Env.GetEvtForTool(this, true, d);
 
 		var curSel = Var.Make<Guid[]>([], d);
 
@@ -85,18 +86,16 @@ sealed class SelectTool(Keys shortcut) : ITool<Doc, EditorState>
 
 		
 		ModeNeutral()
-			.Run(evt, Env.Invalidate, d);
+			.Run(evt, ctx.Env.Invalidate, d);
 
-		
-		Env.WhenPaint.Subscribe(gfx =>
+
+		ctx.Env.WhenPaint.Subscribe(gfx =>
 		{
 			var bboxOpt =
-				Env.Doc.VModded.GetObjects(curSel.V)
+				ctx.Doc.VModded.GetObjects(curSel.V)
 					.Select(e => e.BoundingBox)
 					.Union();
 			Painter.PaintSelectRectangle(gfx, bboxOpt);
 		}).D(d);
-
-		return d;
 	}
 }

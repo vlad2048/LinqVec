@@ -1,28 +1,30 @@
 ﻿namespace LinqVec.Tools;
 
-public sealed record ToolActions(
-	Action Reset
-);
-
-public interface ITool<TDoc, TState>
+public sealed record ToolNfo(
+	string Name,
+	Bitmap? Icon,
+	Keys Shortcut
+)
 {
-	string Name { get; }
-	Bitmap? Icon { get; }
-	Keys Shortcut { get; }
-	Disp Run(ToolEnv<TDoc, TState> Env, ToolActions toolActions);
+	public static readonly ToolNfo Empty = new("_", null, 0);
+}
+
+public interface ITool
+{
+	ToolNfo Nfo { get; }
+	void Run(Disp d);
 }
 
 
-public sealed class EmptyTool<TDoc, TState> : ITool<TDoc, TState>
+
+public sealed class EmptyTool : ITool
 {
-	public string Name => "_";
-	public Bitmap? Icon => null;
-	public Keys Shortcut => 0;
-	public Disp Run(ToolEnv<TDoc, TState> Env, ToolActions toolActions) => MkD();
+	public ToolNfo Nfo => ToolNfo.Empty;
+	public void Run(Disp d) {}
 
 	private EmptyTool()
 	{
 	}
 
-	public static readonly ITool<TDoc, TState> Instance = new EmptyTool<TDoc, TState>();
+	public static readonly ITool Instance = new EmptyTool();
 }

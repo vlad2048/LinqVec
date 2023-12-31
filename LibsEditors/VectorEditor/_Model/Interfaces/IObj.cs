@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Geom;
-using LinqVec;
+using LinqVec.Interfaces;
 
 namespace VectorEditor._Model.Interfaces;
 

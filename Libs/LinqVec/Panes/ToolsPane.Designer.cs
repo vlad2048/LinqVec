@@ -1,6 +1,6 @@
 ﻿namespace LinqVec.Panes
 {
-	partial class ToolsPane<TDoc, TState>
+	partial class ToolsPane
 	{
 		/// <summary>
 		/// Required designer variable.

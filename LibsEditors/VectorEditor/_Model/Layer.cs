@@ -1,4 +1,4 @@
-﻿using LinqVec;
+﻿using LinqVec.Interfaces;
 using VectorEditor._Model.Interfaces;
 
 namespace VectorEditor._Model;

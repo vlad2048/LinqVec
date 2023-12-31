@@ -2,6 +2,7 @@
 using LinqVec;
 using LinqVec.Panes;
 using LinqVec.Tools;
+using LinqVec.Utils;
 using PowBasics.CollectionsExt;
 using ReactiveVars;
 using WeifenLuo.WinFormsUI.Docking;
@@ -10,111 +11,74 @@ namespace LinqVecDemo.Logic;
 
 static class PanesLogic
 {
+	private sealed record Ctx(
+		EditorLogicMaker Maker,
+		DockPanel DockPanel,
+		IRoVar<Option<DocPane>> Doc,
+		Disp D
+	);
+
 	public static void InitPanesLogic(
 		this MainWin win,
-		EditorLogic<TDoc, TState> editorLogic,
-		IRoVar<Option<DocPane<TDoc, TState>>> doc,
+		EditorLogicMaker maker,
+		IRoVar<Option<DocPane>> doc,
 		Disp d
 	)
 	{
-		// LayoutPane
-		// ==========
-		if (editorLogic.Caps.HasFlag(EditorLogicCaps.SupportLayoutPane))
-			HookPane<LayoutPane>(win.dockPanel, DockState.DockRight, true, win.menuViewLayout, editorLogic, doc, MakeLayoutPane, d);
+		var ctx = new Ctx(maker, win.dockPanel, doc, d);
+
+		if (ctx.Maker.Caps.HasFlag(EditorLogicCaps.SupportLayoutPane))
+			HookPane<LayoutPane>(ctx, MakeLayoutPane, win.menuViewLayout, DockState.DockRight, true);
 		else
 			win.menuViewLayout.Visible = false;
 
-		// ToolsPane
-		// =========
-		HookPane<ToolsPane<TDoc, TState>>(win.dockPanel, DockState.DockLeft, true, win.menuViewTools, editorLogic, doc, MakeToolsPane, d);
+		HookPane<ToolsPane>(ctx, MakeToolsPane, win.menuViewTools, DockState.DockLeft, true);
 	}
 
-	private static void HookPane<T>(
-		DockPanel dockPanel,
-		DockState dockState,
-		bool showOnStart,
-		ToolStripMenuItem menuItem,
-		EditorLogic<TDoc, TState> editorLogic,
-		IRoVar<Option<DocPane<TDoc, TState>>> doc,
-		Action<DockPanel, DockState, EditorLogic<TDoc, TState>, IRoVar<Option<DocPane<TDoc, TState>>>, Disp> makeFun,
-		Disp d
-	) where T : DockContent
-	{
-		var isDisplayed = Var.Make(false, d);
-		dockPanel.WhenActiveContentChanged().Subscribe(_ => isDisplayed.V = IsPaneDisplayed<T>(dockPanel)).D(d);
 
-		isDisplayed.Subscribe(on => menuItem.Checked = on).D(d);
+	private static void HookPane<T>(Ctx ctx, Func<Ctx, DockContent> fun, ToolStripMenuItem menuItem, DockState dockState, bool showOnStart) where T : DockContent
+	{
+		var isDisplayed = Var.Make(false, ctx.D);
+		ctx.DockPanel.WhenActiveContentChanged().Subscribe(_ => isDisplayed.V = IsPaneDisplayed<T>(ctx.DockPanel)).D(ctx.D);
+
+		void Open() => fun(ctx).Show(ctx.DockPanel, dockState);
+		void Close() => ctx.DockPanel.Contents.OfType<T>().ToArray().ForEach(e => e.DockHandler.DockPanel = null);
+
+		isDisplayed.Subscribe(on => menuItem.Checked = on).D(ctx.D);
 		menuItem.Events().Click.Subscribe(_ =>
 		{
-			isDisplayed.V = IsPaneDisplayed<T>(dockPanel);
-			TogglePane<T>(dockPanel, isDisplayed, () => makeFun(dockPanel, dockState, editorLogic, doc, d));
-			isDisplayed.V = IsPaneDisplayed<T>(dockPanel);
-		}).D(d);
+			isDisplayed.V = IsPaneDisplayed<T>(ctx.DockPanel);
+			if (isDisplayed.V)
+				Close();
+			else
+				Open();
+			isDisplayed.V = IsPaneDisplayed<T>(ctx.DockPanel);
+		}).D(ctx.D);
 
 		if (showOnStart)
 		{
-			TogglePane<T>(dockPanel, isDisplayed, () => makeFun(dockPanel, dockState, editorLogic, doc, d));
-			isDisplayed.V = IsPaneDisplayed<T>(dockPanel);
+			Open();
+			isDisplayed.V = IsPaneDisplayed<T>(ctx.DockPanel);
 		}
 	}
 
-	private static void TogglePane<T>(DockPanel dockPanel, IRoVar<bool> isDisplayed, Action makeFun) where T : DockContent
+
+	private static DockContent MakeLayoutPane(Ctx ctx)
 	{
-		if (isDisplayed.V)
-			dockPanel.Contents.OfType<T>().ToArray().ForEach(e => e.DockHandler.DockPanel = null);
-		else
-			makeFun();
+		var pane = new LayoutPane();
+		ctx.Doc.WhereNone().Subscribe(_ => pane.layoutTree.ClearObjects()).D(ctx.D);
+		ctx.Doc.WhereSome().Subscribe(docV => docV.Logic.SetupLayoutPane(pane.layoutTree, ctx.D)).D(ctx.D);
+		return pane;
 	}
-
-	private static void MakeLayoutPane(
-		DockPanel dockPanel,
-		DockState dockState,
-		EditorLogic<TDoc, TState> editorLogic,
-		IRoVar<Option<DocPane<TDoc, TState>>> doc,
-		Disp d
-	)
+	private static DockContent MakeToolsPane(Ctx ctx)
 	{
-		var layoutPane = new LayoutPane();
-		layoutPane.Show(dockPanel, dockState);
-
-		var docObs =
-			doc
-				.Select(e => e.Match(
-					f => f.Doc.WhenValueChanged.Select(_ => Some(f.Doc.V)),
-					() => Obs.Return(Option<TDoc>.None)
-				))
-				.Switch();
-
-		editorLogic.SetupLayoutPane(layoutPane.layoutTree, docObs, d);
+		var toolSet = ctx.Doc.GetToolSet(ctx.D);
+		var (curTool, setCurTool) = ctx.Doc.GetCurTool(ctx.D);
+		var pane = new ToolsPane(toolSet, curTool, setCurTool);
+		return pane;
 	}
 
 
-	private static void MakeToolsPane(
-		DockPanel dockPanel,
-		DockState dockState,
-		EditorLogic<TDoc, TState> editorLogic,
-		IRoVar<Option<DocPane<TDoc, TState>>> doc,
-		Disp d
-	)
-	{
-		var (curTool, setCurTool) = doc.GetCurTool(d);
-		var toolsPane = new ToolsPane<TDoc, TState>(editorLogic.Tools, curTool, setCurTool);
-		toolsPane.Width = 64;
-		toolsPane.Show(dockPanel, dockState);
-	}
-
-
-
-
-
-
-
-	/*private static IRoVar<bool> IsPaneDisplayed<T>(DockPanel dockPanel, Disp d) where T : DockContent
-	{
-		var isDisplayed = Var.Make(false, d);
-		dockPanel.WhenActiveContentChanged().Subscribe(_ => isDisplayed.V = IsPaneDisplayed<T>(dockPanel)).D(d);
-		return isDisplayed;
-	}*/
 
 	private static bool IsPaneDisplayed<T>(DockPanel dockPanel) => dockPanel.Contents.OfType<T>().ToArray().Any();
 
@@ -126,73 +90,27 @@ static class PanesLogic
 
 file static class DocExt
 {
-	public static (IRoVar<ITool<TDoc, TState>>, Action<ITool<TDoc, TState>>) GetCurTool(this IRoVar<Option<DocPane<TDoc, TState>>> doc, Disp d)
+	public static IRoVar<ITool[]> GetToolSet(this IRoVar<Option<DocPane>> doc, Disp d) =>
+		doc
+			.Select(e => e.Match(
+				f => f.Logic.Tools,
+				() => [EmptyTool.Instance]
+			))
+			.ToVar(d);
+
+	public static (IRoVar<ITool>, Action<ITool>) GetCurTool(this IRoVar<Option<DocPane>> doc, Disp d)
 	{
 		var curTool =
 			doc
 				.Select(e => e.Match(
-					f => f.vecEditor.Env.CurTool.AsObservable(),
-					() => Obs.Return(EmptyTool<TDoc, TState>.Instance)
+					f => f.Env.CurTool.AsObservable(),
+					() => Obs.Return(EmptyTool.Instance)
 				))
 				.Switch()
 				.ToVar(d);
 
-		void setCurTool(ITool<TDoc, TState> v) => doc.V.IfSome(e => e.vecEditor.Env.SetCurTool(v));
+		void setCurTool(ITool v) => doc.V.IfSome(e => e.Env.CurTool.V = v);
 
 		return (curTool, setCurTool);
 	}
-
-
-
-
-	/*
-		return new FunRwVar<ITool<TDoc>>(
-			obs => cur.V.Match(
-				e => e.Subscribe(obs),
-				() => Disposable.Empty
-			),
-			() => cur.V.Match(
-				e => e.V,
-				() => emptyTool
-			),
-			v => cur.V.Match(
-				e => e.V = v,
-				() => {}
-			),
-			() => cur.V.Match(
-				e => e.IsDisposed,
-				() => false
-			)
-		);
-	}
-
-
-	private static readonly ITool<TDoc> emptyTool = new EmptyTool();
-
-	private sealed class EmptyTool : ITool<TDoc>
-	{
-		public string Name => "_";
-		public Bitmap? Icon => null;
-		public Keys Shortcut => 0;
-		public Disp Run(ToolEnv<TDoc> Env, ToolActions toolActions) => MkD();
-	}
-
-
-
-	private sealed class FunRwVar<T>(
-		Func<IObserver<T>, IDisposable> subscribeFun,
-		Func<T> getFun,
-		Action<T> setFun,
-		Func<bool> isDisposedFun
-	) : IRwVar<T>
-	{
-		public IDisposable Subscribe(IObserver<T> observer) => subscribeFun(observer);
-		public T V
-		{
-			get => getFun();
-			set => setFun(value);
-		}
-		public bool IsDisposed => isDisposedFun();
-	}
-	*/
 }

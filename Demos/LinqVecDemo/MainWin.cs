@@ -1,4 +1,5 @@
 ﻿using LinqVec;
+using LinqVec.Tools;
 using LinqVec.Utils.Rx;
 using LinqVecDemo.Logic;
 using ReactiveVars;
@@ -29,9 +30,8 @@ partial class MainWin : Form
 
 		this.InitRX(this.Events().Load.ToUnit(), (_, d) =>
 		{
-			var editorLogic = new VectorEditorLogic();
-			var doc = this.InitDocLogic(editorLogic, d);
-			this.InitPanesLogic(editorLogic, doc, d);
+			var doc = this.InitDocLogic(VectorEditorLogicMaker.Instance, d);
+			this.InitPanesLogic(VectorEditorLogicMaker.Instance, doc, d);
 		});
 	}
 }

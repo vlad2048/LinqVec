@@ -6,117 +6,143 @@ using LinqVec.Utils;
 using ReactiveVars;
 using UILib;
 using WeifenLuo.WinFormsUI.Docking;
+using PowBasics.CollectionsExt;
 
-namespace LinqVec.Panes
+namespace LinqVec.Panes;
+
+
+public sealed partial class ToolsPane : DockContent
 {
-	public sealed partial class ToolsPane<TDoc, TState> : DockContent
+	private sealed record ToolGfx(
+		ITool Tool,
+		R R
+	);
+	
+
+	public ToolsPane(IRoVar<ITool[]> toolSet, IRoVar<ITool> curTool, Action<ITool> setCurTool)
 	{
-		private static Lazy<IconMap<TDoc, TState>>? iconMap;
-		private IconMap<TDoc, TState> IconMap => (iconMap ?? throw new NullReferenceException()).Value;
+		DoubleBuffered = true;
+		InitializeComponent();
 
-		public ToolsPane(ITool<TDoc, TState>[] tools, IRoVar<ITool<TDoc, TState>> curTool, Action<ITool<TDoc, TState>> setCurTool)
+		var tooltip = new ToolTip();
+
+		this.InitRX(d =>
 		{
-			iconMap ??= new(() => IconMapLoader.Load(tools));
-			DoubleBuffered = true;
+			var mousePos =
+				this.Events().MouseMove
+					.Select(e => new Pt(e.X, e.Y))
+					.Prepend(new Pt(-1, -1))
+					.ToVar(d);
+			var isDown =
+				Obs.Merge(
+						this.Events().MouseDown.Select(_ => true),
+						this.Events().MouseUp.Select(_ => false)
+					)
+					.Prepend(false)
+					.ToVar(d);
 
-			InitializeComponent();
+			var tools = toolSet.Select(e => e.Select((f, idx) => new ToolGfx(f, PaintUtils.GetR(idx))).ToArr()).ToVar(d);
 
-			var tooltip = new ToolTip();
-
-
-			this.InitRX(d =>
-			{
-				var mousePos =
-					this.Events().MouseMove
-						.Select(e => new Pt(e.X, e.Y))
-						.Prepend(new Pt(-1, -1))
-						.ToVar(d);
-				var isDown =
-					Obs.Merge(
-							this.Events().MouseDown.Select(_ => true),
-							this.Events().MouseUp.Select(_ => false)
-						)
-						.Prepend(false)
-						.ToVar(d);
-
-				var hoveredTool = mousePos
-					.Select(e => tools.FirstOrOption(f => IconMap.Tool2IconR[f].Contains(e)))
+			var hoveredTool =
+				Obs.CombineLatest(
+						tools,
+						mousePos,
+						(tools_, mousePos_) => (tools_, mousePos_)
+					)
+					.Select(t => t.tools_.FirstOrOption(e => e.R.Contains(t.mousePos_)))
 					.Prepend(None)
 					.DistinctUntilChanged()
 					.ToVar(d);
 
-				hoveredTool.Subscribe(e => e.Match(
-					t =>
-					{
-						tooltip.SetToolTip(this, t.GetType().Name);
-						tooltip.Active = true;
-					},
-					() => tooltip.Active = false
-				)).D(d);
-
-
-				var stateMap =
-					Obs.CombineLatest(
-							curTool,
-							hoveredTool,
-							mousePos,
-							isDown,
-							(curTool_, hoveredTool_, mousePos_, isDown_) => (curTool_, hoveredTool_, mousePos_, isDown_)
-						)
-						.Select(t =>
-							tools
-								.Select(
-									tool => (
-										tool,
-										(tool == curTool.V) switch
-											{
-												true => ToolIconState.Active,
-												false => (Some(tool) == t.hoveredTool_, t.isDown_) switch
-												{
-													(true, true) => ToolIconState.MouseDown,
-													(true, false) => ToolIconState.Hover,
-													_ => ToolIconState.Normal,
-												}
-										}
-									)
-								)
-								.ToHashMap()
-						)
-						.Prepend(tools.Select(tool => (tool, ToolIconState.Normal)).ToHashMap())
-						.DistinctUntilChanged()
-						.ToVar(d);
-
-				stateMap.Subscribe(_ => Invalidate()).D(d);
-
-				this.Events().Click
-					.Subscribe(_ =>
-					{
-						var tool = tools.FirstOrOption(tool => IconMap.Tool2IconR[tool].Contains(mousePos.V));
-						tool.IfSome(setCurTool);
-					}).D(d);
-
-
-				this.Events().Paint.Subscribe(e =>
+			hoveredTool.Subscribe(e => e.Match(
+				t =>
 				{
-					var gfx = e.Graphics;
-					var r = new Rectangle(0, 0, ClientSize.Width, ClientSize.Height);
-					gfx.FillRectangle(PaintUtils.BackBrush, r);
+					tooltip.SetToolTip(this, t.Tool.Nfo.Name);
+					tooltip.Active = true;
+				},
+				() => tooltip.Active = false
+			)).D(d);
 
-					foreach (var tool in tools)
-					{
-						var iconR = IconMap.Tool2IconR[tool];
-						var state = stateMap.V[tool];
-						var bmp = IconMap.State2Icon[(tool, state)];
-						gfx.DrawImage(bmp, iconR.Min.X, iconR.Min.Y);
-					}
-				}).D(d);
-			});
-		}
 
+			var stateMap =
+				Obs.CombineLatest(
+						tools,
+						curTool,
+						hoveredTool,
+						mousePos,
+						isDown,
+						(tools_, curTool_, hoveredTool_, mousePos_, isDown_) => (tools_, curTool_, hoveredTool_, mousePos_, isDown_)
+					)
+					.Select(t =>
+						t.tools_
+							.Select(
+								tool => (
+									tool,
+									(tool.Tool == curTool.V) switch
+									{
+										true => ToolIconState.Active,
+										false => (Some(tool) == t.hoveredTool_, t.isDown_) switch
+										{
+											(true, true) => ToolIconState.MouseDown,
+											(true, false) => ToolIconState.Hover,
+											_ => ToolIconState.Normal,
+										}
+									}
+								)
+							)
+							.ToHashMap()
+					)
+					.Prepend(new HashMap<ToolGfx, ToolIconState>())
+					.DistinctUntilChanged()
+					.ToVar(d);
+
+			stateMap.Subscribe(_ => Invalidate()).D(d);
+
+			this.Events().Click
+				.Subscribe(_ =>
+					tools.V.FirstOrOption(t => t.R.Contains(mousePos.V))
+						.Select(t => t.Tool)
+						.IfSome(setCurTool)
+				).D(d);
+
+
+			this.Events().Paint.Subscribe(e =>
+			{
+				var gfx = e.Graphics;
+				var r = new Rectangle(0, 0, ClientSize.Width, ClientSize.Height);
+				gfx.FillRectangle(PaintUtils.BackBrush, r);
+
+				foreach (var tool in tools.V)
+				{
+					var state = stateMap.V.ContainsKey(tool) switch {
+						true => stateMap.V[tool],
+						false => ToolIconState.Normal
+					};
+					var bmp = PaintUtils.GetBmp(tool.Tool.Nfo, state);
+					var toolR = tool.R;
+					gfx.DrawImage(bmp, toolR.Min.X, toolR.Min.Y);
+				}
+			}).D(d);
+		});
 	}
 }
 
+
+
 file static class PaintUtils
 {
+	private static readonly Dictionary<ToolNfo, Bitmap[]> bmpCache = new();
+
 	public static readonly Brush BackBrush = new SolidBrush(MkCol(0x353535));
+
+	public static R GetR(int idx) => R.Make(
+		idx % 2 * 32,
+		// ReSharper disable once PossibleLossOfFraction
+		idx / 2 * 32,
+		32,
+		32
+	);
+
+	public static Bitmap GetBmp(ToolNfo tool, ToolIconState state) =>
+		bmpCache.GetOrCreate(tool, () => IconMapLoader.Load(tool))[(int)state];
 }

@@ -1,4 +1,5 @@
-﻿using LinqVec.Structs;
+﻿using LinqVec.Interfaces;
+using LinqVec.Structs;
 
 namespace LinqVec.Utils;
 

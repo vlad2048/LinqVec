@@ -1,5 +1,8 @@
-﻿using BrightIdeasSoftware;
+﻿using System.Reactive.Linq;
+using BrightIdeasSoftware;
+using LinqVec.Structs;
 using LinqVec.Tools;
+using PtrLib;
 
 namespace LinqVec;
 
@@ -9,23 +12,23 @@ public enum EditorLogicCaps
 	SupportLayoutPane = 1,
 }
 
-public abstract class EditorLogic<TDoc, TState>
+
+public abstract class EditorLogicMaker
 {
 	public abstract EditorLogicCaps Caps { get; }
+	public abstract EditorLogic Make(Option<string> filename, ToolEnv env, Disp d);
+}
 
-	public abstract ITool<TDoc, TState>[] Tools { get; }
 
-	public abstract TDoc LoadOrCreate(Option<string> file);
-	public abstract void Save(string file, TDoc doc);
+public abstract class EditorLogic
+{
+	public abstract IDocHolder DocHolder { get; }
+	public abstract ITool[] Tools { get; }
 
-	public abstract void Init(
-		ToolEnv<TDoc, TState> env,
-		Disp d
-	);
+	public abstract void Save(string filename);
 
 	public virtual void SetupLayoutPane(
 		TreeListView tree,
-		IObservable<Option<TDoc>> doc,
 		Disp d
 	) => throw new NotImplementedException();
 }

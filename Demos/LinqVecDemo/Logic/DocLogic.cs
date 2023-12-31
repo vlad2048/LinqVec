@@ -27,19 +27,19 @@ static class DocLogic
 	}; 
 	
 	
-	public static IRoVar<Option<DocPane<TDoc, TState>>> InitDocLogic(this MainWin win, EditorLogic<TDoc, TState> editorLogic, Disp d)
+	public static IRoVar<Option<DocPane>> InitDocLogic(this MainWin win, EditorLogicMaker maker, Disp d)
 	{
 		var curDoc = win.dockPanel.GetActiveDoc(d);
 
 		curDoc.Enables(win.menuFileSave, win.menuFileSaveAs).D(d);
-		win.menuFileNew.Events().Click.Subscribe(_ => New(win.dockPanel, editorLogic)).D(d);
-		win.menuFileOpen.Events().Click.Subscribe(_ => Open(win.dockPanel, editorLogic)).D(d);
+		win.menuFileNew.Events().Click.Subscribe(_ => New(win.dockPanel, maker)).D(d);
+		win.menuFileOpen.Events().Click.Subscribe(_ => Open(win.dockPanel, maker)).D(d);
 		win.menuFileSave.Events().Click.Subscribe(_ => Save(false, curDoc.V.Ensure())).D(d);
 		win.menuFileSaveAs.Events().Click.Subscribe(_ => Save(true, curDoc.V.Ensure())).D(d);
 		win.menuFileExit.Events().Click.Subscribe(_ => win.Close()).D(d);
 		win.Events().FormClosing.Subscribe(_ => DisposeAllDocPanes(win)).D(d);
 
-		TrackAndRestoreCurFile(win, curDoc, editorLogic, d);
+		TrackAndRestoreCurFile(win, curDoc, maker, d);
 
 		return curDoc;
 	}
@@ -47,21 +47,21 @@ static class DocLogic
 
 	private static void DisposeAllDocPanes(MainWin win)
 	{
-		var docPanes = win.dockPanel.Documents.OfType<DocPane<TDoc, TState>>().ToArray();
+		var docPanes = win.dockPanel.Documents.OfType<DocPane>().ToArray();
 		foreach (var docPane in docPanes)
 			docPane.Dispose();
 	}
 
 	private static void TrackAndRestoreCurFile(
 		MainWin win,
-		IRoVar<Option<DocPane<TDoc, TState>>> curDoc,
-		EditorLogic<TDoc, TState> editorLogic,
+		IRoVar<Option<DocPane>> curDoc,
+		EditorLogicMaker maker,
 		Disp d
 	)
 	{
 		var baseName = win.Text;
 
-		OpenLastLoadedFile(win, editorLogic);
+		OpenLastLoadedFile(win, maker);
 
 		var curFile =
 			curDoc
@@ -86,7 +86,7 @@ static class DocLogic
 		win.statusStrip.AddLabel("File", curFile.Select(e => e ?? "_")).D(d);
 	}
 
-	private static void OpenLastLoadedFile(MainWin win, EditorLogic<TDoc, TState> editorLogic)
+	private static void OpenLastLoadedFile(MainWin win, EditorLogicMaker maker)
 	{
 		var hasOpened = false;
 		if (win.LastLoadedFile != null && File.Exists(win.LastLoadedFile))
@@ -95,7 +95,7 @@ static class DocLogic
 			{
 				try
 				{
-					AddDocPane(win.LastLoadedFile, win.dockPanel, editorLogic);
+					AddDocPane(win.LastLoadedFile, win.dockPanel, maker);
 					hasOpened = true;
 				}
 				catch (JsonException)
@@ -108,26 +108,26 @@ static class DocLogic
 			}
 		}
 		if (!hasOpened)
-			New(win.dockPanel, editorLogic);
+			New(win.dockPanel, maker);
 	}
 
 
 	// **************
 	// * New & Open *
 	// **************
-	private static void New(DockPanel dockPanel, EditorLogic<TDoc, TState> editorLogic) => AddDocPane(null, dockPanel, editorLogic);
-	private static void Open(DockPanel dockPanel, EditorLogic<TDoc, TState> editorLogic)
+	private static void New(DockPanel dockPanel, EditorLogicMaker maker) => AddDocPane(null, dockPanel, maker);
+	private static void Open(DockPanel dockPanel, EditorLogicMaker maker)
 	{
 		using var dlg = MkOpenFileDialog();
 		if (dlg.ShowDialog() == DialogResult.OK)
-			AddDocPane(dlg.FileName, dockPanel, editorLogic);
+			AddDocPane(dlg.FileName, dockPanel, maker);
 	}
-	private static void AddDocPane(string? filename, DockPanel dockPanel, EditorLogic<TDoc, TState> editorLogic)
+	private static void AddDocPane(string? filename, DockPanel dockPanel, EditorLogicMaker maker)
 	{
 		var docPane = filename switch
 		{
-			null => new DocPane<TDoc, TState>(editorLogic, None),
-			not null => new DocPane<TDoc, TState>(editorLogic, Some(filename))
+			null => new DocPane(maker, None),
+			not null => new DocPane(maker, Some(filename))
 		};
 		docPane.Show(dockPanel, DockState.Document);
 		Rx.Sched.Schedule(() => docPane.vecEditor.Focus());
@@ -137,7 +137,7 @@ static class DocLogic
 	// ********
 	// * Save *
 	// ********
-	private static void Save(bool saveAs, DocPane<TDoc, TState> docPane)
+	private static void Save(bool saveAs, DocPane docPane)
 	{
 		var filename = (saveAs || docPane.Filename.V.IsNone) switch {
 			true => AskSaveFilename(),
@@ -158,12 +158,12 @@ static class DocLogic
 	// ********
 	// * Misc *
 	// ********
-	private static IRoVar<Option<DocPane<TDoc, TState>>> GetActiveDoc(this DockPanel dockPanel, Disp d)
+	private static IRoVar<Option<DocPane>> GetActiveDoc(this DockPanel dockPanel, Disp d)
 	{
-		var activeDoc = Var.Make(Option<DocPane<TDoc, TState>>.None, d);
+		var activeDoc = Var.Make(Option<DocPane>.None, d);
 		dockPanel.WhenActiveDocChanged().Subscribe(_ =>
 		{
-			activeDoc.V = dockPanel.ActiveDocument as DocPane<TDoc, TState>;
+			activeDoc.V = dockPanel.ActiveDocument as DocPane;
 		}).D(d);
 		return activeDoc;
 	}

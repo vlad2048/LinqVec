@@ -1,10 +1,13 @@
-﻿using BrightIdeasSoftware;
+﻿using System.Reactive.Linq;
+using BrightIdeasSoftware;
 using LinqVec;
+using LinqVec.Interfaces;
+using LinqVec.Structs;
 using LinqVec.Tools;
-using LinqVec.Utils;
 using LinqVec.Utils.Json;
 using PowBasics.CollectionsExt;
 using PowBasics.Json_;
+using PtrLib;
 using ReactiveVars;
 using UILib.Utils;
 using VectorEditor._Model;
@@ -23,16 +26,87 @@ public sealed record EditorState(
 }
 
 
-public sealed class VectorEditorLogic : EditorLogic<Doc, EditorState>
+
+public sealed class VectorEditorLogicMaker : EditorLogicMaker
 {
 	public override EditorLogicCaps Caps => EditorLogicCaps.SupportLayoutPane;
 
-	public override ITool<Doc, EditorState>[] Tools { get; } = [
-		new SelectTool(Keys.Q),
-		new CurveTool(Keys.P),
-		new CurveEditTool(Keys.E),
-	];
+	public override VectorEditorLogic Make(Option<string> filename, ToolEnv env, Disp d) => new(filename, env, d);
 
+	private VectorEditorLogicMaker() {}
+
+	public static readonly VectorEditorLogicMaker Instance = new();
+}
+
+sealed record Ctx(
+	IPtr<Doc> Doc,
+	IRwVar<EditorState> State,
+	ToolEnv Env
+);
+
+public sealed class VectorEditorLogic : EditorLogic
+{
+	public override IDocHolder DocHolder { get; }
+	public override ITool[] Tools { get; }
+
+	public IPtr<Doc> Doc { get; }
+
+	public VectorEditorLogic(Option<string> filename, ToolEnv env, Disp d)
+	{
+		var docInit = filename.Match(
+			VecJsoner.Vec.Load<Doc>,
+			_Model.Doc.Empty
+		);
+		Doc = Ptr.Make(docInit, d);
+		DocHolder = LinqVec.Structs.DocHolder.Make(Doc);
+		var state = EditorState.Empty.Make(d);
+
+		var ctx = new Ctx(Doc, state, env);
+		Tools = [
+			new SelectTool(ctx),
+			new CurveTool(ctx),
+			new CurveEditTool(ctx),
+		];
+
+
+		state.Subscribe(_ => env.Invalidate()).D(d);
+
+
+		env.WhenPaint
+			.Subscribe(gfx =>
+			{
+				foreach (var layer in Doc.VModded.Layers)
+				foreach (var obj in layer.Objects)
+				{
+					switch (obj)
+					{
+						case Curve curve:
+							Painter.PaintCurve(gfx, curve, CurveGfxState.None);
+							break;
+					}
+				}
+			}).D(d);
+	}
+
+	public override void Save(string filename) => VecJsoner.Vec.Save(filename, Doc.V);
+
+
+
+	public override void SetupLayoutPane(TreeListView tree, Disp d)
+	{
+		tree.SetNodGeneric<LayoutTreeLogic.DocNode>();
+		tree.SetupColumns();
+		Doc.WhenValueChanged.Select(_ => Doc.V)
+			.Subscribe(cur =>
+			{
+				var roots = cur.ToTree();
+				tree.SetObjects(roots);
+				tree.ExpandAll();
+			}).D(d);
+	}
+
+
+	/*
 	public override Doc LoadOrCreate(Option<string> file) => file.Match(
 		VecJsoner.Vec.Load<Doc>,
 		Doc.Empty
@@ -61,20 +135,7 @@ public sealed class VectorEditorLogic : EditorLogic<Doc, EditorState>
 				}
 			}).D(d);
 	}
-
-	public override void SetupLayoutPane(TreeListView tree, IObservable<Option<Doc>> doc, Disp d)
-	{
-		tree.SetNodGeneric<LayoutTreeLogic.DocNode>();
-		tree.SetupColumns();
-		doc.WhereNone().Subscribe(_ => tree.ClearObjects()).D(d);
-		doc.WhereSome()
-			.Subscribe(cur =>
-			{
-				var roots = cur.ToTree();
-				tree.SetObjects(roots);
-				tree.ExpandAll();
-			}).D(d);
-	}
+	*/
 }
 
 

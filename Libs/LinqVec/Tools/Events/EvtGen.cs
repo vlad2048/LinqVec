@@ -109,10 +109,10 @@ public static class EvtUtils
 
 
 
-	public static IObservable<IEvt> RestrictToTool<TDoc, TState>(
+	public static IObservable<IEvt> RestrictToTool(
 		this IObservable<IEvt> src,
-		ITool<TDoc, TState> tool,
-		IRoVar<ITool<TDoc, TState>> curTool,
+		ITool tool,
+		IRoVar<ITool> curTool,
 		IRoVar<bool> isPanZoom
 	)
 	{

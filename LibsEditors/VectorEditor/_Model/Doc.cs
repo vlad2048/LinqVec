@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Geom;
-using LinqVec;
+using LinqVec.Interfaces;
 using LinqVec.Utils;
 using PowBasics.CollectionsExt;
 using VectorEditor._Model.Interfaces;
@@ -11,7 +11,7 @@ namespace VectorEditor._Model;
 public sealed record Doc(
 	Layer[] Layers,
 	Guid ActiveLayer
-) : IDoc
+)
 {
 	public static Doc Empty() => new([new Layer(Guid.Empty, [])], Guid.Empty);
 
@@ -20,12 +20,12 @@ public sealed record Doc(
 
 	public override string ToString() => "[" + Layers.SelectMany(e => e.Objects).JoinText() + "]";
 
-	public string GetUndoRedoStr()
-	{
-		var curves = Layers.SelectMany(e => e.Objects).OfType<Curve>().ToArray();
-		var str = curves.Select(e => $"{e.Pts.Length}").JoinText(",");
-		return $"[{str}]";
-	}
+	//public string GetUndoRedoStr()
+	//{
+	//	var curves = Layers.SelectMany(e => e.Objects).OfType<Curve>().ToArray();
+	//	var str = curves.Select(e => $"{e.Pts.Length}").JoinText(",");
+	//	return $"[{str}]";
+	//}
 }
 
 

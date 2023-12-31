@@ -1,43 +1,16 @@
-﻿using Geom;
-using LinqVec.Tools;
+﻿using LinqVec.Tools;
 using LinqVec.Utils;
+using PowBasics.CollectionsExt;
 using Point = System.Drawing.Point;
 
 namespace LinqVec.Panes.ToolsPaneLogic_;
 
-sealed record IconMap<TDoc, TState>(
-	IReadOnlyDictionary<(ITool<TDoc, TState>, ToolIconState), Bitmap> State2Icon,
-	IReadOnlyDictionary<ITool<TDoc, TState>, R> Tool2IconR
-);
-
 
 static class IconMapLoader
 {
-	public static IconMap<TDoc, TState> Load<TDoc, TState>(ITool<TDoc, TState>[] tools) =>
-		new(
-			(
-				from tool in tools
-				from state in Enum.GetValues<ToolIconState>()
-				let img = MakeIcon(tool.Icon, tool.Name, state)
-				select ((tool, state), img)
-			)
-			.ToDictionary(e => e.Item1, e => e.img),
-			tools
-				.Select((tool, idx) =>
-					(
-						tool,
-						R.Make(
-							idx % 2 * 32,
-							// ReSharper disable once PossibleLossOfFraction
-							idx / 2 * 32,
-							32,
-							32
-						)
-					)
-				)
-				.ToDictionary(e => e.tool, e => e.Item2)
-		);
-
+	public static Bitmap[] Load(ToolNfo tool) =>
+		Enum.GetValues<ToolIconState>()
+			.SelectToArray(state => MakeIcon(tool.Icon, tool.Name, state));
 
 
 	private static Bitmap MakeIcon(Bitmap? baseIcon, string name, ToolIconState state) =>

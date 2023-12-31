@@ -10,11 +10,13 @@ using VectorEditor._Model;
 namespace VectorEditor.Tools.Curve_;
 
 
-sealed class CurveTool(Keys shortcut) : ITool<Doc, EditorState>
+sealed class CurveTool(Ctx ctx) : ITool
 {
-	public string Name => "C";
-	public Bitmap? Icon => Resource.toolicon_CurveCreate;
-	public Keys Shortcut => shortcut;
+	public ToolNfo Nfo { get; } = new(
+		"C",
+		Resource.toolicon_CurveCreate,
+		Keys.P
+	);
 
 	private static class States
 	{
@@ -26,11 +28,10 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc, EditorState>
 		public const string AddPoint = nameof(AddPoint);
 	}
 
-	public Disp Run(ToolEnv<Doc, EditorState> Env, ToolActions toolActions)
+	public void Run(Disp d)
 	{
-		var d = MkD();
-		var doc = Env.Doc;
-		var evt = Env.GetEvtForTool(this, true, d);
+		var doc = ctx.Doc;
+		var evt = ctx.Env.GetEvtForTool(this, true, d);
 
 		var curve = doc.Create(Curve.Empty(), CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun, d);
 
@@ -44,7 +45,7 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc, EditorState>
 			.Subscribe(_ =>
 			{
 				curve.Commit();
-				toolActions.Reset();
+				ctx.Env.ToolReset();
 			}).D(d);
 
 		ToolStateFun ModeNeutral() => _ => new ToolState(
@@ -80,15 +81,13 @@ sealed class CurveTool(Keys shortcut) : ITool<Doc, EditorState>
 
 
 		ModeNeutral()
-			.Run(evt, Env.Invalidate, d);
+			.Run(evt, ctx.Env.Invalidate, d);
 
 
 
-		Env.WhenPaint.Subscribe(gfx =>
+		ctx.Env.WhenPaint.Subscribe(gfx =>
 		{
 			Painter.PaintCurve(gfx, curve.VModded, gizmo);
 		}).D(d);
-
-		return d;
 	}
 }

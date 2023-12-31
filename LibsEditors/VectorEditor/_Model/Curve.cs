@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Geom;
-using LinqVec;
+using LinqVec.Interfaces;
 using LinqVec.Utils;
 using PowBasics.CollectionsExt;
 using PtrLib;

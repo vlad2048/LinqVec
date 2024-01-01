@@ -1,5 +1,4 @@
-﻿using System.Reactive.Disposables;
-using Geom;
+﻿using Geom;
 using LinqVec.Tools.Cmds.Enums;
 using ReactiveVars;
 using H = System.Object;
@@ -73,10 +72,10 @@ public sealed record Hotspot(
 	string Name,
 	Func<Pt, Option<H>> Fun,
 	Cursor? Cursor,
-	Func<IRoVar<Option<Pt>>, IDisposable> HoverAction
+	Func<IRoVar<Option<Pt>>, Action<bool>> HoverAction
 )
 {
-	public static readonly Hotspot Empty = new("Empty", _ => None, null, _ => Disposable.Empty);
+	public static readonly Hotspot Empty = new("Empty", _ => None, null, _ => _ => {});
 }
 
 public interface IHotspotCmd
@@ -92,7 +91,7 @@ public sealed record ClickHotspotCmd(
 public sealed record DragHotspotCmd(
 	string Name,
 	Gesture Gesture,
-	Func<Pt, IRoVar<Option<Pt>>, IDisposable> DragAction
+	Func<Pt, IRoVar<Option<Pt>>, Action<bool>> DragAction
 ) : IHotspotCmd;
 
 
@@ -120,7 +119,7 @@ public sealed record Hotspot<TH>(
 )
 {
 	public Cursor? Cursor { get; init; }
-	public Func<IRoVar<Option<Pt>>, IDisposable> HoverAction { get; init; } = _ => Disposable.Empty;
+	public Func<IRoVar<Option<Pt>>, Action<bool>> HoverAction { get; init; } = _ => _ => {};
 }
 
 public sealed record HotspotNfo<TH>(

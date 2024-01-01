@@ -36,13 +36,13 @@ sealed class SelectTool(Ctx c) : ITool
 	{
 		var evt = c.Env.GetEvtForTool(this, true, d);
 
-
+		/*
 		ToolStateFun ModeNeutral() => _ =>
 			new ToolState(
 				States.Neutral,
 				CBase.Cursors.BlackArrow,
 				[
-					Hotspots.Object(c.Doc.V)
+					Hotspots.Object(c.Doc.V.V)
 						.Do(objId => [
 								Cmd.Click(
 									Cmds.Select,
@@ -85,5 +85,6 @@ sealed class SelectTool(Ctx c) : ITool
 		
 		ModeNeutral()
 			.Run(evt, c.Env.Invalidate, d);
+		*/
 	}
 }

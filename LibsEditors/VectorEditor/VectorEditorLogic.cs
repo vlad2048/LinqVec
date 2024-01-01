@@ -65,7 +65,7 @@ public sealed class VectorEditorLogic : EditorLogic
 		env.WhenPaint
 			.Subscribe(gfx =>
 			{
-				foreach (var layer in Doc.VModded.Layers)
+				foreach (var layer in Doc.VGfx.V.Layers)
 				foreach (var obj in layer.Objects)
 				{
 					switch (obj)
@@ -77,7 +77,7 @@ public sealed class VectorEditorLogic : EditorLogic
 				}
 
 				var bboxOpt =
-					Doc.VModded.GetObjects(state.V.Selection)
+					Doc.VGfx.V.GetObjects(state.V.Selection)
 						.Select(e => e.BoundingBox)
 						.Union();
 				Painter.PaintSelectRectangle(gfx, bboxOpt);
@@ -93,7 +93,7 @@ public sealed class VectorEditorLogic : EditorLogic
 	{
 		tree.SetNodGeneric<LayoutTreeLogic.DocNode>();
 		tree.SetupColumns();
-		Doc.WhenValueChanged.Select(_ => Doc.V)
+		Doc.V.WhenOuter
 			.Subscribe(cur =>
 			{
 				var roots = cur.ToTree();

@@ -8,4 +8,8 @@
     <ProjectReference Include="..\ReactiveVars\ReactiveVars.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Components\" />
+  </ItemGroup>
+
 </Project>

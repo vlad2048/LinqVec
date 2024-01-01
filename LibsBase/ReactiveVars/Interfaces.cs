@@ -5,10 +5,9 @@ public interface IRoVar<out T> : IObservable<T>
 	T V { get; }
 }
 
-public interface IRwVar<T> : IRoVar<T>
+public interface IRwVar<T> : IRoVar<T>, IHasDisp
 {
 	new T V { get; set; }
-	bool IsDisposed { get; }
 
 	// if V itself is disposed
 	//   -> it will try to access the V getter

@@ -5,9 +5,9 @@ namespace ReactiveVars;
 
 public static class Var
 {
-	public static IRwVar<T> Make<T>(this T init, Disp d) => new RwVar<T>(init).D(d);
+	public static IRwVar<T> Make<T>(this T init, Disp d) => new RwVar<T>(init, d);
 	public static IRoVar<T> MakeConst<T>(T val) => Obs.Return(val).ToVar();
-	public static IBoundVar<T> MakeBound<T>(T init, Disp d) => new BoundVar<T>(init).D(d);
+	public static IBoundVar<T> MakeBound<T>(T init, Disp d) => new BoundVar<T>(init, d);
 
 
 	//public static IRoVar<T> ToVar<T>(this IObservable<T> obs) => new RoVar<T>(obs);
@@ -55,9 +55,10 @@ public static class Var
 	}
 
 
-	private sealed class RwVar<T> : IRwVar<T>, IDisposable
+	private sealed class RwVar<T> : IRwVar<T>
 	{
-		public void Dispose() => Subj.Dispose();
+		public Disp D { get; }
+		public void Dispose() => D.Dispose();
 		public IDisposable Subscribe(IObserver<T> observer) => Subj.Subscribe(observer);
 
 		private readonly BehaviorSubject<T> Subj;
@@ -70,17 +71,21 @@ public static class Var
 
 		public bool IsDisposed => Subj.IsDisposed;
 
-		public RwVar(T init) => Subj = new BehaviorSubject<T>(init);
+		public RwVar(T init, Disp d)
+		{
+			D = d;
+			Subj = new BehaviorSubject<T>(init).D(d);
+		}
 	}
 
 
-	private sealed class BoundVar<T> : IBoundVar<T>, IDisposable
+	private sealed class BoundVar<T> : IBoundVar<T>
 	{
 		private enum UpdateType { Inner, Outer };
 		private sealed record Update(UpdateType Type, T Val);
 
-		private readonly Disp d = MkD();
-		public void Dispose() => d.Dispose();
+		public Disp D { get; }
+		public void Dispose() => D.Dispose();
 
 		private readonly BehaviorSubject<T> Subj;
 		private readonly ISubject<Update> whenUpdate;
@@ -98,7 +103,6 @@ public static class Var
 			set => SetOuter(value);
 		}
 		public bool IsDisposed => Subj.IsDisposed;
-		public void SetSafe(T v) => SetOuter(v);
 
 		// IBoundVar<T>
 		// ============
@@ -107,8 +111,9 @@ public static class Var
 		public void SetInner(T v) => whenUpdate.OnNext(new Update(UpdateType.Inner, v));
 		private void SetOuter(T v) => whenUpdate.OnNext(new Update(UpdateType.Outer, v));
 
-		public BoundVar(T init)
+		public BoundVar(T init, Disp d)
 		{
+			D = d;
 			Subj = new BehaviorSubject<T>(init).D(d);
 			whenUpdate = new Subject<Update>().D(d);
 			WhenUpdate = whenUpdate.AsObservable();

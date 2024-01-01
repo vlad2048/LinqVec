@@ -1,7 +1,9 @@
-﻿using System.Reactive.Disposables;
+﻿using System;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Geom;
 using LinqVec.Tools.Cmds.Enums;
+using LinqVec.Utils.Rx;
 using PtrLib;
 using ReactiveVars;
 
@@ -10,9 +12,9 @@ namespace LinqVec.Tools.Cmds;
 
 public static class Cmd
 {
-	public static Hotspot<TH> OnHover<TH>(this Hotspot<TH> hotspot, Func<IRoVar<Option<Pt>>, IDisposable> hoverAction) => hotspot with { HoverAction = hoverAction };
+	public static Hotspot<TH> OnHover<TH>(this Hotspot<TH> hotspot, Func<IRoVar<Option<Pt>>, Action<bool>> hoverAction) => hotspot with { HoverAction = hoverAction };
 
-	public static readonly Func<IRoVar<Option<Pt>>, IDisposable> EmptyHoverAction = _ => Disposable.Empty;
+	public static readonly Func<IRoVar<Option<Pt>>, Action<bool>> EmptyHoverAction = _ => commit => {};
 
 	public static ClickHotspotCmd ClickRet(
 		string name,
@@ -26,7 +28,7 @@ public static class Cmd
 
 	public static DragHotspotCmd Drag(
 		string name,
-		Func<Pt, IRoVar<Option<Pt>>, IDisposable> dragAction
+		Func<Pt, IRoVar<Option<Pt>>, Action<bool>> dragAction
 	) => new(
 		name,
 		Gesture.Drag,
@@ -55,10 +57,39 @@ public static class Cmd
 
 public static class CmdModExt
 {
-	public static Func<Pt, IRoVar<Option<Pt>>, IDisposable> ModSetDrag<T>(this IPtrRegular<T> ptr, string name, Func<Pt, Pt, T, T> fun) =>
-		(ptStart, ptEnd) => ptr.ModSet(new Mod<T>(
+	public static Func<Pt, IRoVar<Option<Pt>>, Action<bool>> ModSetDrag<T>(this IScopedPtr<T> ptr, string name, Func<Pt, Pt, T, T> fun) =>
+		(ptStart, ptEnd) =>
+		{
+			var (source, action) = ptEnd
+				.Select(ptEndOpt => ptEndOpt.Match(
+					ptEndV => Mk<T>(ptrV => fun(ptStart, ptEndV, ptrV)),
+					() => Mk<T>(ptrV => ptrV)
+				))
+				.ToVar()
+				.TerminateWithAction();
+			ptr.SetMod(new Mod<T>(name, source));
+			return action;
+		};
+
+	public static Func<IRoVar<Option<Pt>>, Action<bool>> ModSetHover<T>(this IScopedPtr<T> ptr, string name, Func<Pt, T, T> fun) =>
+		pt =>
+		{
+			var (source, action) = pt
+				.Select(ptOpt => ptOpt.Match(
+					ptV => Mk<T>(ptrV => fun(ptV, ptrV)),
+					() => Mk<T>(ptrV => ptrV)
+				))
+				.ToVar()
+				.TerminateWithAction();
+			ptr.SetMod(new Mod<T>(name, source));
+			return action;
+		};
+
+
+	/*
+	public static Func<Pt, IRoVar<Option<Pt>>, IDisposable> ModSetDrag<T>(this IScopedPtr<T> ptr, string name, Func<Pt, Pt, T, T> fun) =>
+		(ptStart, ptEnd) => ptr.SetMod(new Mod<T>(
 			name,
-			true,
 			ptEnd
 				.Select(ptEndOpt => ptEndOpt.Match(
 					ptEndV => Mk<T>(ptrV => fun(ptStart, ptEndV, ptrV)),
@@ -67,10 +98,9 @@ public static class CmdModExt
 				.ToVar()
 		));
 
-	public static Func<IRoVar<Option<Pt>>, IDisposable> ModSetHover<T>(this IPtrRegular<T> ptr, string name, Func<Pt, T, T> fun) =>
-		pt => ptr.ModSet(new Mod<T>(
+	public static Func<IRoVar<Option<Pt>>, IDisposable> ModSetHover<T>(this IScopedPtr<T> ptr, string name, Func<Pt, T, T> fun) =>
+		pt => ptr.SetMod(new Mod<T>(
 			name,
-			false,
 			pt
 				.Select(ptOpt => ptOpt.Match(
 					ptV => Mk<T>(ptrV => fun(ptV, ptrV)),
@@ -78,6 +108,7 @@ public static class CmdModExt
 				))
 				.ToVar()
 		));
+	*/
 
 	private static Func<T, T> Mk<T>(Func<T, T> f) => f;
 }
@@ -85,92 +116,88 @@ public static class CmdModExt
 
 public static class GizmoExt
 {
-	public static Func<IRoVar<Option<Pt>>, IDisposable> UpdateGizmo<Gizmo>(
-		this Func<IRoVar<Option<Pt>>, IDisposable> dragHover,
+	public static Func<IRoVar<Option<Pt>>, Action<bool>> UpdateGizmo<Gizmo>(
+		this Func<IRoVar<Option<Pt>>, Action<bool>> dragHover,
 		Action<Func<Gizmo, Gizmo>> applyFun,
 		Func<Gizmo, Gizmo>? funStart = null,
 		Func<Gizmo, Gizmo>? funEnd = null
 	) =>
-		pt =>
-		{
-			funStart.Apply(applyFun);
-			var dragActionD = dragHover(pt);
-			return Disposable.Create(() =>
-			{
-				funEnd.Apply(applyFun);
-				dragActionD.Dispose();
-			});
-		};
+		pt => mf(() => dragHover(pt)).UpdateInternal(applyFun, funStart, funEnd, End.Set)();
 
 
 
-	public static Func<IRoVar<Option<Pt>>, IDisposable> UpdateGizmoTemp<Gizmo>(
-		this Func<IRoVar<Option<Pt>>, IDisposable> dragHover,
+	public static Func<IRoVar<Option<Pt>>, Action<bool>> UpdateGizmoTemp<Gizmo>(
+		this Func<IRoVar<Option<Pt>>, Action<bool>> dragHover,
 		Action<Func<Gizmo, Gizmo>> applyFun,
 		Func<Gizmo, Gizmo> funStart
 	) =>
-		pt =>
-		{
-			var prev = funStart.ApplyAndGetPreviousValue(applyFun);
-			Func<Gizmo, Gizmo> funEnd = _ => prev;
-			var dragActionD = dragHover(pt);
-			return Disposable.Create(() =>
-			{
-				funEnd.Apply(applyFun);
-				dragActionD.Dispose();
-			});
-		};
+		pt => mf(() => dragHover(pt)).UpdateInternal(applyFun, funStart, null, End.Restore)();
 
 
-
-
-
-	public static Func<Pt, IRoVar<Option<Pt>>, IDisposable> UpdateGizmo<Gizmo>(
-		this Func<Pt, IRoVar<Option<Pt>>, IDisposable> dragAction,
+	public static Func<Pt, IRoVar<Option<Pt>>, Action<bool>> UpdateGizmo<Gizmo>(
+		this Func<Pt, IRoVar<Option<Pt>>, Action<bool>> dragAction,
 		Action<Func<Gizmo, Gizmo>> applyFun,
 		Func<Gizmo, Gizmo>? funStart = null,
 		Func<Gizmo, Gizmo>? funEnd = null
 	) =>
-		(ptStart, ptEnd) =>
-		{
-			funStart.Apply(applyFun);
-			var dragActionD = dragAction(ptStart, ptEnd);
-			return Disposable.Create(() =>
-			{
-				funEnd.Apply(applyFun);
-				dragActionD.Dispose();
-			});
-		};
+		(ptStart, ptEnd) => mf(() => dragAction(ptStart, ptEnd)).UpdateInternal(applyFun, funStart, funEnd, End.Set)();
 
 
-
-	public static Func<Pt, IRoVar<Option<Pt>>, IDisposable> UpdateGizmoTemp<Gizmo>(
-		this Func<Pt, IRoVar<Option<Pt>>, IDisposable> dragAction,
+	public static Func<Pt, IRoVar<Option<Pt>>, Action<bool>> UpdateGizmoTemp<Gizmo>(
+		this Func<Pt, IRoVar<Option<Pt>>, Action<bool>> dragAction,
 		Action<Func<Gizmo, Gizmo>> applyFun,
 		Func<Gizmo, Gizmo> funStart
 	) =>
-		(ptStart, ptEnd) =>
-		{
-			var prev = funStart.ApplyAndGetPreviousValue(applyFun);
-			Func<Gizmo, Gizmo> funEnd = _ => prev;
-			var dragActionD = dragAction(ptStart, ptEnd);
-			return Disposable.Create(() =>
-			{
-				funEnd.Apply(applyFun);
-				dragActionD.Dispose();
-			});
-		};
+		(ptStart, ptEnd) => mf(() => dragAction(ptStart, ptEnd)).UpdateInternal(applyFun, funStart, null, End.Restore)();
 
 
+	private static Func<Action<bool>> mf(Func<Action<bool>> f) => f;
 
-	private static void Apply<Gizmo>(this Func<Gizmo, Gizmo>? fun, Action<Func<Gizmo, Gizmo>> applyFun)
+	private enum End
 	{
-		if (fun == null) return;
+		Set,
+		Leave,
+		Restore,
+	}
+
+	private static Func<Action<bool>> UpdateInternal<Gizmo>(
+		this Func<Action<bool>> dragAction,
+		Action<Func<Gizmo, Gizmo>> applyFun,
+		Func<Gizmo, Gizmo>? funStart,
+		Func<Gizmo, Gizmo>? funEnd,
+		End end
+	) =>
+		() =>
+		{
+			var gizmoPrev = applyFun.ApplyAndGetPreviousValue(funStart);
+			return commitPrev =>
+			{
+				switch (end)
+				{
+					case End.Set:
+						applyFun.Apply(funEnd);
+						break;
+					case End.Leave:
+						break;
+					case End.Restore:
+						applyFun.Apply(_ => gizmoPrev);
+						break;
+				}
+				dragAction()(commitPrev);
+			};
+		};
+
+
+
+	private static void Apply<Gizmo>(this Action<Func<Gizmo, Gizmo>> applyFun, Func<Gizmo, Gizmo>? fun)
+	{
+		fun ??= e => e;
 		applyFun(fun);
 	}
 
-	private static Gizmo ApplyAndGetPreviousValue<Gizmo>(this Func<Gizmo, Gizmo> fun, Action<Func<Gizmo, Gizmo>> applyFun)
+	private static Gizmo ApplyAndGetPreviousValue<Gizmo>(this Action<Func<Gizmo, Gizmo>> applyFun, Func<Gizmo, Gizmo>? fun)
 	{
+		fun ??= e => e;
 		Gizmo prev = default!;
 		applyFun(e =>
 		{

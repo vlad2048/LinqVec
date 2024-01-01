@@ -2,62 +2,46 @@
 
 namespace PtrLib;
 
+public sealed class ModUserCancelledException : Exception;
 public sealed record Mod<T>(
 	string Name,
-	bool Apply,
-	IRoVar<Func<T, T>> Fun
+	IObservable<Func<T, T>> Fun
 )
 {
-	public override string ToString() => $"Mod({Name}) apply:{Apply}";
-
-	public static readonly Mod<T> Empty = new("Empty", false, Var.MakeConst<Func<T, T>>(e => e));
+	public override string ToString() => $"Mod({Name})";
+	public static readonly Mod<T> Empty = new(nameof(Empty), Obs.Empty<Func<T, T>>());
 }
 
-public interface IPtrRegular<T>
-{
-	Disp D { get; }
-	T V { get; set; }
-	T VModded { get; }
-	IDisposable ModSet(Mod<T> modVal);
-}
-public interface IPtrCommit<Kid> : IPtrRegular<Kid>
-{
-	void Commit();
-}
 
-public interface IPtr<Dad> : IPtrRegular<Dad>
+public interface IPtr<TDoc> : IDisposable
 {
-	// Used by the Tools
-	// =================
-	IPtrRegular<Kid> Edit<Kid>(
-		Kid init,
-		Func<Dad, Kid, Dad> setFun,
-		Func<Dad, Kid, Dad> removeFun,
-		Disp d
+	IBoundVar<TDoc> V { get; }
+	IRoVar<TDoc> VGfx { get; }
+	IScopedPtr<TSub> Scope<TSub>(
+		TSub init,
+		Func<TDoc, TSub, TDoc> del,
+		Func<TDoc, TSub, TDoc> add,
+		Func<TSub, bool> valid
 	);
-	IPtrCommit<Kid> Create<Kid>(
-		Kid init,
-		Func<Dad, Kid, Dad> setFun,
-		Func<Kid, bool> validFun,
-		Disp d
-	);
-
-	// Used by VecEditor for management
-	// ================================
-	IObservable<Unit> WhenPaintNeeded { get; }
-	IObservable<Unit> WhenUndoRedo { get; }
 	void Undo();
 	void Redo();
-
-	// Used by the LayoutPane
-	// ======================
-	IObservable<Unit> WhenValueChanged { get; }
+	IObservable<Unit> WhenPaintNeeded { get; }
 }
-
-
-
 
 public static class Ptr
 {
-	public static IPtr<T> Make<T>(T init, Disp d) => new PtrDad<T>(init, d);
+	public static IPtr<TDoc> Make<TDoc>(TDoc init, Disp d) => new Ptr<TDoc>(init, d);
+}
+
+public interface IScopedPtr
+{
+	IObservable<Unit> WhenPaintNeeded { get; }
+}
+
+public interface IScopedPtr<TSub> : IScopedPtr, IDisposable
+{
+	IRwVar<TSub> V { get; }
+	IRoVar<TSub> VGfx { get; }
+	void Commit();
+	void SetMod(Mod<TSub> modV);
 }

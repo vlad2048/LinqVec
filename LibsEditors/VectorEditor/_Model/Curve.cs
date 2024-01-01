@@ -73,7 +73,7 @@ static class CurveMods
 			Pts = curve.Pts.AddArr(CurvePt.Make(ptStart, ptEnd))
 		};
 
-	public static Mod<Curve> AddPoint_Hover(IRoVar<Option<Pt>> mouse) =>
+	/*public static Mod<Curve> AddPoint_Hover(IRoVar<Option<Pt>> mouse) =>
 		new(
 			nameof(AddPoint_Hover),
 			false,
@@ -85,7 +85,7 @@ static class CurveMods
 						Pts = curve.Pts.AddArr(CurvePt.Make(m, m))
 					}))
 				.ToVar()
-		);
+		);*/
 
 
 

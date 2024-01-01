@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Geom;
@@ -114,19 +115,19 @@ public static class CmdRunner
 		Disp d
 	)
 	{
-		IDisposable? dragActionD = null;
+		Action<bool>? dragActionD = null;
 
 		ISubject<Unit> whenDisposeHover = new Subject<Unit>().D(d);
 		var WhenDisposeHover = whenDisposeHover.AsObservable();
 
+		Func<IDisposable> Conv(Func<Action<bool>> fun) => () => Disposable.Create(() => fun()(false));
 
 		curHotspot
 			.Where(_ => dragActionD == null)
 			.Select(t => t.Hotspot.HoverAction)
-			//.DoLogThread("CurHotspot")
-			.Select<Func<IRoVar<Option<Pt>>, IDisposable>, Func<IDisposable>>(e => () => e(mouse))
+			.Select<Func<IRoVar<Option<Pt>>, Action<bool>>, Func<Action<bool>>>(e => () => e(mouse))
+			.Select(Conv)
 			.ObserveOnUI()
-			//.DoLogThread("CurHotspot->UI")
 			.DisposePreviousSequentiallyOrWhen(WhenDisposeHover, d);
 
 		cmdEvt
@@ -151,7 +152,7 @@ public static class CmdRunner
 								clickCmd.ClickAction().Match(curStateSet, curStateReset);
 								break;
 							case DragHotspotCmd dragCmd:
-								dragActionD?.Dispose();
+								dragActionD?.Invoke(true);
 								//dragActionD = Disposable.Empty;
 								dragActionD = null;
 								curStateReset();

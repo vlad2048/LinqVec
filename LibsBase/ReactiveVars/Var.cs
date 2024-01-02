@@ -8,10 +8,11 @@ public static class Var
 	public static IRwVar<T> Make<T>(this T init, Disp d) => new RwVar<T>(init, d);
 	public static IRoVar<T> MakeConst<T>(T val) => Obs.Return(val).ToVar();
 	public static IBoundVar<T> MakeBound<T>(T init, Disp d) => new BoundVar<T>(init, d);
+	public static IRoVar<Option<T>> MakeOptionalFromOptionalObs<T>(IObservable<Option<T>> source, Disp d) => source.Prepend(None).ToVar(d);
 
 
 	//public static IRoVar<T> ToVar<T>(this IObservable<T> obs) => new RoVar<T>(obs);
-	//public static IRoVar<T> ToVar<T>(this IObservable<T> obs, Disp d) => obs.MakeReplay(d).ToVar();
+	//public static IRoVar<T> ToVar<T>(this IObservable<T> obs, DISP d) => obs.MakeReplay(d).ToVar();
 
 	public static IRoVar<T> ToVar<T>(this IObservable<T> obs) => new RoVar<T>(obs.Replay(1).RefCount());
 	public static IRoVar<T> ToVar<T>(this IObservable<T> obs, Disp d) => new RoVar<T>(obs.MakeReplay(d));

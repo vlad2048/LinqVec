@@ -85,7 +85,7 @@ static class PanZoomer
 		Ctrl ctrl
 	)
 	{
-		var d = MkD();
+		var d = MkD("PanZoomer");
 
 		evt.WhenMouseWheel().Subscribe(e =>
 		{

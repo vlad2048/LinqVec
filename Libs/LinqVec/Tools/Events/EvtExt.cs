@@ -33,13 +33,13 @@ public static class EvtExt
 
 	// Mouse Enter
 	// ===========
-	public static bool IsMouseEnter(this IEvt evt) => evt is MouseEnter;
-	public static IObservable<Unit> WhenMouseEnter(this IObservable<IEvt> src) => src.OfType<MouseEnter>().ToUnit();
+	public static bool IsMouseEnter(this IEvt evt) => evt is MouseEnterEvt;
+	public static IObservable<Unit> WhenMouseEnter(this IObservable<IEvt> src) => src.OfType<MouseEnterEvt>().ToUnit();
 
 	// Mouse Leave
 	// ===========
-	public static bool IsMouseLeave(this IEvt evt) => evt is MouseLeave;
-	public static IObservable<Unit> WhenMouseLeave(this IObservable<IEvt> src) => src.OfType<MouseLeave>().ToUnit();
+	public static bool IsMouseLeave(this IEvt evt) => evt is MouseLeaveEvt;
+	public static IObservable<Unit> WhenMouseLeave(this IObservable<IEvt> src) => src.OfType<MouseLeaveEvt>().ToUnit();
 
 	// Mouse Down
 	// ==========

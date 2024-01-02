@@ -5,9 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
-    <PackageReference Include="PowBasics" Version="0.0.40" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LogLib\LogLib.csproj" />
   </ItemGroup>
 
 </Project>

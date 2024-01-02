@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
+    <PackageReference Include="LanguageExt.Transformers" Version="4.4.7" />
+    <PackageReference Include="PowBasics" Version="0.0.40" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Geom\Geom.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -11,7 +11,7 @@ namespace LinqVec.Tools;
 
 public sealed class ToolEnv : IDisposable
 {
-	private readonly Disp d = MkD();
+	private readonly Disp d = MkD("ToolEnv");
 	public void Dispose() => d.Dispose();
 
 	private readonly Ctrl drawPanel;

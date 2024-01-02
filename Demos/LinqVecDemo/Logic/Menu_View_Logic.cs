@@ -9,7 +9,7 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace LinqVecDemo.Logic;
 
-static class PanesLogic
+static class Menu_View_Logic
 {
 	private sealed record Ctx(
 		EditorLogicMaker Maker,
@@ -18,7 +18,7 @@ static class PanesLogic
 		Disp D
 	);
 
-	public static void InitPanesLogic(
+	public static void Init_View_Logic(
 		this MainWin win,
 		EditorLogicMaker maker,
 		IRoVar<Option<DocPane>> doc,

@@ -32,7 +32,7 @@ public static class WinFormsUtils
 
 	public static void InitRX<T>(this Control ctrl, IObservable<T> whenInit, Action<T, Disp> initAction)
 	{
-		var d = MkD().D(ctrl);
+		var d = MkD($"InitRX({ctrl.GetType().Name})").D(ctrl);
 		ctrl.Events().HandleCreated.Subscribe(_ =>
 		{
 			whenInit.Subscribe(init => { initAction(init, d); }).D(d);
@@ -41,11 +41,11 @@ public static class WinFormsUtils
 
 	public static void InitRX(this Control ctrl, Action<Disp> initAction)
     {
-        var d = MkD().D(ctrl);
+        var d = MkD($"InitRX({ctrl.GetType().Name})").D(ctrl);
         ctrl.Events().HandleCreated.Subscribe(_ => initAction(d)).D(d);
     }
 
-	public static Disp GetD(this Control ctrl) => MkD().D(ctrl);
+	public static Disp GetD(this Control ctrl) => MkD($"GetD({ctrl.GetType().Name})").D(ctrl);
 
 
 

@@ -4,6 +4,8 @@ using Geom;
 using LinqVec;
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
+using LinqVec.Tools.Cmds.Structs;
+using LinqVec.Tools.Cmds.Utils;
 using LinqVec.Tools.Events;
 using LinqVec.Utils;
 using LinqVec.Utils.Rx;
@@ -49,7 +51,7 @@ sealed class CurveTool(Ctx c) : ITool
 
 	private static Func<T, T> Mk<T>(Func<T, T> f) => f;
 
-	/*public void Run(Disp d)
+	/*public void Run(DISP d)
 	{
 		var evt = c.Env.GetEvtForTool(this, true, d);
 		var curve = c.Doc.Scope(Curve.Empty(), (e, _) => e, CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun).D(d);
@@ -94,10 +96,16 @@ sealed class CurveTool(Ctx c) : ITool
 	{
 		var evt = c.Env.GetEvtForTool(this, true, d);
 		var curve = c.Doc.Scope(Curve.Empty(), (e, _) => e, CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun).D(d);
+		LoggingLogic.Setup_CurveMod_Logging(curve, Rx.Sched, d);
 
 		var gizmo = CurveGfxState.AddPoint;
 		Action<Func<CurveGfxState, CurveGfxState>> gizmoApply = f => gizmo = f(gizmo);
 		//gizmoApply = gizmoApply.Log("CurveTool");
+
+
+		//G.Cfg.RunWhen(e => e.Log.LogCmd.ModEvt, d, [
+		//	() => curve.WhenModEvt.LogD("ModEvt"),
+		//]);
 
 
 		evt.WhenKeyDown(Keys.Enter)
@@ -136,10 +144,22 @@ sealed class CurveTool(Ctx c) : ITool
 
 
 
-				Hotspots.AnywhereNeg
+				Hotspots.Anywhere
 					.OnHover(
 						curve.ModSetHover("Curve_AddPoint_Hover", (pt, curveV) => curveV.AddPoint(pt, pt))
 							.UpdateGizmo(gizmoApply, _ => CurveGfxState.AddPoint)
+
+
+						//curve.ModSetHover("Curve_AddPoint_Hover", (pt, curveV) => curveV.AddPoint(pt, pt))
+
+					/*mp =>
+					{
+						L.WriteLine("Hook.Start");
+						return c =>
+						{
+							L.WriteLine($"Hook.Commit({c})");
+						};
+					}*/
 					)
 					.Do(_ => [
 						Cmd.Drag(

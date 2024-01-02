@@ -34,12 +34,14 @@ public static class VecJsoner
 		WriteIndented = true,
 		AllowTrailingCommas = true,
 		ReadCommentHandling = JsonCommentHandling.Skip,
+		Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 	};
 
 	static VecJsoner()
 	{
 		configJsonOpt.Converters.Add(new OptionConverterFactory());
-		vecJsonOpt.Converters.Add(new OptionConverterFactory());
+		//vecJsonOpt.Converters.Add(new OptionConverterFactory());
+		vecJsonOpt.Converters.Add(new OptionStringConverter());
 	}
 
 	public static readonly Jsoner Config = new(configJsonOpt);

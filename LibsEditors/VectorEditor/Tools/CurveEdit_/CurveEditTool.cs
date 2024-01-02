@@ -2,6 +2,8 @@
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Cmds.Enums;
+using LinqVec.Tools.Cmds.Structs;
+using LinqVec.Tools.Cmds.Utils;
 using ReactiveVars;
 using VectorEditor._Model;
 

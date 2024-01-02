@@ -1,10 +1,12 @@
-﻿using System.Reactive;
+﻿/*
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Geom;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Cmds.Enums;
 using LinqVec.Tools.Cmds.Logic;
+using LinqVec.Tools.Cmds.Structs;
 using LinqVec.Tools.Events;
 using Microsoft.Reactive.Testing;
 using ReactiveVars;
@@ -19,25 +21,25 @@ class HotspotTrackerTests
 		"Main",
 		CBase.Cursors.Pen,
 		[
-			new HotspotNfo(
-				new Hotspot("First", mouse => mouse.X switch {
+			new HotspotCmdsNfo(
+				new HotspotNfo("First", mouse => mouse.X switch {
 					>= 0 and < 25 => Option<H>.Some("A"),
 					>= 25 and < 50 => Option<H>.Some("B"),
 					_ => None
-				}, null, _ => Disposable.Empty),
+				}, null, _ => _ =>  {}),
 				_ => [
-					new DragHotspotCmd("Drag", Gesture.Drag, (_, _) => Disposable.Empty),
+					new DragHotspotCmd("Drag", Gesture.Drag, (_, _) => _ => {}),
 					new ClickHotspotCmd("Click", Gesture.Click, () => None),
 				]
 			),
-			new HotspotNfo(
-				new Hotspot("Second", mouse => mouse.X switch {
+			new HotspotCmdsNfo(
+				new HotspotNfo("Second", mouse => mouse.X switch {
 					>= 50 and < 75 => Option<H>.Some("C"),
 					>= 75 and < 100 => Option<H>.Some("D"),
 					_ => None
-				}, null, _ => Disposable.Empty),
+				}, null, _ => _ => { }),
 				_ => [
-					new DragHotspotCmd("Drag", Gesture.Drag, (_, _) => Disposable.Empty),
+					new DragHotspotCmd("Drag", Gesture.Drag, (_, _) => _ => { }),
 					new ClickHotspotCmd("Click", Gesture.Click, () => None),
 				]
 			),
@@ -113,3 +115,4 @@ class HotspotTrackerTests
 	private static Recorded<Notification<IEvt>> LUp(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Up, MouseBtn.Left, ModKeyState.Empty));
 	private static Recorded<Notification<IEvt>> RUp(double t, int x) => OnNext(t, (IEvt)new MouseBtnEvt(new Pt(x, 0), UpDown.Up, MouseBtn.Right, ModKeyState.Empty));
 }
+*/

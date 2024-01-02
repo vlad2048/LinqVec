@@ -11,7 +11,7 @@ public static class RxCfg
 	public static IRoVar<C> Make<C>(string filename, C defaultValue, Jsoner jsoner) =>
 		Obs.Create<C>(obs =>
 			{
-				var obsD = MkD();
+				var obsD = MkD("Cfg");
 
 				var init = jsoner.LoadOrCreateDefault(filename.MakeFolderForFileIFN(), defaultValue);
 				obs.OnNext(init);

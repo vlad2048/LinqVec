@@ -16,7 +16,7 @@ public static class EvtRestricter
 	public static IObservable<IEvt> RestrictTo(this IObservable<IEvt> src, Func<Pt, bool> predicate) =>
 		Obs.Create<IEvt>(obs =>
 		{
-			var d = MkD();
+			var d = MkD("EvtRestricter");
 
 			bool? isIn = null;
 
@@ -31,7 +31,7 @@ public static class EvtRestricter
 						// Enter
 						if (predicate(pos) && isIn != true)
 						{
-							Send(new MouseEnter());
+							Send(new MouseEnterEvt());
 							Send(e);
 							isIn = true;
 						}
@@ -39,7 +39,7 @@ public static class EvtRestricter
 						// Leave
 						else if (!predicate(pos) && isIn != false)
 						{
-							Send(new MouseLeave());
+							Send(new MouseLeaveEvt());
 							Send(e);
 							isIn = false;
 						}
@@ -52,10 +52,10 @@ public static class EvtRestricter
 
 						break;
 
-					case MouseEnter:
+					case MouseEnterEvt:
 						break;
 
-					case MouseLeave when isIn != false:
+					case MouseLeaveEvt when isIn != false:
 						Send(e);
 						isIn = false;
 						break;

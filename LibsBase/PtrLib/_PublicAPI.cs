@@ -13,6 +13,21 @@ public sealed record Mod<T>(
 }
 
 
+public interface IModEvt;
+
+public sealed record ModStartEvt(string Name) : IModEvt
+{
+	public override string ToString() => $"Start({Name})";
+}
+
+public sealed record ModFinishEvt(string Name, bool Commit, string Str) : IModEvt
+{
+	public override string ToString() => $"{Verb}({Name})  -> {Str}";
+	private string Verb => Commit ? "Commit" : "Cancel";
+}
+
+
+
 public interface IPtr<TDoc> : IDisposable
 {
 	IBoundVar<TDoc> V { get; }
@@ -44,4 +59,5 @@ public interface IScopedPtr<TSub> : IScopedPtr, IDisposable
 	IRoVar<TSub> VGfx { get; }
 	void Commit();
 	void SetMod(Mod<TSub> modV);
+	IObservable<IModEvt> WhenModEvt { get; }
 }

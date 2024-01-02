@@ -1,5 +1,4 @@
-﻿/*
-using System.Collections;
+﻿using System.Collections;
 using System.Reactive.Disposables;
 
 namespace ReactiveVars;
@@ -440,4 +439,3 @@ public sealed class ReverseCompositeDisposable : ICollection<IDisposable>, ICanc
 		}
 	}
 }
-*/

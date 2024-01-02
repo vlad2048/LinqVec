@@ -1,8 +1,8 @@
-﻿using System;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using Geom;
 using LinqVec.Tools.Cmds.Enums;
+using LinqVec.Tools.Cmds.Structs;
+using LinqVec.Tools.Cmds.Utils;
 using LinqVec.Utils.Rx;
 using PtrLib;
 using ReactiveVars;
@@ -12,9 +12,9 @@ namespace LinqVec.Tools.Cmds;
 
 public static class Cmd
 {
-	public static Hotspot<TH> OnHover<TH>(this Hotspot<TH> hotspot, Func<IRoVar<Option<Pt>>, Action<bool>> hoverAction) => hotspot with { HoverAction = hoverAction };
+	public static HotspotNfo<TH> OnHover<TH>(this HotspotNfo<TH> hotspot, Func<IRoVar<Pt>, Action<bool>> hoverAction) => hotspot with { HoverAction = hoverAction };
 
-	public static readonly Func<IRoVar<Option<Pt>>, Action<bool>> EmptyHoverAction = _ => commit => {};
+	//public static readonly Func<IRoVar<Pt>, Action<bool>> EmptyHoverAction = _ => _ => {};
 
 	public static ClickHotspotCmd ClickRet(
 		string name,
@@ -28,13 +28,18 @@ public static class Cmd
 
 	public static DragHotspotCmd Drag(
 		string name,
-		Func<Pt, IRoVar<Option<Pt>>, Action<bool>> dragAction
+		Func<Pt, IRoVar<Pt>, Action<bool>> dragAction
 	) => new(
 		name,
 		Gesture.Drag,
 		dragAction
 	);
 
+	public static ShortcutNfo Shortcut(
+		string name,
+		Keys key,
+		Action action
+	) => new(name, key, action);
 
 	// *************
 	// * Utilities *
@@ -57,28 +62,30 @@ public static class Cmd
 
 public static class CmdModExt
 {
-	public static Func<Pt, IRoVar<Option<Pt>>, Action<bool>> ModSetDrag<T>(this IScopedPtr<T> ptr, string name, Func<Pt, Pt, T, T> fun) =>
+	public static Func<Pt, IRoVar<Pt>, Action<bool>> ModSetDrag<T>(this IScopedPtr<T> ptr, string name, Func<Pt, Pt, T, T> fun) =>
 		(ptStart, ptEnd) =>
 		{
 			var (source, action) = ptEnd
-				.Select(ptEndOpt => ptEndOpt.Match(
+				.Select(ptEndV => Mk<T>(ptrV => fun(ptStart, ptEndV, ptrV)))
+				/*.Select(ptEndOpt => ptEndOpt.Match(
 					ptEndV => Mk<T>(ptrV => fun(ptStart, ptEndV, ptrV)),
 					() => Mk<T>(ptrV => ptrV)
-				))
+				))*/
 				.ToVar()
 				.TerminateWithAction();
 			ptr.SetMod(new Mod<T>(name, source));
 			return action;
 		};
 
-	public static Func<IRoVar<Option<Pt>>, Action<bool>> ModSetHover<T>(this IScopedPtr<T> ptr, string name, Func<Pt, T, T> fun) =>
+	public static Func<IRoVar<Pt>, Action<bool>> ModSetHover<T>(this IScopedPtr<T> ptr, string name, Func<Pt, T, T> fun) =>
 		pt =>
 		{
 			var (source, action) = pt
-				.Select(ptOpt => ptOpt.Match(
+				.Select(ptV => Mk<T>(ptrV => fun(ptV, ptrV)))
+				/*.Select(ptOpt => ptOpt.Match(
 					ptV => Mk<T>(ptrV => fun(ptV, ptrV)),
 					() => Mk<T>(ptrV => ptrV)
-				))
+				))*/
 				.ToVar()
 				.TerminateWithAction();
 			ptr.SetMod(new Mod<T>(name, source));
@@ -87,7 +94,7 @@ public static class CmdModExt
 
 
 	/*
-	public static Func<Pt, IRoVar<Option<Pt>>, IDisposable> ModSetDrag<T>(this IScopedPtr<T> ptr, string name, Func<Pt, Pt, T, T> fun) =>
+	public static Func<Pt, IRoVar<Pt>, IDisposable> ModSetDrag<T>(this IScopedPtr<T> ptr, string name, Func<Pt, Pt, T, T> fun) =>
 		(ptStart, ptEnd) => ptr.SetMod(new Mod<T>(
 			name,
 			ptEnd
@@ -98,7 +105,7 @@ public static class CmdModExt
 				.ToVar()
 		));
 
-	public static Func<IRoVar<Option<Pt>>, IDisposable> ModSetHover<T>(this IScopedPtr<T> ptr, string name, Func<Pt, T, T> fun) =>
+	public static Func<IRoVar<Pt>, IDisposable> ModSetHover<T>(this IScopedPtr<T> ptr, string name, Func<Pt, T, T> fun) =>
 		pt => ptr.SetMod(new Mod<T>(
 			name,
 			pt
@@ -116,8 +123,24 @@ public static class CmdModExt
 
 public static class GizmoExt
 {
-	public static Func<IRoVar<Option<Pt>>, Action<bool>> UpdateGizmo<Gizmo>(
-		this Func<IRoVar<Option<Pt>>, Action<bool>> dragHover,
+	public static Action<Func<Gizmo, Gizmo>> Log<Gizmo>(this Action<Func<Gizmo, Gizmo>> applyFunPrev, string name)
+	{
+		Action<Func<Gizmo, Gizmo>> applyFunNext = fPrev =>
+		{
+			Func<Gizmo, Gizmo> fNext = vPrev =>
+			{
+				var vNext = fPrev(vPrev);
+				L.WriteLine($"[gizmo - {name}]: {vPrev} -> {vNext}");
+				return vNext;
+			};
+			applyFunPrev(fNext);
+		};
+		return applyFunNext;
+	}
+
+
+	public static Func<IRoVar<Pt>, Action<bool>> UpdateGizmo<Gizmo>(
+		this Func<IRoVar<Pt>, Action<bool>> dragHover,
 		Action<Func<Gizmo, Gizmo>> applyFun,
 		Func<Gizmo, Gizmo>? funStart = null,
 		Func<Gizmo, Gizmo>? funEnd = null
@@ -126,16 +149,16 @@ public static class GizmoExt
 
 
 
-	public static Func<IRoVar<Option<Pt>>, Action<bool>> UpdateGizmoTemp<Gizmo>(
-		this Func<IRoVar<Option<Pt>>, Action<bool>> dragHover,
+	public static Func<IRoVar<Pt>, Action<bool>> UpdateGizmoTemp<Gizmo>(
+		this Func<IRoVar<Pt>, Action<bool>> dragHover,
 		Action<Func<Gizmo, Gizmo>> applyFun,
 		Func<Gizmo, Gizmo> funStart
 	) =>
 		pt => mf(() => dragHover(pt)).UpdateInternal(applyFun, funStart, null, End.Restore)();
 
 
-	public static Func<Pt, IRoVar<Option<Pt>>, Action<bool>> UpdateGizmo<Gizmo>(
-		this Func<Pt, IRoVar<Option<Pt>>, Action<bool>> dragAction,
+	public static Func<Pt, IRoVar<Pt>, Action<bool>> UpdateGizmo<Gizmo>(
+		this Func<Pt, IRoVar<Pt>, Action<bool>> dragAction,
 		Action<Func<Gizmo, Gizmo>> applyFun,
 		Func<Gizmo, Gizmo>? funStart = null,
 		Func<Gizmo, Gizmo>? funEnd = null
@@ -143,8 +166,8 @@ public static class GizmoExt
 		(ptStart, ptEnd) => mf(() => dragAction(ptStart, ptEnd)).UpdateInternal(applyFun, funStart, funEnd, End.Set)();
 
 
-	public static Func<Pt, IRoVar<Option<Pt>>, Action<bool>> UpdateGizmoTemp<Gizmo>(
-		this Func<Pt, IRoVar<Option<Pt>>, Action<bool>> dragAction,
+	public static Func<Pt, IRoVar<Pt>, Action<bool>> UpdateGizmoTemp<Gizmo>(
+		this Func<Pt, IRoVar<Pt>, Action<bool>> dragAction,
 		Action<Func<Gizmo, Gizmo>> applyFun,
 		Func<Gizmo, Gizmo> funStart
 	) =>
@@ -170,6 +193,7 @@ public static class GizmoExt
 		() =>
 		{
 			var gizmoPrev = applyFun.ApplyAndGetPreviousValue(funStart);
+			var stopFun = dragAction();
 			return commitPrev =>
 			{
 				switch (end)
@@ -183,7 +207,7 @@ public static class GizmoExt
 						applyFun.Apply(_ => gizmoPrev);
 						break;
 				}
-				dragAction()(commitPrev);
+				stopFun(commitPrev);
 			};
 		};
 

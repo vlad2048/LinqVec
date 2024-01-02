@@ -30,8 +30,9 @@ partial class MainWin : Form
 
 		this.InitRX(this.Events().Load.ToUnit(), (_, d) =>
 		{
-			var doc = this.InitDocLogic(VectorEditorLogicMaker.Instance, d);
-			this.InitPanesLogic(VectorEditorLogicMaker.Instance, doc, d);
+			var doc = this.Init_File_Logic(VectorEditorLogicMaker.Instance, d);
+			this.Init_View_Logic(VectorEditorLogicMaker.Instance, doc, d);
+			this.Init_Tools_Logic(d);
 		});
 	}
 }

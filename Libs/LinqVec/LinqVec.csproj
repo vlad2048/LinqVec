@@ -6,14 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\LibsBase\Geom\Geom.csproj" />
     <ProjectReference Include="..\..\LibsBase\PtrLib\PtrLib.csproj" />
     <ProjectReference Include="..\..\LibsBase\UILib\UILib.csproj" />
-    <ProjectReference Include="..\..\LibsBase\WinAPI\WinAPI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

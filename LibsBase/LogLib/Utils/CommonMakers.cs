@@ -1,4 +1,6 @@
-﻿namespace LinqVec.Utils;
+﻿using System.Drawing;
+
+namespace LogLib.Utils;
 
 public static class CommonMakers
 {

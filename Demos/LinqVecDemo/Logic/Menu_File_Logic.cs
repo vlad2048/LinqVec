@@ -11,7 +11,7 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace LinqVecDemo.Logic;
 
-static class DocLogic
+static class Menu_File_Logic
 {
 	private static OpenFileDialog MkOpenFileDialog() => new()
 	{
@@ -27,7 +27,7 @@ static class DocLogic
 	}; 
 	
 	
-	public static IRoVar<Option<DocPane>> InitDocLogic(this MainWin win, EditorLogicMaker maker, Disp d)
+	public static IRoVar<Option<DocPane>> Init_File_Logic(this MainWin win, EditorLogicMaker maker, Disp d)
 	{
 		var curDoc = win.dockPanel.GetActiveDoc(d);
 

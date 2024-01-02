@@ -1,13 +1,62 @@
 ﻿using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Geom;
+using LinqVec.Logging;
 using LinqVec.Tools.Cmds.Enums;
+using LinqVec.Tools.Cmds.Events;
+using LinqVec.Tools.Cmds.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Utils;
 using LinqVec.Utils.Rx;
+using LogLib;
+using LogLib.Interfaces;
+using LogLib.Structs;
 using ReactiveVars;
 
 namespace LinqVec.Tools.Cmds.Logic;
+
+
+
+interface IUsr : IWriteSer
+{
+	bool IsQuick { get; }
+}
+sealed record MoveUsr(bool IsQuick, Pt Pt) : IUsr
+{
+	public override string ToString() => $"Move({Pt}) IsQuick:{IsQuick}";
+	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
+}
+sealed record LDownUsr(bool IsQuick, Pt Pt, ModKeyState ModKey) : IUsr
+{
+	public override string ToString() => $"LDown({Pt}, {ModKey}) IsQuick:{IsQuick}";
+	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
+}
+sealed record LUpUsr(bool IsQuick, Pt Pt, ModKeyState ModKey) : IUsr
+{
+	public override string ToString() => $"LUp({Pt}, {ModKey}) IsQuick:{IsQuick}";
+	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
+}
+sealed record RDownUsr(bool IsQuick, Pt Pt) : IUsr
+{
+	public override string ToString() => $"RDown({Pt}) IsQuick:{IsQuick}";
+	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
+}
+sealed record RUpUsr(bool IsQuick, Pt Pt) : IUsr
+{
+	public override string ToString() => $"RUp({Pt}) IsQuick:{IsQuick}";
+	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
+}
+sealed record KeyDownUsr(bool IsQuick, Keys Key) : IUsr
+{
+	public override string ToString() => $"KeyDown({Key}) IsQuick:{IsQuick}";
+	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
+}
+
+
+
+
+
+
 
 
 
@@ -18,8 +67,8 @@ static class CmdEvtGenerator
 
 
 	public static IObservable<ICmdEvt> ToCmdEvt(
-		this IRoVar<HotspotNfoResolved> curHotspot,
-		IRoVar<ToolState> curState,
+		this IRoVar<Option<Hotspot>> hotspot,
+		IRoVar<ToolState> state,
 		IObservable<IEvt> evt,
 		IScheduler scheduler,
 		Disp d
@@ -28,44 +77,85 @@ static class CmdEvtGenerator
 		var usrEvt = evt
 			.TimeInterval(scheduler)
 			.Select(e => e.Value.ToUsr(e.Interval <= ClickDelay))
-			.WhereSome();
-		return curHotspot
-			.Select(e => e.ToCmdEvt(curState.V, usrEvt, scheduler, d))
-			.Switch()
+			.WhereSome()
+			.MakeHot(d);
+
+		LogCategories.Setup_UsrEvt_Logging(usrEvt, scheduler, d);
+
+		return hotspot
+			.SwitchOption_NeverIfNone(hotspot_ =>
+				hotspot_.ToCmdEvt(usrEvt, state.V.Shortcuts, scheduler, d))
 			.MakeHot(d);
 	}
 
 
-	private static IObservable<ICmdEvt> ToCmdEvt(
-		this HotspotNfoResolved hotspot,
-		ToolState state,
-		IObservable<IUsr> evt,
+	internal static IObservable<ICmdEvt> ToCmdEvt(
+		this Hotspot hotspot,
+		IObservable<IUsr> usrEvt,
+		ShortcutNfo[] shortcuts,
 		IScheduler scheduler,
 		Disp d
 	)
 	{
+		/*var whenDragStart =
+			hotspot.Cmds
+				.FirstOrOption(e => e.Gesture == Gesture.Drag)
+				.Map(cmd => usrEvt
+					.SpotMatches(seqDrag)
+					.Select(e => (ICmdEvt)new DragStartCmdEvt(cmd, ((LDownUsr)e).Pt)))
+				.IfNone(Obs.Never<ICmdEvt>)
+				.Lg("DragStart")
+				.MakeHot(d);*/
+
+		/*var whenDragEnd =
+			whenDragStart
+				.Select(_ =>
+					usrEvt
+						.Lg("  DragEnd - 1")
+						.Where(e => e is LUpUsr)
+						.Lg("  DragEnd - 2")
+						.Select(e => (ICmdEvt)new ConfirmCmdEvt(hotspot.Cmds.Single(f => f.Gesture == Gesture.Drag), ((LUpUsr)e).Pt))
+						.Lg("  DragEnd - 3")
+						.Take(1)
+						.Lg("  DragEnd - 4")
+				)
+				.Switch()
+				.Lg("  DragEnd - Switch")
+				.MakeHot(d);
+
+		return Obs.Merge(
+			whenDragStart,
+			whenDragEnd
+		);*/
+
 		if (hotspot.Cmds.Select(e => e.Gesture).Distinct().Count() != hotspot.Cmds.Length) throw new ArgumentException("Gestures should be unique for a Hotspot");
 		var hasBothSingleAndDoubleClicks = hotspot.Cmds.Any(e => e.Gesture == Gesture.Click) && hotspot.Cmds.Any(e => e.Gesture == Gesture.DoubleClick);
 
 		var whenDragStart =
 			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.Drag)
-				.Map(cmd =>
-					evt
-						.SpotMatches(seqDrag)
-						.Select(e => (ICmdEvt)new DragStartCmdEvt(cmd, ((LDownUsr)e).Pt))
-				)
-				.IfNone(Obs.Never<ICmdEvt>);
+				.Map(cmd => usrEvt
+					.SpotMatches(seqDrag)
+					.Select(e => new DragStartCmdEvt(cmd, ((LDownUsr)e).Pt)))
+				.IfNone(Obs.Never<DragStartCmdEvt>)
+				//.Lg("DragStart")
+				.MakeHot(d);
 
 		var whenDragEnd =
 			whenDragStart
-				.Select(_ =>
-					evt
+				.Select(whenDragStart_ =>
+					usrEvt
+						//.Lg("  DragEnd - 1")
 						.Where(e => e is LUpUsr)
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(hotspot.Cmds.Single(f => f.Gesture == Gesture.Drag), ((LUpUsr)e).Pt))
+						//.Lg("  DragEnd - 2")
+						.Select(e => new DragFinishCmdEvt(hotspot.Cmds.Single(f => f.Gesture == Gesture.Drag), whenDragStart_.PtStart, ((LUpUsr)e).Pt))
+						//.Lg("  DragEnd - 3")
 						.Take(1)
+						//.Lg("  DragEnd - 4")
 				)
-				.Switch();
+				.Switch()
+				//.Lg("  DragEnd - Switch")
+				.MakeHot(d);
 
 		var isDragging =
 			Obs.Merge(
@@ -75,30 +165,34 @@ static class CmdEvtGenerator
 				.Prepend(false)
 				.ToVar(d);
 
+		//isDragging.TimePrefix(scheduler).Log(d, "isDragging");
+
 		var whenRightClick =
 			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.RightClick)
 				.Map(cmd =>
-					evt
+					usrEvt
 						.Where(_ => !isDragging.V)
 						.SpotMatches(seqRightClick)
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((RDownUsr)e).Pt))
+						.Select(e => new ConfirmCmdEvt(cmd, ((RDownUsr)e).Pt))
 				)
-				.IfNone(Obs.Never<ICmdEvt>);
+				.IfNone(Obs.Never<ConfirmCmdEvt>)
+				.MakeHot(d);
 
 		var whenDoubleClick =
 			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.DoubleClick)
 				.Map(cmd =>
-					evt
+					usrEvt
 						.Where(_ => !isDragging.V)
 						.SpotMatches(seqDoubleClick)
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
+						.Select(e => new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
 				)
-				.IfNone(Obs.Never<ICmdEvt>)
+				.IfNone(Obs.Never<ConfirmCmdEvt>)
 				.MakeHot(d);
 
-		var whenDoubleClickDelayed = whenDoubleClick.Delay(TimeSpan.Zero, scheduler).MakeHot(d);
+		var whenDoubleClickDelayed = whenDoubleClick.Delay(TimeSpan.Zero, scheduler)
+			.MakeHot(d);
 
 		var whenClick =
 			hotspot.Cmds
@@ -107,62 +201,79 @@ static class CmdEvtGenerator
 					hasBothSingleAndDoubleClicks switch
 					{
 						false =>
-							evt
+							usrEvt
 								.Where(_ => !isDragging.V)
 								.SpotMatches(seqClick)
-								.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt)),
+								.Select(e => new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt)),
 						true =>
-							evt
+							usrEvt
 								.Where(_ => !isDragging.V)
 								.SpotMatches(seqClick)
 								.IfOtherDoesntHappenWithin(
 									Obs.Merge(
-										evt.Where(e => e is LDownUsr).ToUnit(),
+										usrEvt.Where(e => e is LDownUsr).ToUnit(),
 										whenDoubleClickDelayed.ToUnit()
 									)
 								, ClickDelay, scheduler)
-								.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
+								.Select(e => new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
 					}
 				)
-				.IfNone(Obs.Never<ICmdEvt>);
+				.IfNone(Obs.Never<ConfirmCmdEvt>)
+				.MakeHot(d);
 
 		var whenShiftClick =
 			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.ShiftClick)
 				.Map(cmd =>
-					evt
+					usrEvt
 						.Where(_ => !isDragging.V)
 						.SpotMatches(seqShiftClick)
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
+						.Select(e => new ConfirmCmdEvt(cmd, ((LDownUsr)e).Pt))
 				)
-				.IfNone(Obs.Never<ICmdEvt>);
+				.IfNone(Obs.Never<ConfirmCmdEvt>)
+				.MakeHot(d);
 
 
 		//void Log(string s) => L.WriteLine($"[{scheduler.Now:HH:mm:ss.f}] {s}");
 
 		var whenShortcut =
-			state.Shortcuts
+			shortcuts
 				.Select(shortcut =>
-					evt
+					usrEvt
 						.OfType<KeyDownUsr>()
 						.Where(e => e.Key == shortcut.Key)
 						.Select(_ => new ShortcutCmdEvt(shortcut))
 				)
-				.Merge();
+				.Merge()
+				.MakeHot(d);
 
+		var whenCancel =
+			usrEvt.OfType<KeyDownUsr>()
+				.Where(e => e.Key == Keys.Escape)
+				.Select(_ => new CancelCmdEvt())
+				.MakeHot(d);
 
-		return Obs.Merge(
+		whenDragEnd
+			.OfType<DragFinishCmdEvt>();
+			//.Subscribe(e => L.WriteLine($"***** 1 *****: {e}")).D(d);
+
+		return Obs.Merge<ICmdEvt>(
 			whenDragStart,
 			whenDragEnd,
 			whenRightClick,
 			whenDoubleClick,
 			whenClick,
 			whenShiftClick,
-			whenShortcut
+			whenShortcut,
+			whenCancel
 		);
 	}
 
-
+	private static IObservable<T> Lg<T>(this IObservable<T> source, string name) => source.Do(e =>
+	{
+		var nameStr = $"[{name}]".PadRight(32);
+		L.WriteLine($"{nameStr}({e})");
+	});
 
 	// *************
 	// * Sequences *
@@ -198,34 +309,6 @@ static class CmdEvtGenerator
 	// ****************
 	// * IUsr & Match *
 	// ****************
-	private interface IUsr
-	{
-		bool IsQuick { get; }
-	}
-	private sealed record MoveUsr(bool IsQuick, Pt Pt) : IUsr
-	{
-		public override string ToString() => $"Move({Pt}) IsQuick:{IsQuick}";
-	}
-	private sealed record LDownUsr(bool IsQuick, Pt Pt, ModKeyState ModKey) : IUsr
-	{
-		public override string ToString() => $"LDown({Pt}, {ModKey}) IsQuick:{IsQuick}";
-	}
-	private sealed record LUpUsr(bool IsQuick, Pt Pt, ModKeyState ModKey) : IUsr
-	{
-		public override string ToString() => $"LUp({Pt}, {{ModKey}}) IsQuick:{IsQuick}";
-	}
-	private sealed record RDownUsr(bool IsQuick, Pt Pt) : IUsr
-	{
-		public override string ToString() => $"RDown({Pt}) IsQuick:{IsQuick}";
-	}
-	private sealed record RUpUsr(bool IsQuick, Pt Pt) : IUsr
-	{
-		public override string ToString() => $"RUp({Pt}) IsQuick:{IsQuick}";
-	}
-	private sealed record KeyDownUsr(bool IsQuick, Keys Key) : IUsr
-	{
-		public override string ToString() => $"KeyDown({Key}) IsQuick:{IsQuick}";
-	}
 	private static Option<IUsr> ToUsr(this IEvt e, bool isQuick) => e switch
 	{
 		MouseMoveEvt { Pos: var pos } => new MoveUsr(isQuick, pos),

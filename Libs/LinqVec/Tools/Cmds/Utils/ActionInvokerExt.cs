@@ -7,7 +7,7 @@ namespace LinqVec.Tools.Cmds.Utils;
 
 static class ActionInvokerExt
 {
-	public static void RunFuncAction(this IObservable<Func<Action>> source, Disp d) =>
+	public static void RunFuncAction(this IObservable<Func<Action>> source, DISP d) =>
 		source
 			.Select(e => e.ToFuncDisp()())
 			.DisposePrevious()

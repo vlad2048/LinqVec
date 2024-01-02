@@ -8,7 +8,7 @@ namespace LinqVec.Drawing;
 
 public class GfxResources : IDisposable
 {
-    private readonly Disp d = MkD();
+    private readonly Disp d = MkD("GfxResources");
     public void Dispose() => d.Dispose();
 
     private record struct PenNfo(Color Color, float Thickness, float Scale);

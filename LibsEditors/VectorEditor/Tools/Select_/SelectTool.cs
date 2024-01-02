@@ -5,6 +5,8 @@ using LinqVec.Tools.Cmds.Enums;
 using LinqVec.Utils;
 using ReactiveVars;
 using Geom;
+using LinqVec.Tools.Cmds.Structs;
+using LinqVec.Tools.Cmds.Utils;
 using VectorEditor._Model;
 
 namespace VectorEditor.Tools.Select_;
@@ -36,8 +38,7 @@ sealed class SelectTool(Ctx c) : ITool
 	{
 		var evt = c.Env.GetEvtForTool(this, true, d);
 
-		/*
-		ToolStateFun ModeNeutral() => _ =>
+		/*ToolStateFun ModeNeutral() => _ =>
 			new ToolState(
 				States.Neutral,
 				CBase.Cursors.BlackArrow,

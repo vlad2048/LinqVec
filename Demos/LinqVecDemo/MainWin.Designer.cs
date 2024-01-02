@@ -43,6 +43,8 @@
 			menuViewLayout = new ToolStripMenuItem();
 			menuViewTools = new ToolStripMenuItem();
 			statusStrip = new StatusStrip();
+			toolsToolStripMenuItem = new ToolStripMenuItem();
+			menuToolsSaveConsoleOutput = new ToolStripMenuItem();
 			menuStrip.SuspendLayout();
 			SuspendLayout();
 			// 
@@ -60,7 +62,7 @@
 			// 
 			// menuStrip
 			// 
-			menuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, viewToolStripMenuItem });
+			menuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, viewToolStripMenuItem, toolsToolStripMenuItem });
 			menuStrip.Location = new Point(0, 0);
 			menuStrip.Name = "menuStrip";
 			menuStrip.Size = new Size(800, 24);
@@ -146,6 +148,20 @@
 			statusStrip.TabIndex = 2;
 			statusStrip.Text = "statusStrip1";
 			// 
+			// toolsToolStripMenuItem
+			// 
+			toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { menuToolsSaveConsoleOutput });
+			toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+			toolsToolStripMenuItem.Size = new Size(46, 20);
+			toolsToolStripMenuItem.Text = "&Tools";
+			// 
+			// menuToolsSaveConsoleOutput
+			// 
+			menuToolsSaveConsoleOutput.Name = "menuToolsSaveConsoleOutput";
+			menuToolsSaveConsoleOutput.ShortcutKeys = Keys.Control | Keys.O;
+			menuToolsSaveConsoleOutput.Size = new Size(224, 22);
+			menuToolsSaveConsoleOutput.Text = "&Save console output";
+			// 
 			// MainWin
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
@@ -180,5 +196,7 @@
 		public ToolStripMenuItem menuViewLayout;
 		public ToolStripMenuItem menuViewTools;
 		private ToolStripMenuItem toolboxToolStripMenuItem;
+		private ToolStripMenuItem toolsToolStripMenuItem;
+		public ToolStripMenuItem menuToolsSaveConsoleOutput;
 	}
 }

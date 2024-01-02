@@ -13,6 +13,11 @@ public static class Rx
 
 public static class RxExt
 {
+	//public static IObservable<string> TimePrefix<T>(this IObservable<T> source, IScheduler scheduler) =>
+	//	source
+	//		.Timestamp(scheduler)
+	//		.Select(e => $"[{e.Timestamp:HH:mm:ss.fffffff}] - {e.Value}");
+
 	public static IObservable<T> ObserveOnUI<T>(this IObservable<T> obs) => obs.ObserveOn(Rx.Sched);
 	public static IObservable<Option<U>> Map2<T, U>(this IObservable<Option<T>> obs, Func<T, U> fun) => obs.Select(e => e.Map(fun));
 
@@ -28,7 +33,7 @@ public static class RxExt
 
 		var destination =
 			Obs.Using(
-				() => MkD(),
+				() => MkD($"TerminateWithAction<{typeof(T).Name}>"),
 				d => Obs.Create<T>(obs =>
 				{
 					source.Subscribe(obs.OnNext).D(d);

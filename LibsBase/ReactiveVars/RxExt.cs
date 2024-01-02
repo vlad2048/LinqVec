@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿using System;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -17,10 +18,37 @@ public static class RxExt
 			source
 		);
 
-	public static void DisposePreviousSequentiallyOrWhen(
+
+	public static IRoVar<T> InvokeAndSequentiallyDispose<T>(this IObservable<Func<Disp, T>> sourceFun) =>
+		Obs.Using(
+				() => new SerialDisposable(),
+				serD => sourceFun
+					.Select(fun =>
+					{
+						serD.Disposable = null;
+						var stateD = MkD($"InvokeAndSequentiallyDispose<{typeof(T).Name}>");
+						var state = fun(stateD);
+						serD.Disposable = stateD;
+						return state;
+					})
+			)
+			.ToVar();
+
+
+	public static IObservable<U> SwitchOption_NeverIfNone<T, U>(this IObservable<Option<T>> source, Func<T, IObservable<U>> fun) =>
+		source
+			.Select(e => e.Match(
+				fun,
+				Obs.Never<U>
+			))
+			.Switch();
+
+
+
+	/*public static void DisposePreviousSequentiallyOrWhen(
 		this IObservable<Func<IDisposable>> source,
 		IObservable<Unit> whenDispose,
-		Disp d
+		DISP d
 	) =>
 		Obs.Using(
 				() => new SequentialSerialDisposable(),
@@ -30,7 +58,7 @@ public static class RxExt
 						whenDispose.Do(_ => serD.DisposableFun = null)
 					)
 			)
-			.MakeHot(d);
+			.MakeHot(d);*/
 
 
 	public static IObservable<Unit> ToUnit<T>(this IObservable<T> source) => source.Select(_ => Unit.Default);

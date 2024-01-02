@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LinqVec.Controls;
 using LinqVec.Structs;
@@ -78,6 +79,9 @@ public partial class VecEditor : UserControl
 
 			G.Cfg.RunWhen(e => e.Log.CurTool, d, curTool.Log);
 		});
+
+
+		G.Cfg.RunWhen(e => e.Log.Disp, ctrlD, () => { DispMakerLoggingEnabled = true; return Disposable.Create(() => DispMakerLoggingEnabled = false); });
 	}
 
 	private static string GetToolName(ITool tool) => tool.GetType().Name[..^4];
@@ -113,7 +117,7 @@ file static class VecEditorUtils
 	) TrackUserEventsAndCurTool(
 		DrawPanel drawPanel,
 		ITool[] tools,
-		Disp d
+		DISP d
 	)
 	{
 		var (setCurTool, whenSetCurTool) = RxEventMaker.Make<ITool>(d);
@@ -131,7 +135,7 @@ file static class VecEditorUtils
 		IObservable<IEvt> whenEvt,
 		ITool[] tools,
 		IObservable<ITool> whenSetCurTool,
-		Disp d
+		DISP d
 	) =>
 		Obs.Merge(
 				tools
@@ -160,7 +164,7 @@ file static class VecEditorUtils
 			{
 				serDisp.DisposableFun = () =>
 				{
-					var toolD = MkD();
+					var toolD = MkD("ToolD");
 					tool.Run(toolD);
 					return toolD;
 				};
@@ -171,7 +175,7 @@ file static class VecEditorUtils
 	public static IDisposable Log(this IRoVar<ITool> curTool) =>
 		curTool
 			.Select(e => $"Tool <- {e.GetType().Name.RemoveSuffixIFP("Tool")}")
-			.Subscribe(e => LC.WriteLine(e, 0xfd5c5b));
+			.Subscribe(e => L.WriteLine(e, 0xfd5c5b));
 
 
 	private static readonly Brush designModeBackBrush = new SolidBrush(MkCol(0x542a57));

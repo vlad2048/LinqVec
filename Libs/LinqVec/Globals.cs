@@ -7,21 +7,34 @@ global using Obs = System.Reactive.Linq.Observable;
 global using Disp = System.Reactive.Disposables.CompositeDisposable;
 global using static ReactiveVars.DispMaker;
 
-global using static LinqVec.Utils.CommonMakers;
-global using L = ReactiveVars.ReactiveVarsLogger;
-global using LC = LinqVec.Utils.ColoredLogger;
-global using LT = LinqVec.Utils.ThreadLogger;
+global using static LogLib.Utils.CommonMakers;
+global using L = LogLib.Logger;
+global using LR = ReactiveVars.ReactiveVarsLogger;
+global using LV = LinqVec.Utils.LinqVecLogger;
+
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using LinqVec.Utils.Json;
 using ReactiveUI;
 using ReactiveVars;
+using LogLib.Writers;
+using LinqVec.Logging;
+
 
 [assembly:InternalsVisibleTo("LINQPadQuery")]
 [assembly:InternalsVisibleTo("LinqVec.Tests")]
 
 namespace LinqVec;
+
+public static class Reseter
+{
+	public static void Reset()
+	{
+		ReactiveVars.Reseter.Reset();
+		LogVecConKeeper.Instance.Reset();
+	}
+}
 
 public static class G
 {
@@ -38,7 +51,7 @@ public static class G
 		};
 	}
 
-	public static IObservable<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Config);
+	public static IRoVar<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Config);
 }
 
 

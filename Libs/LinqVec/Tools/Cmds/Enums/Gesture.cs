@@ -13,8 +13,8 @@ public enum Gesture
 
 public enum ClickGesture
 {
-	Click = 2,
-	RightClick = 4,
-	DoubleClick = 8,
-	ShiftClick = 16,
+	Click = Gesture.Click,
+	RightClick = Gesture.RightClick,
+	DoubleClick = Gesture.DoubleClick,
+	ShiftClick = Gesture.ShiftClick,
 }

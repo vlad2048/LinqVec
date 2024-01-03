@@ -8,12 +8,10 @@ namespace LogLib;
 
 public static class LogLibColors
 {
-	public const int Black = 0x000000;
-	public const int Gray = 0x207341;
-	public const int Time = 0x207341;
-	public const int On = 0x207341;
-	public const int Off = 0x207341;
+	public static int Black = 0x000000;
 }
+
+public sealed record VName(int Col, [CallerArgumentExpression(nameof(Col))] string? ColStr = null);
 
 public static class TxtWriterExt
 {
@@ -29,20 +27,12 @@ public static class TxtWriterExt
 
 	// Specialized
 	// ===========
-	public static ITxtWriter WriteTime(this ITxtWriter w, DateTimeOffset t) => w
-		.Write($"[{t:HH:mm:ss.fffffff}]", LogLibColors.Time)
-		.Space(1);
-
-	public static ITxtWriter WriteFlag(this ITxtWriter w, string? name, bool val) => w
-        .WriteIf(name != null, $"[{name}:", LogLibColors.Gray)
-        .Write(val ? new TxtSegment("on ", LogLibColors.On) : new TxtSegment("off", LogLibColors.Off))
-        .Write("]", LogLibColors.Gray)
-        .Space(1);
 
 	// Misc
 	// ====
+	public static VName ToVName(this int col, [CallerArgumentExpression(nameof(col))] string? colStr = null) => new(col, colStr);
     public static ITxtWriter Write(this ITxtWriter w, Func<ITxtWriter> action) { action(); return w; }
-    //public static ITxtWriter Write(this ITxtWriter w, (string, int) textCol) => w.Write(new TxtSegment(textCol.Item1, textCol.Item2));
+    public static ITxtWriter Write(this ITxtWriter w, string text, VName vName) => w.Write(new TxtSegment(text, vName.Col, vName.ColStr));
     public static ITxtWriter Write(this ITxtWriter w, string text, int col, [CallerArgumentExpression(nameof(col))] string? colStr = null) => w.Write(new TxtSegment(text, col, colStr));
     public static ITxtWriter WriteLine(this ITxtWriter w, string text, int col, [CallerArgumentExpression(nameof(col))] string? colStr = null) => w.WriteLine(new TxtSegment(text, col, colStr));
     public static ITxtWriter Write(this ITxtWriter w, string text, Color col, [CallerArgumentExpression(nameof(col))] string? colStr = null) => w.Write(new TxtSegment(text, UnMkCol(col), colStr));
@@ -51,6 +41,7 @@ public static class TxtWriterExt
     // Utils
     // =====
     public static ITxtWriter Pad(this ITxtWriter w, int n) => w.Space(n - w.LastSegLength);
+    public static ITxtWriter PadAbs(this ITxtWriter w, int n) => w.Space(n - w.AbsoluteX);
     public static ITxtWriter Space(this ITxtWriter w, int cnt) => cnt switch
     {
         > 0 => w.Write(new string(' ', cnt), LogLibColors.Black),

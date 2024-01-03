@@ -97,36 +97,37 @@ static class CmdEvtGenerator
 		Disp d
 	)
 	{
-		/*var whenDragStart =
+		/*
+		var whenDragStart =
 			hotspot.Cmds
 				.FirstOrOption(e => e.Gesture == Gesture.Drag)
 				.Map(cmd => usrEvt
 					.SpotMatches(seqDrag)
-					.Select(e => (ICmdEvt)new DragStartCmdEvt(cmd, ((LDownUsr)e).Pt)))
-				.IfNone(Obs.Never<ICmdEvt>)
-				.Lg("DragStart")
-				.MakeHot(d);*/
-
-		/*var whenDragEnd =
-			whenDragStart
-				.Select(_ =>
-					usrEvt
-						.Lg("  DragEnd - 1")
-						.Where(e => e is LUpUsr)
-						.Lg("  DragEnd - 2")
-						.Select(e => (ICmdEvt)new ConfirmCmdEvt(hotspot.Cmds.Single(f => f.Gesture == Gesture.Drag), ((LUpUsr)e).Pt))
-						.Lg("  DragEnd - 3")
-						.Take(1)
-						.Lg("  DragEnd - 4")
-				)
-				.Switch()
-				.Lg("  DragEnd - Switch")
+					.Select(e => new DragStartCmdEvt(cmd, ((LDownUsr)e).Pt)))
+				.IfNone(Obs.Never<DragStartCmdEvt>)
+				//.Lg("DragStart")
 				.MakeHot(d);
 
-		return Obs.Merge(
-			whenDragStart,
-			whenDragEnd
-		);*/
+		var whenDragEnd =
+			whenDragStart
+				.Select(whenDragStart_ =>
+						usrEvt
+							//.Lg("  DragEnd - 1")
+							.Where(e => e is LUpUsr)
+							//.Lg("  DragEnd - 2")
+							.Select(e => new DragFinishCmdEvt(hotspot.Cmds.Single(f => f.Gesture == Gesture.Drag), whenDragStart_.PtStart, ((LUpUsr)e).Pt))
+							//.Lg("  DragEnd - 3")
+							.Take(1)
+							//.Lg("  DragEnd - 4")
+				)
+				.Switch()
+				//.Lg("  DragEnd - Switch")
+				.MakeHot(d);
+
+		return Obs.Merge<ICmdEvt>(whenDragStart, whenDragEnd);
+		*/
+
+
 
 		if (hotspot.Cmds.Select(e => e.Gesture).Distinct().Count() != hotspot.Cmds.Length) throw new ArgumentException("Gestures should be unique for a Hotspot");
 		var hasBothSingleAndDoubleClicks = hotspot.Cmds.Any(e => e.Gesture == Gesture.Click) && hotspot.Cmds.Any(e => e.Gesture == Gesture.DoubleClick);
@@ -164,8 +165,6 @@ static class CmdEvtGenerator
 				)
 				.Prepend(false)
 				.ToVar(d);
-
-		//isDragging.TimePrefix(scheduler).Log(d, "isDragging");
 
 		var whenRightClick =
 			hotspot.Cmds
@@ -234,8 +233,6 @@ static class CmdEvtGenerator
 				.MakeHot(d);
 
 
-		//void Log(string s) => L.WriteLine($"[{scheduler.Now:HH:mm:ss.f}] {s}");
-
 		var whenShortcut =
 			shortcuts
 				.Select(shortcut =>
@@ -255,7 +252,6 @@ static class CmdEvtGenerator
 
 		whenDragEnd
 			.OfType<DragFinishCmdEvt>();
-			//.Subscribe(e => L.WriteLine($"***** 1 *****: {e}")).D(d);
 
 		return Obs.Merge<ICmdEvt>(
 			whenDragStart,
@@ -272,7 +268,7 @@ static class CmdEvtGenerator
 	private static IObservable<T> Lg<T>(this IObservable<T> source, string name) => source.Do(e =>
 	{
 		var nameStr = $"[{name}]".PadRight(32);
-		L.WriteLine($"{nameStr}({e})");
+		LR.WriteLine($"{nameStr}({e})");
 	});
 
 	// *************

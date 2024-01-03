@@ -31,19 +31,23 @@ namespace LinqVec.Logging;
 [JsonDerivedType(typeof(ShortcutCmdEvt), typeDiscriminator: "ShortcutCmdEvt")]
 [JsonDerivedType(typeof(CancelCmdEvt), typeDiscriminator: "CancelCmdEvt")]
 
+// IModEvt
+[JsonDerivedType(typeof(ModStartEvtF), typeDiscriminator: "ModStartEvtF")]
+[JsonDerivedType(typeof(ModFinishEvtF), typeDiscriminator: "ModFinishEvtF")]
+
 // Others
 [JsonDerivedType(typeof(TimestampCon), typeDiscriminator: "TimestampCon")]
-[JsonDerivedType(typeof(IsHotspotFrozenCon), typeDiscriminator: "IsHotspotFrozenCon")]
+[JsonDerivedType(typeof(IsDraggingCon), typeDiscriminator: "IsDraggingCon")]
 [JsonDerivedType(typeof(HotspotNameCon), typeDiscriminator: "HotspotNameCon")]
 
 public interface IWriteSer : IWrite;
 
-sealed record TimestampCon(DateTimeOffset Time) : IWriteSer
+sealed record TimestampCon(TimeSpan Time) : IWriteSer
 {
 	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
 }
 
-sealed record IsHotspotFrozenCon(bool Flag) : IWriteSer
+sealed record IsDraggingCon(bool Flag) : IWriteSer
 {
 	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
 }

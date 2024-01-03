@@ -26,9 +26,4 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Tools\Cmds\Events\" />
-    <Folder Include="Tools\Cmds\Utils\" />
-  </ItemGroup>
-
 </Project>

@@ -9,7 +9,7 @@ static class HotspotHoverActionRunner
 {
 	public static void Run_Hotspot_HoverActions(
 		this IRoVar<Option<Hotspot>> hotspot,
-		IRoVar<bool> isHotspotFrozen,
+		IRoVar<bool> isDragging,
 		IRoVar<Pt> mouse,
 		Disp d
 	)
@@ -18,22 +18,24 @@ static class HotspotHoverActionRunner
 
 		Obs.CombineLatest(
 			hotspot,
-			isHotspotFrozen,
-			(hotspotOpt, isHotspotFrozen_) => (hotspotOpt, isHotspotFrozen_)
+			isDragging,
+			(hotspotOpt, isDragging_) => (hotspotOpt, isDragging_)
 		)
 			.Subscribe(t =>
 			{
 				serD.Disposable = null;
-				if (t.isHotspotFrozen_) return;
+				if (t.isDragging_) return;
 				t.hotspotOpt.IfSome(hotspot_ =>
 				{
+					//LR.LogThread("Hover Start_1");
 					var stopFun = hotspot_.HotspotNfo.HoverAction(mouse);
-					//L.WriteLine("----> Enter");
 					serD.Disposable = Disposable.Create(() =>
 					{
-						//L.WriteLine("----> Exit");
+						//LR.LogThread("Hover Stop_1");
 						stopFun(false);
+						//LR.LogThread("Hover Stop_2");
 					});
+					//LR.LogThread("Hover Start_2");
 				});
 			}).D(d);
 	}

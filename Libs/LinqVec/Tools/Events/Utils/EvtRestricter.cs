@@ -13,7 +13,7 @@ public static class EvtRestricter
 	}
 
 
-	public static IObservable<IEvt> RestrictTo(this IObservable<IEvt> src, Func<Pt, bool> predicate) =>
+	private static IObservable<IEvt> RestrictTo(this IObservable<IEvt> src, Func<Pt, bool> predicate) =>
 		Obs.Create<IEvt>(obs =>
 		{
 			var d = MkD("EvtRestricter");
@@ -26,6 +26,8 @@ public static class EvtRestricter
 			{
 				switch (e)
 				{
+					// Handle Entering / Leaving the area
+					// ==================================
 					case MouseMoveEvt { Pos: var pos }:
 
 						// Enter
@@ -59,10 +61,48 @@ public static class EvtRestricter
 						Send(e);
 						isIn = false;
 						break;
+					case MouseLeaveEvt:
+						break;
 
-					default:
+
+
+					// Only accept mouse buttons within the area
+					// Except for MouseUp:
+					// -> if a MouseUp happens outside the area it needs to be reported but with the Invalid flag set
+					// ==============================================================================================
+					/*
+					case MouseBtnEvt { UpDown: UpDown.Down } or MouseClickEvt when isIn == true:
 						Send(e);
 						break;
+
+					case MouseBtnEvt { UpDown: UpDown.Up } f:
+						//Send(f with {IsInvalidUp = isIn != true});
+						break;
+					*/
+					case MouseBtnEvt:
+						Send(e);
+						break;
+
+
+
+
+					// Always let MouseWheel through
+					// =============================
+					case MouseWheelEvt:
+						Send(e);
+						break;
+
+					// Always let Keys through
+					// =======================
+					case KeyEvt:
+						Send(e);
+						break;
+
+
+
+
+					default:
+						throw new ArgumentException();
 				}
 			}).D(d);
 

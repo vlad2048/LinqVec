@@ -5,6 +5,7 @@ namespace LogLib.Interfaces;
 public interface ITxtWriter
 {
 	int LastSegLength { get; }
+	int AbsoluteX { get; }
 	ITxtWriter Write(TxtSegment seg);
 	ITxtWriter WriteLine();
 }

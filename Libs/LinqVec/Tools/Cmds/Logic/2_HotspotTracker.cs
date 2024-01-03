@@ -1,8 +1,6 @@
-﻿using System.Reactive.Concurrency;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using Geom;
 using LinqVec.Tools.Cmds.Structs;
-using LinqVec.Tools.Events;
 using LinqVec.Utils;
 using LinqVec.Utils.Rx;
 using ReactiveVars;
@@ -13,13 +11,13 @@ static class HotspotTracker
 {
 	public static IRoVar<Option<Hotspot>> TrackHotspot(
 		this IRoVar<ToolState> state,
-		IRoVar<bool> isHotspotFrozen,
+		IRoVar<bool> isDragging,
 		IRoVar<Option<Pt>> mousePos,
 		Disp d
 	) =>
 		Var.MakeOptionalFromOptionalObs(
 
-			state.WithLatestFrom(isHotspotFrozen, (state_, isHotspotFrozen_) => state_)
+			state.WithLatestFrom(isDragging, (state_, isDragging_) => state_)
 				.Select(state_ => mousePos.Map2(mousePos_ =>
 							state_.Hotspots
 								.Select(hotspotCmdsNfo => hotspotCmdsNfo.Hotspot.Fun(mousePos_)

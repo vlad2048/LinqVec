@@ -1,19 +1,8 @@
-﻿using System.Drawing;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using LogLib.Interfaces;
 
 namespace LogLib.Structs;
 
-
-public interface ITxtSource;
-
-/*
-public sealed record TxtSegment(
-	string Text,
-	int Color,
-	[CallerArgumentExpression(nameof(Color))] string? ColorName = null
-);
- */
 
 public sealed record TxtSegment
 {
@@ -26,10 +15,6 @@ public sealed record TxtSegment
 		this.Text = Text;
 		this.Color = Color;
 		this.ColorName = ColorName;
-		if (ColorName is "col" or "0")
-		{
-			var abc = 123;
-		}
 	}
 	public string Text { get; init; }
 	public int Color { get; init; }

@@ -10,7 +10,7 @@ public static class Logger
 
 	public static void Write(string s, Color col)
 	{
-		ConUtils.SetColor(col);
+		ConUtils.SetFore(col);
 		Console.Write(s);
 		ResetColor();
 	}
@@ -18,7 +18,7 @@ public static class Logger
 
 	public static void WriteLine(string s, Color col)
 	{
-		ConUtils.SetColor(col);
+		ConUtils.SetFore(col);
 		Console.Write(s);
 		ResetColor();
 	}
@@ -27,7 +27,7 @@ public static class Logger
 
 
 	private static readonly Color DefaultColor = MkCol(0xCCCCCC);
-	private static void ResetColor() => ConUtils.SetColor(DefaultColor);
+	private static void ResetColor() => ConUtils.SetFore(DefaultColor);
 	private static Color MkCol(uint v) => Color.FromArgb(0xFF, Color.FromArgb((int)v));
 	private static Color MkCol(int v) => Color.FromArgb(0xFF, Color.FromArgb(v));
 }

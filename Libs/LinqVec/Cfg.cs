@@ -1,4 +1,6 @@
-﻿namespace LinqVec;
+﻿using System.Text.Json.Serialization;
+
+namespace LinqVec;
 
 public record struct CfgLogCmd(
 	bool Evt,
@@ -6,7 +8,11 @@ public record struct CfgLogCmd(
 	bool Hotspot,
 	bool CmdEvt,
 	bool ModEvt
-);
+)
+{
+	[JsonIgnore]
+	public static readonly CfgLogCmd AllLoggingEnabled = new(true, true, true, true, true);
+}
 
 public record struct CfgLog(
 	bool Disp,
@@ -14,8 +20,16 @@ public record struct CfgLog(
 	bool CurTool,
 	bool EditorState,
 	CfgLogCmd LogCmd
-);
+)
+{
+	[JsonIgnore]
+	public static readonly CfgLog AllLoggingEnabled = new(true, true, true, true, CfgLogCmd.AllLoggingEnabled);
+}
 
 public record struct Cfg(
 	CfgLog Log
-);
+)
+{
+	[JsonIgnore]
+	public static readonly Cfg AllLoggingEnabled = new(CfgLog.AllLoggingEnabled);
+}

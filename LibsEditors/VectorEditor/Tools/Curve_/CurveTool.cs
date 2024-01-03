@@ -2,6 +2,7 @@
 using System.Xml.Linq;
 using Geom;
 using LinqVec;
+using LinqVec.Logging;
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Cmds.Structs;
@@ -49,63 +50,16 @@ sealed class CurveTool(Ctx c) : ITool
 		return false;
 	}
 
-	private static Func<T, T> Mk<T>(Func<T, T> f) => f;
-
-	/*public void Run(DISP d)
-	{
-		var evt = c.Env.GetEvtForTool(this, true, d);
-		var curve = c.Doc.Scope(Curve.Empty(), (e, _) => e, CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun).D(d);
-
-		Action<bool>? action = null;
-
-		evt.WhenKeyDown(Keys.D8).Subscribe(_ =>
-		{
-			L.WriteLine("Drag -> Start");
-			Func<Pt, Pt, Curve, Curve> fun = (ptStart, ptEnd, curveV) => curveV with
-			{
-				Pts = curveV.Pts.AddArr(CurvePt.Make(ptEnd, ptEnd))
-			};
-			(var source, action) = evt.MousePos
-				.Select(ptEndOpt => ptEndOpt.Match(
-					ptEndV => Mk<Curve>(ptrV => fun(Pt.Zero, ptEndV, ptrV)),
-					() => Mk<Curve>(ptrV => ptrV)
-				))
-				.ToVar()
-				.TerminateWithAction();
-			var sourceHot = source.MakeHot(d);
-			//sourceHot.Materialize().Subscribe(e => L.WriteLine($"{e}")).D(d);
-			var mod = new Mod<Curve>("Test", sourceHot);
-			curve.SetMod(mod);
-		}).D(d);
-		evt.WhenKeyDown(Keys.D9).Subscribe(_ =>
-		{
-			L.WriteLine("Drag -> SendComplete");
-			action?.Invoke(true);
-		}).D(d);
-		evt.WhenKeyDown(Keys.D0).Subscribe(_ =>
-		{
-			L.WriteLine("Drag -> SendError");
-			action?.Invoke(true);
-		}).D(d);
-
-	}*/
-
-
 
 	public void Run(Disp d)
 	{
 		var evt = c.Env.GetEvtForTool(this, true, d);
 		var curve = c.Doc.Scope(Curve.Empty(), (e, _) => e, CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun).D(d);
-		LoggingLogic.Setup_CurveMod_Logging(curve, Rx.Sched, d);
+		LogCategories.Setup_ModEvt_Logging(curve.WhenModEvt.Select(e => e.Conv()), Rx.Sched, d);
 
 		var gizmo = CurveGfxState.AddPoint;
 		Action<Func<CurveGfxState, CurveGfxState>> gizmoApply = f => gizmo = f(gizmo);
 		//gizmoApply = gizmoApply.Log("CurveTool");
-
-
-		//G.Cfg.RunWhen(e => e.Log.LogCmd.ModEvt, d, [
-		//	() => curve.WhenModEvt.LogD("ModEvt"),
-		//]);
 
 
 		evt.WhenKeyDown(Keys.Enter)
@@ -120,18 +74,18 @@ sealed class CurveTool(Ctx c) : ITool
 			States.Neutral,
 			CBase.Cursors.Pen,
 			[
-				//Hotspots.CurvePoint(curve.V.V, false)
-				//	.OnHover(
-				//		Cmd.EmptyHoverAction
-				//			.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
-				//	)
-				//	.Do(pointId => [
-				//		Cmd.Drag(
-				//			Cmds.MovePoint,
-				//			curve.ModSetDrag("Curve_MovePoint", (ptStart, ptEnd, curveV) => curveV.MovePoint(pointId, ptEnd))
-				//				.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
-				//		)
-				//	]),
+				Hotspots.CurvePoint(curve.V.V, false)
+					.OnHover(
+						Cmd.EmptyHoverAction
+							.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
+					)
+					.Do(pointId => [
+						Cmd.Drag(
+							Cmds.MovePoint,
+							curve.ModSetDrag("Curve_MovePoint", (ptStart, ptEnd, curveV) => curveV.MovePoint(pointId, ptEnd))
+								.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
+						)
+					]),
 
 				//.. DoesSelectionContainExactlyOneCurve(c.State, c.Doc, out var curveId)
 				//? new[] {
@@ -148,18 +102,6 @@ sealed class CurveTool(Ctx c) : ITool
 					.OnHover(
 						curve.ModSetHover("Curve_AddPoint_Hover", (pt, curveV) => curveV.AddPoint(pt, pt))
 							.UpdateGizmo(gizmoApply, _ => CurveGfxState.AddPoint)
-
-
-						//curve.ModSetHover("Curve_AddPoint_Hover", (pt, curveV) => curveV.AddPoint(pt, pt))
-
-					/*mp =>
-					{
-						L.WriteLine("Hook.Start");
-						return c =>
-						{
-							L.WriteLine($"Hook.Commit({c})");
-						};
-					}*/
 					)
 					.Do(_ => [
 						Cmd.Drag(

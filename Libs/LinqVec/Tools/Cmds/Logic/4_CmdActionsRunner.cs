@@ -11,26 +11,21 @@ static class CmdActionsRunner
 	public static void Run_Cmd_Actions(
 		this IObservable<ICmdEvt> cmdEvt,
 		IRoVar<Option<Hotspot>> hotspot,
-		IRwVar<bool> isHotspotFrozen,
+		IRwVar<bool> isDragging,
 		IRoVar<Pt> mouse,
 		Action<ToolStateFun> setState,
 		Disp d
 	)
 	{
-		void Freeze(bool enable)
-		{
-			isHotspotFrozen.V = enable;
-		}
-
 		Obs.Merge(
 				cmdEvt.OfType<ConfirmCmdEvt>().Where(e => e.HotspotCmd is ClickHotspotCmd)
 					.Do(
 						cmd =>
 						{
-							Freeze(true);
+							isDragging.V = true;
 							var stateNextOpt = ((ClickHotspotCmd)cmd.HotspotCmd).ClickAction();
 							stateNextOpt.IfSome(setState);
-							Freeze(false);
+							isDragging.V = false;
 						}
 					)
 					.ToUnit(),
@@ -38,8 +33,10 @@ static class CmdActionsRunner
 					.Select(
 						cmd =>
 						{
-							Freeze(true);
+							isDragging.V = true;
+							//LR.LogThread("           Drag Start_1");
 							var stopFun = ((DragHotspotCmd)cmd.HotspotCmd).DragAction(cmd.PtStart, mouse);
+							//LR.LogThread("           Drag Start_2");
 							return
 								Obs.Amb(
 										cmdEvt.OfType<CancelCmdEvt>().Select(_ => false),
@@ -48,8 +45,10 @@ static class CmdActionsRunner
 									.Take(1)
 									.Do(commit =>
 									{
+										//LR.LogThread("           Drag Stop_1");
 										stopFun(commit);
-										Freeze(false);
+										//LR.LogThread("           Drag Stop_2");
+										isDragging.V = false;
 									});
 						}
 					)
@@ -59,62 +58,4 @@ static class CmdActionsRunner
 			)
 			.Subscribe(_ => {}).D(d);
 	}
-
-
-	/*public static void Run_Cmd_Actions(
-		this IObservable<ICmdEvt> cmdEvt,
-		IRoVar<Option<Hotspot>> hotspot,
-		IRwVar<bool> hotspotTrackingEnabled,
-		IRoVar<Pt> mouse,
-		Action<ToolStateFun> setState,
-		DISP d
-	)
-	{
-		Obs.Merge<IAct>(
-			cmdEvt.OfType<ConfirmCmdEvt>().Where(e => e.HotspotCmd is ClickHotspotCmd)
-				.Select(
-					cmd => new ClickAction(
-						() =>
-						{
-							var stateNextOpt = ((ClickHotspotCmd)cmd.HotspotCmd).ClickAction();
-							stateNextOpt.IfSome(setState);
-						},
-						cmd.HotspotCmd.Name,
-						cmd.HotspotCmd.Gesture
-					)
-				),
-			cmdEvt.OfType<DragStartCmdEvt>()
-				.Select(
-					cmd =>
-					{
-						var stopFun = ((DragHotspotCmd)cmd.HotspotCmd).DragAction(cmd.PtStart, mouse);
-						return
-							Obs.Amb(
-								cmdEvt.OfType<CancelCmdEvt>().Select(_ => false),
-								cmdEvt.OfType<ConfirmCmdEvt>().Select(_ => true)
-							)
-							.Take(1)
-							.Do(stopFun);
-					}
-				)
-		)
-	}*/
-
-
-	/*private interface IAct
-	{
-		Action Run { get; }
-	}
-	private sealed record ClickAction(Action Run, string CmdName, Gesture CmdGesture) : IAct
-	{
-		public override string ToString() => $"ClickAction({CmdName}, {CmdGesture})";
-	}
-	private sealed record DragActionStart(Action Run, string CmdName, Gesture CmdGesture) : IAct
-	{
-		public override string ToString() => $"DragAction({CmdName}, {CmdGesture})";
-	}
-	private sealed record DragActionStop(Action Run, string CmdName, Gesture CmdGesture, bool Commit) : IAct
-	{
-		public override string ToString() => $"DragAction({CmdName}, {CmdGesture}) - Stop({Commit})";
-	}*/
 }

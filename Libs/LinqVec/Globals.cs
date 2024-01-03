@@ -24,6 +24,7 @@ using LinqVec.Logging;
 
 [assembly:InternalsVisibleTo("LINQPadQuery")]
 [assembly:InternalsVisibleTo("LinqVec.Tests")]
+[assembly:InternalsVisibleTo("Storybook")]
 
 namespace LinqVec;
 
@@ -41,6 +42,7 @@ public static class G
 	private const string ConfigFile = @"config\config.json";
 
 	private static readonly Disp D = new();
+	private static readonly IRwVar<IRoVar<Cfg>> CfgVar = Var.Make(RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Config), D);
 
 	static G()
 	{
@@ -51,7 +53,9 @@ public static class G
 		};
 	}
 
-	public static IRoVar<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Config);
+	public static IRoVar<Cfg> Cfg => CfgVar.Switch().ToVar();
+	//public static IRoVar<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Config);
+	public static void OverrideCfg(Cfg cfg) => CfgVar.V = Var.MakeConst(cfg);
 }
 
 

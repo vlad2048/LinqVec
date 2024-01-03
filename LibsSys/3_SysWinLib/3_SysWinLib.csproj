@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<RootNamespace>SysWinLib</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\2_SysWinInterfaces\2_SysWinInterfaces.csproj" />
+	</ItemGroup>
+
+</Project>

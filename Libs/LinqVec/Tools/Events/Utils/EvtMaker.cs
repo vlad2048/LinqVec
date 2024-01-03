@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using LinqVec.Utils;
+using LinqVec.Utils.Rx;
 using ReactiveVars;
 using UILib;
 
@@ -12,7 +13,9 @@ static class EvtMaker
 		IObservable<Unit> whenRepeatLastMouseMove
 	)
 	{
-		var whenMouseMove = ctrl.Events().MouseMove.Select(e => new MouseMoveEvt(e.ToPt()));
+		var whenMouseMove = ctrl.Events().MouseMove
+			//.Do(e => LR.LogThread($"MouseMove:{e.X},{e.Y}"))
+			.Select(e => new MouseMoveEvt(e.ToPt()));
 		var whenMouseEnter = ctrl.Events().MouseEnter.Select(_ => new MouseEnterEvt());
 		var whenMouseLeave = ctrl.Events().MouseLeave.Select(_ => new MouseLeaveEvt());
 		var whenMouseDown = ctrl.Events().MouseDown.Select(e => new MouseBtnEvt(e.ToPt(), UpDown.Down, e.ToBtn(), ModKeyState.Make()));
@@ -22,12 +25,14 @@ static class EvtMaker
 		var whenKeyUp = ctrl.Events().KeyUp.Select(e => new KeyEvt(UpDown.Up, e.KeyCode));
 
 		var whenMouseMoveRepeat = whenRepeatLastMouseMove
-			.Delay(TimeSpan.Zero)
+			//.Do(_ => LR.LogThread("whenRepeatLastMouseMove -> Triggered (1)"))
+			.Delay(TimeSpan.Zero, Rx.Sched)
+			//.Do(_ => LR.LogThread("whenRepeatLastMouseMove -> Triggered (2)"))
 			.WithLatestFrom(whenMouseMove).Select(e => e.Second);
 		var ctrlD = ctrl.GetD();
 		return
 			Obs.Merge<IEvt>(
-					whenMouseMove,
+					whenMouseMove, //.Do(_ => LR.LogThread("MouseMoveOut")),
 					whenMouseEnter,
 					whenMouseLeave,
 					whenMouseDown,
@@ -35,7 +40,7 @@ static class EvtMaker
 					whenMouseWheel,
 					whenKeyDown,
 					whenKeyUp,
-					whenMouseMoveRepeat
+					whenMouseMoveRepeat //.Do(_ => LR.LogThread("MouseMoveOut (repeat)"))
 				)
 				.MakeHot(ctrlD);
 	}

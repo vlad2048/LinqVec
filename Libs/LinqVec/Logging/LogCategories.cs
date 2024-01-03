@@ -7,30 +7,41 @@ using LogLib;
 using ReactiveVars;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using LogLib.Interfaces;
+using PtrLib;
 
 namespace LinqVec.Logging;
 
-static class LogCategories
+public static class LogCategories
 {
 	// Time
 	// ====
-	public static void Setup_Time_Logging(IScheduler scheduler, Disp d) =>
+	internal static void Setup_Time_Logging(IScheduler scheduler, Disp d)
+	{
+		var lastTime = scheduler.Now;
 		LogCategoriesExt.RegisterPrefix(
-			() => new TimestampCon(scheduler.Now),
+			() =>
+			{
+				var now = scheduler.Now;
+				var delta = now - lastTime;
+				lastTime = now;
+				return new TimestampCon(delta);
+			},
 			"Time",
 			_ => true,
 			d
 		);
+	}
 
 	// Hotspot
 	// =======
-	public static void Setup_Hotspot_Logging(IRoVar<bool> isHotspotFrozen, IRoVar<Option<Hotspot>> hotspot, IScheduler scheduler, Disp d)
+	internal static void Setup_Hotspot_Logging(IRoVar<bool> isDragging, IRoVar<Option<Hotspot>> hotspot, IScheduler scheduler, Disp d)
 	{
-		// IsHotspotFrozen
-		// ---------------
-		isHotspotFrozen.Select(e => new IsHotspotFrozenCon(e)).ToVar()
+		// IsDragging
+		// ----------
+		isDragging.Select(e => new IsDraggingCon(e)).ToVar()
 			.RegisterPrefix(
-				"frozen",
+				"dragging",
 				cfg => cfg.Log.LogCmd.Hotspot,
 				d
 			);
@@ -47,7 +58,7 @@ static class LogCategories
 
 	// Evt
 	// ***
-	public static void Setup_Evt_Logging(IObservable<IEvt> evt, IScheduler scheduler, Disp d) =>
+	internal static void Setup_Evt_Logging(IObservable<IEvt> evt, IScheduler scheduler, Disp d) =>
 		evt
 			.Where(_ => G.Cfg.V.Log.LogCmd.Evt)
 			.Write(d);
@@ -55,17 +66,47 @@ static class LogCategories
 
 	// UsrEvt
 	// ******
-	public static void Setup_UsrEvt_Logging(IObservable<IUsr> evt, IScheduler scheduler, Disp d) =>
+	internal static void Setup_UsrEvt_Logging(IObservable<IUsr> evt, IScheduler scheduler, Disp d) =>
 		evt
 			.Where(_ => G.Cfg.V.Log.LogCmd.UsrEvt)
 			.Write(d);
 
 	// CmdEvt
 	// ******
-	public static void Setup_CmdEvt_Logging(IObservable<ICmdEvt> evt, IScheduler scheduler, Disp d) =>
+	internal static void Setup_CmdEvt_Logging(IObservable<ICmdEvt> evt, IScheduler scheduler, Disp d) =>
 		evt
 			.Where(_ => G.Cfg.V.Log.LogCmd.CmdEvt)
 			.Write(d);
+
+	// ModEvt
+	// ******
+	public static void Setup_ModEvt_Logging(IObservable<IModEvtF> evt, IScheduler scheduler, Disp d) =>
+		evt
+			.Where(_ => G.Cfg.V.Log.LogCmd.ModEvt)
+			.Write(d);
+
+
+}
+public interface IModEvtF : IWriteSer;
+public sealed record ModStartEvtF(string Name) : IModEvtF
+{
+	public override string ToString() => $"Start({Name})";
+	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
+}
+public sealed record ModFinishEvtF(string Name, bool Commit, string Str) : IModEvtF
+{
+	public override string ToString() => $"{Verb}({Name})  -> {Str}";
+	private string Verb => Commit ? "Commit" : "Cancel";
+	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
+}
+
+public static class ModEvtExt
+{
+	public static IModEvtF Conv(this IModEvt e) => e switch {
+		ModStartEvt f => new ModStartEvtF(f.Name),
+		ModFinishEvt f => new ModFinishEvtF(f.Name, f.Commit, f.Str),
+		_ => throw new ArgumentException()
+	};
 }
 
 

@@ -27,76 +27,6 @@ public static class ReactiveVarsLogger
 		return obs;
 	}
 
-	/*public static O LogTimeIf<O, T>(this O obs, Func<bool> predicate, IScheduler scheduler, [CallerArgumentExpression(nameof(obs))] string? obsStr = null) where O : IObservable<T>
-	{
-		obs.Do(v =>
-		{
-			if (!predicate()) return;
-			WriteLine($"[{scheduler:HH:mm:ss.fffffff}] {obsStr} -> {v}");
-		});
-		return obs;
-	}*/
-
-
-
-
-
-
-
-
-
-	/*public static IRoVar<T> LogTimeIf<T>(this IRoVar<T> roVar, Func<bool> predicate, Func<T, string> fmt, Disp d, IScheduler scheduler, [CallerArgumentExpression(nameof(roVar))] string? obsStr = null)
-	{
-		roVar.Subscribe(v =>
-		{
-			if (!predicate()) return;
-			WriteLine($"[{scheduler:HH:mm:ss.fffffff}] {obsStr} -> {fmt(v)}");
-		}).D(d);
-		return roVar;
-	}
-
-	public static IObservable<T> LogTimeIf<T>(this IObservable<T> roVar, Func<bool> predicate, Func<T, string> fmt, Disp d, IScheduler scheduler, [CallerArgumentExpression(nameof(roVar))] string? obsStr = null)
-	{
-		roVar.Subscribe(v =>
-		{
-			if (!predicate()) return;
-			WriteLine($"[{scheduler:HH:mm:ss.fffffff}] {obsStr} -> {fmt(v)}");
-		}).D(d);
-		return roVar;
-	}
-
-	public static IObservable<T> LogTimeIf<T>(this IObservable<T> roVar, Func<bool> predicate, Disp d, IScheduler scheduler, [CallerArgumentExpression(nameof(roVar))] string? obsStr = null)
-	{
-		roVar.Subscribe(v =>
-		{
-			if (!predicate()) return;
-			WriteLine($"[{scheduler:HH:mm:ss.fffffff}] {obsStr} -> {v}");
-		}).D(d);
-		return roVar;
-	}
-
-	public static IObservable<T> LogTimeIf<T>(this IObservable<T> roVar, Func<bool> predicate, IScheduler scheduler, [CallerArgumentExpression(nameof(roVar))] string? obsStr = null)
-	{
-		roVar.Subscribe(v =>
-		{
-			if (!predicate()) return;
-			WriteLine($"[{scheduler:HH:mm:ss.fffffff}] {obsStr} -> {v}");
-		});
-		return roVar;
-	}
-
-
-	public static O LogTimeIf<O, T>(this O obs, Func<bool> predicate, Func<T, string> fmt, Disp d, IScheduler scheduler, [CallerArgumentExpression(nameof(obs))] string? obsStr = null) where O : IObservable<T>
-	{
-		obs.Subscribe(v =>
-		{
-			if (!predicate()) return;
-			WriteLine($"[{scheduler:HH:mm:ss.fffffff}] {obsStr} -> {fmt(v)}");
-		}).D(d);
-		return obs;
-	}*/
-
-
 	public static IObservable<T> Log<T>(this IObservable<T> obs, Disp d, [CallerArgumentExpression(nameof(obs))] string? obsStr = null)
 	{
 		Disposable.Create(() => WriteLine($"{obsStr} <- Dispose()")).D(d);
@@ -141,7 +71,8 @@ public static class ReactiveVarsLogger
 
 	private static Thread Cur => Thread.CurrentThread;
 	private static int? mainThreadId;
-	private static void LogMsg(string s) => Console.WriteLine($"[{ThreadStr}] - {s}");
-	private static string ThreadStr => $"{Cur.ManagedThreadId}/{Cur.Name}{MainStr}".PadRight(32);
+	private static void LogMsg(string s) => Console.WriteLine($"[{TimeStr}] [{ThreadStr}] - {s}");
+	private static string TimeStr => $"{DateTime.Now:HH:mm:ss.fffffff}";
+	private static string ThreadStr => $"{Cur.ManagedThreadId}/{Cur.Name}{MainStr}".PadRight(16);
 	private static string MainStr => Cur.ManagedThreadId == mainThreadId ? "(Main)" : "";
 }

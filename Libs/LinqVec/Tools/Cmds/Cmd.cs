@@ -14,7 +14,7 @@ public static class Cmd
 {
 	public static HotspotNfo<TH> OnHover<TH>(this HotspotNfo<TH> hotspot, Func<IRoVar<Pt>, Action<bool>> hoverAction) => hotspot with { HoverAction = hoverAction };
 
-	//public static readonly Func<IRoVar<Pt>, Action<bool>> EmptyHoverAction = _ => _ => {};
+	public static readonly Func<IRoVar<Pt>, Action<bool>> EmptyHoverAction = _ => _ => {};
 
 	public static ClickHotspotCmd ClickRet(
 		string name,
@@ -67,10 +67,6 @@ public static class CmdModExt
 		{
 			var (source, action) = ptEnd
 				.Select(ptEndV => Mk<T>(ptrV => fun(ptStart, ptEndV, ptrV)))
-				/*.Select(ptEndOpt => ptEndOpt.Match(
-					ptEndV => Mk<T>(ptrV => fun(ptStart, ptEndV, ptrV)),
-					() => Mk<T>(ptrV => ptrV)
-				))*/
 				.ToVar()
 				.TerminateWithAction();
 			ptr.SetMod(new Mod<T>(name, source));
@@ -82,40 +78,11 @@ public static class CmdModExt
 		{
 			var (source, action) = pt
 				.Select(ptV => Mk<T>(ptrV => fun(ptV, ptrV)))
-				/*.Select(ptOpt => ptOpt.Match(
-					ptV => Mk<T>(ptrV => fun(ptV, ptrV)),
-					() => Mk<T>(ptrV => ptrV)
-				))*/
 				.ToVar()
 				.TerminateWithAction();
 			ptr.SetMod(new Mod<T>(name, source));
 			return action;
 		};
-
-
-	/*
-	public static Func<Pt, IRoVar<Pt>, IDisposable> ModSetDrag<T>(this IScopedPtr<T> ptr, string name, Func<Pt, Pt, T, T> fun) =>
-		(ptStart, ptEnd) => ptr.SetMod(new Mod<T>(
-			name,
-			ptEnd
-				.Select(ptEndOpt => ptEndOpt.Match(
-					ptEndV => Mk<T>(ptrV => fun(ptStart, ptEndV, ptrV)),
-					() => Mk<T>(ptrV => ptrV)
-				))
-				.ToVar()
-		));
-
-	public static Func<IRoVar<Pt>, IDisposable> ModSetHover<T>(this IScopedPtr<T> ptr, string name, Func<Pt, T, T> fun) =>
-		pt => ptr.SetMod(new Mod<T>(
-			name,
-			pt
-				.Select(ptOpt => ptOpt.Match(
-					ptV => Mk<T>(ptrV => fun(ptV, ptrV)),
-					() => Mk<T>(ptrV => ptrV)
-				))
-				.ToVar()
-		));
-	*/
 
 	private static Func<T, T> Mk<T>(Func<T, T> f) => f;
 }

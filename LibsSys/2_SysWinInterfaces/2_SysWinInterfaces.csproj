@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<RootNamespace>SysWinInterfaces</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\LibsBase\GeomInt\GeomInt.csproj" />
+		<ProjectReference Include="..\..\LibsBase\ReactiveVars\ReactiveVars.csproj" />
+		<ProjectReference Include="..\1_WinAPI\1_WinAPI.csproj" />
+	</ItemGroup>
+
+</Project>

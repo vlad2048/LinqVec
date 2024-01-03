@@ -102,6 +102,7 @@ public sealed class ConWriter<TIWriteSer> where TIWriteSer : IWrite
 				_ => 0
 			}
 		};
+		public int AbsoluteX { get; private set; }
 
 		public ChunkyTxtWriter(Func<ITxtWriter, ITxtWriter> prefixesFun)
 		{
@@ -113,9 +114,13 @@ public sealed class ConWriter<TIWriteSer> where TIWriteSer : IWrite
 			if (isNewLine)
 			{
 				isNewLine = false;
+				var absPrev = AbsoluteX;
 				prefixesFun(this);
+				var absNext = AbsoluteX;
+				AbsoluteX -= Math.Max(0, absNext - absPrev);
 			}
 			chunks.Add(new TextChunk(seg));
+			AbsoluteX += seg.Text.Length;
 			return this;
 		}
 
@@ -123,6 +128,7 @@ public sealed class ConWriter<TIWriteSer> where TIWriteSer : IWrite
 		{
 			chunks.Add(new NewlineChunk());
 			isNewLine = true;
+			AbsoluteX = 0;
 			return this;
 		}
 	}
@@ -133,7 +139,6 @@ public sealed class ConWriter<TIWriteSer> where TIWriteSer : IWrite
 
 		var chunkyWriter = new ChunkyTxtWriter(prefixes.Select(e => Mk(e.Write)).ApplyAll());
 		src.Write(chunkyWriter);
-		chunkyWriter.WriteLine();
 		var chunks = chunkyWriter.Chunks;
 		gens.Add(new GenNfo<TIWriteSer>(src, chunks));
 		foreach (var chunk in chunks)

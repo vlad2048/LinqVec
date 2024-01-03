@@ -21,8 +21,8 @@ public static class ConUtils
 		set => SetR(value);
 	}
 
-	public static void SetColor(Color c) => Console.Write($"{EscChar}[38;2;{c.R};{c.G};{c.B}m");
-
+	public static void SetFore(Color c) => Console.Write($"{EscChar}[38;2;{c.R};{c.G};{c.B}m");
+	public static void SetBack(Color c) => Console.Write($"{EscChar}[48;2;{c.R};{c.G};{c.B}m");
 
 
 	private static R GetR()

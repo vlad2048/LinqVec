@@ -48,10 +48,9 @@ public static class CmdRunner
 
 		var stateFun = Var.Make(initStateFun, d);
 		var state = stateFun.Select(e => (Func<Disp, ToolState>)(d_ => e(d_))).InvokeAndSequentiallyDispose();
-		var isHotspotFrozen = Var.Make(false, d);
-		var hotspot = state.TrackHotspot(isHotspotFrozen, evt.MousePos, d);
+		var hotspot = state.TrackHotspot(evt.IsDragging, evt.MousePos, d);
 
-		LogCategories.Setup_Hotspot_Logging(isHotspotFrozen, hotspot, scheduler, d);
+		LogCategories.Setup_Hotspot_Logging(evt.IsDragging, hotspot, scheduler, d);
 
 		var cmdEvt = hotspot.ToCmdEvt(state, evt.WhenEvt, scheduler, d);
 
@@ -59,8 +58,8 @@ public static class CmdRunner
 
 		var mouse = evt.MousePos.WhereSome().Prepend(Pt.Zero).ToVar(d);
 		SetCursor(state, hotspot, evt.SetCursor, d);
-		hotspot.Run_Hotspot_HoverActions(isHotspotFrozen, mouse, d);
-		cmdEvt.Run_Cmd_Actions(hotspot, isHotspotFrozen, mouse, e => stateFun.V = e, d);
+		hotspot.Run_Hotspot_HoverActions(evt.IsDragging, mouse, d);
+		cmdEvt.Run_Cmd_Actions(hotspot, evt.IsDragging, mouse, e => stateFun.V = e, d);
 
 		//G.Cfg.RunWhen(e => e.Log.LogCmd.Evt, d, [() => evt.WhenEvt.LogD("Evt")]);
 		//G.Cfg.RunWhen(e => e.Log.LogCmd.Hotspot, d, [() => hotspot.LogD("Hotspot")]);

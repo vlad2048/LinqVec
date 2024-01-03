@@ -29,16 +29,19 @@ sealed class MemoryTxtWriter : ITxtWriter
 				false => 0
 			}
 		};
+	public int AbsoluteX { get; private set; }
 
 	public ITxtWriter Write(TxtSegment seg)
 	{
 		curLine.Add(seg);
+		AbsoluteX += seg.Text.Length;
 		return this;
 	}
 	public ITxtWriter WriteLine()
 	{
 		lines.Add([.. curLine]);
 		curLine.Clear();
+		AbsoluteX = 0;
 		return this;
 	}
 }

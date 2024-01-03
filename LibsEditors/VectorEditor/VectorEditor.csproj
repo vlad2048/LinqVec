@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\LibsBase\PowTrees\PowTrees.csproj" />
     <ProjectReference Include="..\..\Libs\LinqVec\LinqVec.csproj" />
   </ItemGroup>
 

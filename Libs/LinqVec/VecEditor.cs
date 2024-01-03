@@ -20,6 +20,15 @@ public partial class VecEditor : UserControl
 	public ToolEnv Env { get; }
 	public EditorLogic Logic { get; }
 
+
+	public VecEditor()
+	{
+		Env = null!;
+		Logic = null!;
+		this.InitRX(d => VecEditorUtils.SetupDesignMode(drawPanel, d));
+	}
+
+
 	public VecEditor(EditorLogicMaker maker, Option<string> file)
 	{
 		var ctrlD = this.GetD();
@@ -52,12 +61,6 @@ public partial class VecEditor : UserControl
 
 		this.InitRX(d =>
 		{
-			if (DesignMode)
-			{
-				VecEditorUtils.SetupDesignMode(drawPanel, d);
-				return;
-			}
-
 			Logic.DocHolder.WhenUndoRedo.Subscribe(_ => Env.TriggerUndoRedo()).D(d);
 
 			VecEditorUtils.RunTools(curTool, Env, whenToolReset, d);
@@ -107,7 +110,11 @@ file static class VecEditorUtils
 			.Merge()
 			.Subscribe(e => curTool.V = e).D(d);
 
-		curTool.Subscribe(_ => repeatLastMouseMove()).D(d);
+		curTool.Subscribe(_ =>
+		{
+			LR.LogThread("CurTool Changed -> RepeatLastMouseMove");
+			repeatLastMouseMove();
+		}).D(d);
 	}
 
 	/*public static (

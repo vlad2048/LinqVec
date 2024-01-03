@@ -12,15 +12,15 @@ public static class LogVecConKeeper
 {
 	public static readonly ConWriter<IWriteSer> Instance = ConWriter<IWriteSer>.Instance;
 
-	public static Action<ITxtWriter> ReplayWithCustomFunctions<T>(Type customType, string filename) where T : IWriteSer
-	{
-		var gens = VecJsoner.Vec.Load<GenNfo<T>[]>(filename);
-		return w =>
+	public static Action<ITxtWriter> ReplayWithCustomFunctions<T>(Type customType, string filename) where T : IWriteSer =>
+		ReplayWithCustomFunctions<T>(customType, VecJsoner.Vec.Load<GenNfo<T>[]>(filename));
+
+	public static Action<ITxtWriter> ReplayWithCustomFunctions<T>(Type customType, GenNfo<T>[] gens) where T : IWriteSer =>
+		w =>
 		{
 			foreach (var gen in gens)
 				ReflectionUtils.CallCustomWrite(customType, gen, w);
 		};
-	}
 }
 
 

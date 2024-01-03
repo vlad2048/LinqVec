@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<RootNamespace>WinAPI</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Reactive" Version="6.0.0" />
+	</ItemGroup>
+
+</Project>

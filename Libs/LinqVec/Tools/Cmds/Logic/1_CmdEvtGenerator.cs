@@ -9,52 +9,47 @@ using LinqVec.Tools.Events;
 using LinqVec.Utils;
 using LinqVec.Utils.Rx;
 using LogLib;
-using LogLib.Interfaces;
+using LogLib.ConTickerLogic;
 using LogLib.Structs;
+using LogLib.Writers;
 using ReactiveVars;
 
 namespace LinqVec.Tools.Cmds.Logic;
 
 
 
-interface IUsr : IWriteSer
+interface IUsr
 {
 	bool IsQuick { get; }
 }
 sealed record MoveUsr(bool IsQuick, Pt Pt) : IUsr
 {
 	public override string ToString() => $"Move({Pt}) IsQuick:{IsQuick}";
-	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
 }
 sealed record LDownUsr(bool IsQuick, Pt Pt, ModKeyState ModKey) : IUsr
 {
 	public override string ToString() => $"LDown({Pt}, {ModKey}) IsQuick:{IsQuick}";
-	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
 }
 sealed record LUpUsr(bool IsQuick, Pt Pt, ModKeyState ModKey) : IUsr
 {
 	public override string ToString() => $"LUp({Pt}, {ModKey}) IsQuick:{IsQuick}";
-	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
 }
 sealed record RDownUsr(bool IsQuick, Pt Pt) : IUsr
 {
 	public override string ToString() => $"RDown({Pt}) IsQuick:{IsQuick}";
-	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
 }
 sealed record RUpUsr(bool IsQuick, Pt Pt) : IUsr
 {
 	public override string ToString() => $"RUp({Pt}) IsQuick:{IsQuick}";
-	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
 }
 sealed record KeyDownUsr(bool IsQuick, Keys Key) : IUsr
 {
 	public override string ToString() => $"KeyDown({Key}) IsQuick:{IsQuick}";
-	public ITxtWriter Write(ITxtWriter w) => this.Color(w);
 }
-
-
-
-
+sealed record MouseLeftBtnUpOutsideUsr(bool IsQuick) : IUsr
+{
+	public override string ToString() => $"MouseLeftBtnUpOutside IsQuick:{IsQuick}";
+}
 
 
 
@@ -70,6 +65,8 @@ static class CmdEvtGenerator
 		this IRoVar<Option<Hotspot>> hotspot,
 		IRoVar<ToolState> state,
 		IObservable<IEvt> evt,
+		IRoVar<bool> isDragging,
+		ConTicker conTicker,
 		IScheduler scheduler,
 		Disp d
 	)
@@ -78,9 +75,10 @@ static class CmdEvtGenerator
 			.TimeInterval(scheduler)
 			.Select(e => e.Value.ToUsr(e.Interval <= ClickDelay))
 			.WhereSome()
-			.MakeHot(d);
+			;//.MakeHot(d);
 
-		LogCategories.Setup_UsrEvt_Logging(usrEvt, scheduler, d);
+
+		conTicker.FancyLog(usrEvt.RenderUsr(), d);
 
 		return hotspot
 			.SwitchOption_NeverIfNone(hotspot_ =>
@@ -245,10 +243,14 @@ static class CmdEvtGenerator
 				.MakeHot(d);
 
 		var whenCancel =
-			usrEvt.OfType<KeyDownUsr>()
-				.Where(e => e.Key == Keys.Escape)
-				.Select(_ => new CancelCmdEvt())
-				.MakeHot(d);
+			Obs.Merge(
+				usrEvt.OfType<KeyDownUsr>()
+					.Where(e => e.Key == Keys.Escape)
+					.Select(_ => new CancelCmdEvt()),
+				usrEvt.OfType<MouseLeftBtnUpOutsideUsr>()
+					.Select(_ => new CancelCmdEvt())
+			)
+			.MakeHot(d);
 
 		whenDragEnd
 			.OfType<DragFinishCmdEvt>();
@@ -313,6 +315,7 @@ static class CmdEvtGenerator
 		MouseBtnEvt { UpDown: UpDown.Down, Btn: MouseBtn.Right, Pos: var pos } => new RDownUsr(isQuick, pos),
 		MouseBtnEvt { UpDown: UpDown.Up, Btn: MouseBtn.Right, Pos: var pos } => new RUpUsr(isQuick, pos),
 		KeyEvt { UpDown: UpDown.Down, Key: var key } => new KeyDownUsr(isQuick, key),
+		MouseLeftBtnUpOutside => new MouseLeftBtnUpOutsideUsr(isQuick),
 		_ => None
 	};
 

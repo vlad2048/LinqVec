@@ -1,7 +1,7 @@
-﻿using System;
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Kernel;
 
 namespace ReactiveVars;
 
@@ -12,6 +12,19 @@ public interface IHasDisp : IDisposable
 
 public static class RxExt
 {
+	public static IObservable<ItemWithValue<TObject, TValue>> MergeManyItems<TObject, TValue>(
+		this IObservable<TObject[]> source,
+		Func<TObject, IObservable<TValue>> fun
+	) =>
+		source
+			.Select(objs => objs
+				.Select(obj => fun(obj)
+					.Select(val => new ItemWithValue<TObject, TValue>(obj, val))
+				)
+				.Merge()
+			)
+			.Switch();
+
 	public static IObservable<T> DupWhen<T>(this IObservable<T> source, IObservable<Unit> whenDup) =>
 		Obs.Merge(
 			whenDup.WithLatestFrom(source, (_, v) => v),

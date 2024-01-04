@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\LibsBase\Geom\Geom.csproj" />
+    <ProjectReference Include="..\..\LibsBase\LogLib\LogLib.csproj" />
     <ProjectReference Include="..\..\LibsBase\PtrLib\PtrLib.csproj" />
     <ProjectReference Include="..\..\LibsBase\UILib\UILib.csproj" />
   </ItemGroup>

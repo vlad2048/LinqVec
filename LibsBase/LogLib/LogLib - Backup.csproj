@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DynamicData" Version="8.3.27" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
     <PackageReference Include="LanguageExt.Transformers" Version="4.4.7" />
     <PackageReference Include="PowBasics" Version="0.0.40" />
@@ -16,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ConTickerLogic\Logic\" />
+    <Folder Include="ConTickerLogic\NewFolder\" />
     <Folder Include="Structs\" />
   </ItemGroup>
 

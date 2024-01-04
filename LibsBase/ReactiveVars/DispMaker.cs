@@ -44,10 +44,10 @@ public static class DispMaker
 	{
 		if (!DispMakerLoggingEnabled) return;
 		var indentStr = new string(' ', indent * IndentSize);
-		L.Write(indentStr);
-		L.Write(name, ColName);
+		Console.Write(indentStr);
+		Console.Write(name, ColName);
 		var (txt, col) = isNew ? (".new()", ColNew) : (".Dispose()", ColDispose);
-		L.WriteLine(txt, col);
+		Console.WriteLine(txt, col);
 	}
 
 

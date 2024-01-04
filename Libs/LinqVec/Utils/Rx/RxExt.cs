@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Kernel;
 using ReactiveUI;
 using ReactiveVars;
 

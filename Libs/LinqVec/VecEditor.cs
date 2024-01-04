@@ -112,7 +112,7 @@ file static class VecEditorUtils
 
 		curTool.Subscribe(_ =>
 		{
-			LR.LogThread("CurTool Changed -> RepeatLastMouseMove");
+			//LR.LogThread("CurTool Changed -> RepeatLastMouseMove");
 			repeatLastMouseMove();
 		}).D(d);
 	}

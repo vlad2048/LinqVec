@@ -1,5 +1,4 @@
-﻿using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 
@@ -10,6 +9,12 @@ public static class ReactiveVarsLogger
 	public static void Write(string s) => Console.Write(s);
 	public static void WriteLine(string s) => Console.WriteLine(s);
 	public static void WriteLine() => Console.WriteLine();
+
+	public static void EnsureMainThread()
+	{
+		if (Cur.ManagedThreadId != mainThreadId)
+			throw new ArgumentException("We should be in the MainThread here!");
+	}
 
 	public static void IdentifyMainThread() => mainThreadId = Cur.ManagedThreadId;
 	public static void LogThread(string s) => LogMsg(s);

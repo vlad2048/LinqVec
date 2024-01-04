@@ -2,90 +2,85 @@
   <Reference>C:\dev\big\LinqVec\Libs\LinqVec\bin\Debug\net8.0-windows\LinqVec.dll</Reference>
   <Reference>C:\dev\big\LinqVec\LibsBase\LogLib\bin\Debug\net8.0\LogLib.dll</Reference>
   <Reference>C:\dev\big\LinqVec\LibsBase\ReactiveVars\bin\Debug\net8.0\ReactiveVars.dll</Reference>
-  <Namespace>LinqVec</Namespace>
+  <Namespace>LINQPad.Controls</Namespace>
   <Namespace>LogLib.Writers</Namespace>
-  <Namespace>LinqVec.Logging</Namespace>
+  <Namespace>PowBasics.CollectionsExt</Namespace>
+  <Namespace>LogLib.Structs</Namespace>
   <Namespace>LinqVec.Utils.Json</Namespace>
   <Namespace>PowBasics.Json_</Namespace>
-  <Namespace>LogLib.Interfaces</Namespace>
-  <Namespace>LINQPad.Controls</Namespace>
-  <Namespace>LogLib.Structs</Namespace>
-  <Namespace>PowBasics.CollectionsExt</Namespace>
 </Query>
 
 public const string FileSrc = @"C:\tmp\vec\cons\chunks.json";
 public const string FileDst = @"C:\tmp\vec\cons\chunks.html";
 
-void Main()
+void Main(string[] args)
 {
-	ExportToHtml(FileSrc, FileDst);
-
-	/*var cols = (
-		from gen in VecJsoner.Vec.Load<GenNfo<IWriteSer>[]>(FileSrc)
-		from chunk in gen.Chunks
-		where chunk is TextChunk
-		select $"{((TextChunk)chunk).Seg.ColorName}"
-	)
-	.Distinct()
-	.ToArray();
-	cols.Dump();*/
-}
-
-static string GetColKey(string name)
-{
-	name = name.Replace('.', '_');
-	var parts = name.Split('_');
-	if (parts.Length <= 1) return string.Empty;
-	return parts.SkipLast().JoinText("_");
+	VecJsoner.Vec.Load<IChunk[]>(FileSrc)
+		.Render()
+		.SaveHtml(FileDst);
 }
 
 
-public static void ExportToHtml(string fileSrc, string fileDst)
+public static class SaveHtmlExt
 {
-	var con = new LINQPadTxtWriter();
-	var chunks = (
-		from gen in VecJsoner.Vec.Load<GenNfo<IWriteSer>[]>(fileSrc)
-		from chunk in gen.Chunks
-		select chunk
-	).ToArray();
-	foreach (var chunk in chunks)
+	public static IEnumerable<IChunk> SaveHtml(this IEnumerable<IChunk> chunks, string file)
 	{
-		switch (chunk)
-		{
-			case TextChunk { Seg: var seg }:
-				con.Write(seg);
-				break;
-			case NewlineChunk:
-				con.WriteLine();
-				break;
-			default:
-				throw new ArgumentException();
-		}
+		#if CMD
+		return chunks;
+		#endif
+		CssVars.Flush();
+		File.WriteAllText(file, Util.InvokeScript(true, "eval", "document.documentElement.outerHTML") as string);		
+		return chunks;
 	}
-	Misc.SaveCurrentHtml(fileDst);
 }
 
-// @formatter:off
-static class Misc {
-	public static void SaveCurrentHtml(string file) { CssVars.Flush(); File.WriteAllText(file, Util.InvokeScript(true, "eval", "document.documentElement.outerHTML") as string); }
-}
-sealed class LINQPadTxtWriter : ITxtWriter
+public static class LINQPadRenderExt
 {
-	private readonly List<Span> curLine = new();
-	public int LastSegLength { get; private set; }
-	public int AbsoluteX { get; private set; }
-	public ITxtWriter Write(TxtSegment seg) { curLine.Add(MkSpan(seg)); LastSegLength = seg.Text.Length; AbsoluteX += seg.Text.Length; return this; }
-	public ITxtWriter WriteLine() { FlushCurLine(); LastSegLength = 0; AbsoluteX = 0; return this; }
-	private void FlushCurLine() { var div = MkDiv(curLine.ToArray()); curLine.Clear(); div.Dump(); }
-	private static Span MkSpan(TxtSegment seg) { var span = new Span(seg.Text); span.Styles["color"] = CssVars.Set(seg.ColorName ?? throw new ArgumentException(), Val2HexColor(seg.Color)); return span; }
-	private static Div MkDiv(Span[] spans) { var div = new Div(spans); return div; }
-	public static string Val2HexColor(int val) => $"#{(val & 0xFF0000) >> 16:X2}{(val & 0xFF00) >> 8:X2}{(val & 0xFF) >> 0:X2}";
+	public static IEnumerable<IChunk> Render(this IEnumerable<IChunk> chunks)
+	{
+		var curLine = new List<Span>();
+		
+		void Flush()
+		{
+			if (curLine.Count == 0) return;
+			var div = new Div(curLine);
+			div.Dump();
+			curLine.Clear();
+		}
+		
+		foreach (var chunk in chunks)
+		{
+			switch (chunk)
+			{
+				case TextChunk { Text: var text, Fore: var fore, Back: var back }:
+					var span = new Span(text);
+					if (fore != null) span.Styles["color"] = CssVars.Set(fore.Name, Val2HexColor(fore));
+					if (back != null) span.Styles["background-color"] = CssVars.Set(back.Name, Val2HexColor(back));
+					span.Styles["font-family"] = "Consolas";
+					curLine.Add(span);
+					break;
+				case NewlineChunk:
+					Flush();
+					break;
+				default:
+					throw new ArgumentException();
+			}
+		}
+		Flush();
+		return chunks;
+	}
+	
+	private static string Val2HexColor(Col col) => $"#{(col.Color & 0xFF0000) >> 16:X2}{(col.Color & 0xFF00) >> 8:X2}{(col.Color & 0xFF) >> 0:X2}";
 }
+
+
+
+
 public static class CssVars
 {
 	private static readonly Dictionary<string, VarNfo> varMap = new();
 	private sealed record VarNfo(string VarName, string CssVarName, string VarVal);
-	public static void Reset() => varMap.Clear();	
+	public static void Reset() => varMap.Clear();
 	public static string Set(string varName, string varVal)
 	{
 		varName = GetValName(varName);
@@ -133,5 +128,7 @@ public static class CssVars
 		return expr;
 	}
 }
+
+
+
 void OnStart() { CssVars.Reset(); Util.HtmlHead.AddStyles("body { font-family: Consolas; }"); }
-// @formatter:on

@@ -1,9 +1,12 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using LinqVec.Logging;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Tools.Events.Utils;
+using LinqVec.Utils.Rx;
 using LinqVec.Utils.WinForms_;
+using LogLib.ConTickerLogic;
 using ReactiveVars;
 
 namespace LinqVec.Tools;
@@ -39,6 +42,7 @@ public sealed class ToolEnv : IDisposable
 		this.editorEvt = editorEvt;
 		this.toolReset = toolReset;
 		whenUndoRedo = new Subject<Unit>().D(d);
+		ConTicker = new ConTicker(Rx.Sched, d);
     }
 
 
@@ -50,20 +54,24 @@ public sealed class ToolEnv : IDisposable
     public IObservable<Gfx> WhenPaint => drawPanel.WhenPaint;
     public void Invalidate() => drawPanel.Invalidate();
     public void ToolReset() => toolReset();
+	public ConTicker ConTicker { get; }
 
-
-	public Evt GetEvtForTool(ITool tool, bool snap, Disp toolD) =>
-	    snap switch
-	    {
-            false => editorEvt
-	            .RestrictToTool(tool, CurTool, isPanZoom)
-	            .ToGrid(Transform)
-	            .ToEvt(e => drawPanel.Cursor = e, WhenUndoRedo, toolD),
-            true => editorEvt
-	            .RestrictToTool(tool, CurTool, isPanZoom)
-	            .ToGrid(Transform)
-	            .SnapToGrid()
-	            .RestrictToGrid()
-	            .ToEvt(e => drawPanel.Cursor = e, WhenUndoRedo, toolD),
+	public Evt GetEvtForTool(ITool tool, bool snap, Disp toolD)
+	{
+		var evt = snap switch {
+			false => editorEvt
+				.RestrictToTool(tool, CurTool, isPanZoom)
+				.ToGrid(Transform)
+				.ToEvt(e => drawPanel.Cursor = e, WhenUndoRedo, toolD),
+			true => editorEvt
+				.RestrictToTool(tool, CurTool, isPanZoom)
+				.ToGrid(Transform)
+				.SnapToGrid()
+				.RestrictToGrid()
+				.ToEvt(e => drawPanel.Cursor = e, WhenUndoRedo, toolD),
 		};
+		ConTicker.FancyLog(evt.IsDragging.RenderFlag(Styles.Slot_IsDragging), d);
+		ConTicker.FancyLog(evt.WhenEvt.RenderEvt(), d);
+		return evt;
+	}
 }

@@ -1,47 +1,33 @@
-﻿using LogLib.Interfaces;
-using LogLib.Structs;
+﻿using LogLib.Structs;
+using LogLib.Utils;
+using LogLib.Writers;
+using PowBasics.CollectionsExt;
+using PowBasics.StringsExt;
 
 namespace LogLib.Writers;
 
-sealed class MemoryTxtWriter : ITxtWriter
+public sealed class MemoryTxtWriter : ITxtWriter
 {
-	private readonly List<TxtSegment[]> lines = [];
-	private readonly List<TxtSegment> curLine = [];
-	internal void Clear()
+	private readonly List<IChunk> chunks = [];
+
+	public IChunk[] Chunks => chunks.ToArray();
+	public ITxtWriter Write(IChunk chunk) => this.Ret(() => chunks.Add(chunk));
+	public ITxtWriter WriteBefore(IChunk chunk) => this.Ret(() => chunks.Insert(0, chunk));
+
+	public ITxtWriter SetDefaultFore(Col fore)
 	{
-		lines.Clear();
-		curLine.Clear();
-	}
-
-	public Txt Txt => new([.. lines, [.. curLine]]);
-
-	public int LastSegLength =>
-		curLine.Any() switch
-		{
-			true => curLine.Last().Text.Length,
-			false => lines.Any() switch
-			{
-				true => lines.Select(l => l.Any() switch
-				{
-					true => l.Last().Text.Length,
-					false => 0
-				}).Last(),
-				false => 0
-			}
-		};
-	public int AbsoluteX { get; private set; }
-
-	public ITxtWriter Write(TxtSegment seg)
-	{
-		curLine.Add(seg);
-		AbsoluteX += seg.Text.Length;
+		var chunksNext = chunks.SelectToList(e => e.SetDefaultFore(fore));
+		chunks.Clear();
+		chunks.AddRange(chunksNext);
 		return this;
 	}
-	public ITxtWriter WriteLine()
-	{
-		lines.Add([.. curLine]);
-		curLine.Clear();
-		AbsoluteX = 0;
-		return this;
-	}
+}
+
+
+file static class ChunkExt
+{
+	public static IChunk SetDefaultFore(this IChunk chunk, Col fore) => chunk switch {
+		TextChunk { Fore: null } e => e with { Fore = fore },
+		_ => chunk
+	};
 }

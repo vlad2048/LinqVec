@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DynamicData" Version="8.3.27" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\LogLib\LogLib.csproj" />
+    <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
+    <PackageReference Include="LanguageExt.Transformers" Version="4.4.7" />
+    <PackageReference Include="PowBasics" Version="0.0.40" />
   </ItemGroup>
 
 </Project>

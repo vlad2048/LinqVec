@@ -33,7 +33,6 @@ public static class Reseter
 	public static void Reset()
 	{
 		ReactiveVars.Reseter.Reset();
-		LogVecConKeeper.Instance.Reset();
 	}
 }
 

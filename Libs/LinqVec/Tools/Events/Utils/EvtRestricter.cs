@@ -66,21 +66,25 @@ public static class EvtRestricter
 
 
 
-					// Only accept mouse buttons within the area
-					// Except for MouseUp:
-					// -> if a MouseUp happens outside the area it needs to be reported but with the Invalid flag set
-					// ==============================================================================================
-					/*
-					case MouseBtnEvt { UpDown: UpDown.Down } or MouseClickEvt when isIn == true:
-						Send(e);
+					// For Right, Middle and Clicks (any buttons) only let the event through while in the zone
+					// =======================================================================================
+					case MouseBtnEvt { Btn: not MouseBtn.Left } or MouseClickEvt:
+						if (isIn == true)
+							Send(e);
 						break;
 
-					case MouseBtnEvt { UpDown: UpDown.Up } f:
-						//Send(f with {IsInvalidUp = isIn != true});
+					// For the Left button only
+					// ========================
+					case MouseBtnEvt { Btn: MouseBtn.Left, UpDown: UpDown.Down }:
+						if (isIn == true)
+							Send(e);
 						break;
-					*/
-					case MouseBtnEvt:
-						Send(e);
+
+					case MouseBtnEvt { Btn: MouseBtn.Left, UpDown: UpDown.Up }:
+						if (isIn == true)
+							Send(e);
+						else
+							Send(new MouseLeftBtnUpOutside());
 						break;
 
 

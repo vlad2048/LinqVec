@@ -1,6 +1,6 @@
-﻿using LogLib.Structs;
+﻿using System.Drawing;
+using LogLib.Structs;
 using LogLib.Utils;
-using LogLib.Writers;
 using PowBasics.StringsExt;
 
 namespace LogLib;
@@ -9,9 +9,17 @@ public sealed record SlotLoc(int Pos, int Size);
 
 public static class ConsoleRenderExt
 {
+	public static IChunk[] ClipToConsole(this IChunk[] chunks, SlotLoc slot)
+	{
+		var width = Console.WindowWidth;
+		if (slot.Pos >= width) return [];
+		var maxLng = Math.Min(slot.Size, width - slot.Pos);
+		return chunks.Truncate(maxLng).ToArray();
+	}
+
 	public static void RenderToConsole(this IEnumerable<IChunk> chunks) => chunks.Render();
 
-	public static void RenderToSlot(this IEnumerable<IChunk> chunks, SlotLoc slot)
+	public static void RenderToConsoleSlot(this IEnumerable<IChunk> chunks, SlotLoc slot)
 	{
 		var width = Console.WindowWidth;
 		if (slot.Pos >= width) return;
@@ -28,11 +36,11 @@ public static class ConsoleRenderExt
 			switch (chunk)
 			{
 				case TextChunk { Text: var text, Fore: var fore, Back: var back }:
-					if (fore != null) ConUtils.SetFore(MkCol(fore.Color));
-					if (back != null) ConUtils.SetBack(MkCol(back.Color));
+					fore.IfSome(e => ConUtils.SetFore(e.Color));
+					back.IfSome(e => ConUtils.SetBack(e.Color));
 					Console.Write(text);
-					ConUtils.SetFore(MkCol(B.gen_colNeutral.Color));
-					ConUtils.SetBack(MkCol(B.gen_colBlack.Color));
+					ConUtils.SetFore(Color.FromArgb(0x808080));
+					ConUtils.SetBack(Color.FromArgb(0x000000));
 					break;
 				case NewlineChunk:
 					Console.WriteLine();
@@ -52,7 +60,7 @@ public static class ConsoleRenderExt
 		var chunksNext = new List<IChunk>();
 		foreach (var chunk in chunks)
 		{
-			if (!chunk.NeedsTruncate(n))
+			if (chunk.Length <= n)
 			{
 				chunksNext.Add(chunk);
 			}
@@ -65,8 +73,6 @@ public static class ConsoleRenderExt
 		}
 		return chunksNext;
 	}
-
-	private static bool NeedsTruncate(this IChunk chunk, int n) => chunk.Length > n;
 
 	private static IChunk Truncate(this IChunk chunk, int n) => chunk switch
 	{

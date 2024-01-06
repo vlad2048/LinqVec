@@ -1,11 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\LibsBase\CoolColorPicker\CoolColorPicker.csproj" />
     <ProjectReference Include="..\..\Libs\LinqVec\LinqVec.csproj" />
   </ItemGroup>
 

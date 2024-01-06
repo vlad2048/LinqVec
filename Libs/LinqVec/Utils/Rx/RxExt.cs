@@ -21,6 +21,7 @@ public static class RxExt
 
 	public static IObservable<T> ObserveOnUI<T>(this IObservable<T> obs) => obs.ObserveOn(Rx.Sched);
 	public static IObservable<Option<U>> Map2<T, U>(this IObservable<Option<T>> obs, Func<T, U> fun) => obs.Select(e => e.Map(fun));
+	public static IObservable<U> Map2IfNone<T, U>(this IObservable<Option<T>> obs, Func<T, U> fun, U none) => obs.Select(e => e.Map(fun).IfNone(none));
 
 	public static (IObservable<T>, Action<bool>) TerminateWithAction<T>(this IObservable<T> source)
 	{

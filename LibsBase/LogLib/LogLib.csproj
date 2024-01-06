@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <Folder Include="ConTickerLogic\Logic\" />
-    <Folder Include="Structs\" />
   </ItemGroup>
 
 </Project>

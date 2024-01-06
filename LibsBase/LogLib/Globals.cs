@@ -11,3 +11,4 @@ global using static ReactiveVars.DispMaker;
 
 global using static LogLib.Utils.CommonMakers;
 global using LR = ReactiveVars.ReactiveVarsLogger;
+global using Txt = LogLib.Structs.IChunk[];

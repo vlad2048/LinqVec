@@ -52,7 +52,21 @@ sealed record MouseLeftBtnUpOutsideUsr(bool IsQuick) : IUsr
 }
 
 
+static class UsrStorybookSamples
+{
+	private static readonly Pt p3 = new(-4, 5);
 
+	public static IUsr[] Samples = [
+		new MoveUsr(false, p3),
+		new MoveUsr(true, p3),
+		new LDownUsr(false, p3, ModKeyState.Empty),
+		new LDownUsr(true, p3, ModKeyState.Empty),
+		new RDownUsr(false, p3),
+		new RDownUsr(true, p3),
+		new KeyDownUsr(false, Keys.S),
+		new KeyDownUsr(true, Keys.S),
+	];
+}
 
 
 
@@ -66,7 +80,7 @@ static class CmdEvtGenerator
 		IRoVar<ToolState> state,
 		IObservable<IEvt> evt,
 		IRoVar<bool> isDragging,
-		ConTicker conTicker,
+		LogTicker logTicker,
 		IScheduler scheduler,
 		Disp d
 	)
@@ -78,7 +92,7 @@ static class CmdEvtGenerator
 			;//.MakeHot(d);
 
 
-		conTicker.FancyLog(usrEvt.RenderUsr(), d);
+		logTicker.Log(usrEvt.RenderUsr(), d);
 
 		return hotspot
 			.SwitchOption_NeverIfNone(hotspot_ =>

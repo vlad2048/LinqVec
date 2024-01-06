@@ -13,9 +13,7 @@ static class EvtMaker
 		IObservable<Unit> whenRepeatLastMouseMove
 	)
 	{
-		var whenMouseMove = ctrl.Events().MouseMove
-			//.Do(e => LR.LogThread($"MouseMove:{e.X},{e.Y}"))
-			.Select(e => new MouseMoveEvt(e.ToPt()));
+		var whenMouseMove = ctrl.Events().MouseMove.Select(e => new MouseMoveEvt(e.ToPt()));
 		var whenMouseEnter = ctrl.Events().MouseEnter.Select(_ => new MouseEnterEvt());
 		var whenMouseLeave = ctrl.Events().MouseLeave.Select(_ => new MouseLeaveEvt());
 		var whenMouseDown = ctrl.Events().MouseDown.Select(e => new MouseBtnEvt(e.ToPt(), UpDown.Down, e.ToBtn(), ModKeyState.Make()));

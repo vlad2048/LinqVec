@@ -20,7 +20,7 @@ class OptionConverterFactory : JsonConverterFactory
 sealed class OptionConverter<T> : JsonConverter<Option<T>>
 {
 	private sealed record Ser(bool HasValue, T V);
-	private static Ser ToSer(Option<T> opt) => new(opt.IsSome, opt.IfNone(default(T)!));
+	private static Ser ToSer(Option<T> opt) => new(opt.IsSome, opt.IfNoneUnsafe(default(T))!);
 	private static Option<T> FromSer(Ser ser) => ser.HasValue ? ser.V : None;
 
 	public override Option<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -30,21 +30,5 @@ sealed class OptionConverter<T> : JsonConverter<Option<T>>
 	}
 
 	public override void Write(Utf8JsonWriter writer, Option<T> value, JsonSerializerOptions options) =>
-		JsonSerializer.Serialize(writer, ToSer(value), options);
-}
-
-sealed class OptionStringConverter : JsonConverter<Option<string>>
-{
-	private sealed record Ser(bool HasValue, string V);
-	private static Ser ToSer(Option<string> opt) => new(opt.IsSome, opt.IfNone(string.Empty));
-	private static Option<string> FromSer(Ser ser) => ser.HasValue ? ser.V : None;
-
-	public override Option<string> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-	{
-		using var doc = JsonDocument.ParseValue(ref reader);
-		return FromSer(doc.Deserialize<Ser>(options)!);
-	}
-
-	public override void Write(Utf8JsonWriter writer, Option<string> value, JsonSerializerOptions options) =>
 		JsonSerializer.Serialize(writer, ToSer(value), options);
 }

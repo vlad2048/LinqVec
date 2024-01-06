@@ -10,20 +10,9 @@ public static class Var
 	public static IBoundVar<T> MakeBound<T>(T init, Disp d) => new BoundVar<T>(init, d);
 	public static IRoVar<Option<T>> MakeOptionalFromOptionalObs<T>(IObservable<Option<T>> source, Disp d) => source.Prepend(None).ToVar(d);
 
-
-	//public static IRoVar<T> ToVar<T>(this IObservable<T> obs) => new RoVar<T>(obs);
-	//public static IRoVar<T> ToVar<T>(this IObservable<T> obs, DISP d) => obs.MakeReplay(d).ToVar();
-
 	public static IRoVar<T> ToVar<T>(this IObservable<T> obs) => new RoVar<T>(obs.Replay(1).RefCount());
 	public static IRoVar<T> ToVar<T>(this IObservable<T> obs, Disp d) => new RoVar<T>(obs.MakeReplay(d));
 
-	/*public static IRoVar<T> ToVar<T>(this IObservable<T> obs)
-	{
-		var conn = obs.Replay(1);
-		//conn.Connect();
-		//return new RoVar<T>(conn);
-		return new RoVar<T>(conn.RefCount(TimeSpan.FromSeconds(1)));
-	}*/
 
 	public static IObservable<T> MakeReplay<T>(this IObservable<T> src, Disp d)
 	{
@@ -103,7 +92,6 @@ public static class Var
 			get => Subj.Value;
 			set => SetOuter(value);
 		}
-		public bool IsDisposed => Subj.IsDisposed;
 
 		// IBoundVar<T>
 		// ============

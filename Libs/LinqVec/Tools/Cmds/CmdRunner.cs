@@ -28,9 +28,9 @@ public static class CmdRunner
 		this ToolStateFun initStateFun,
 		Evt evt,
 		Action invalidate,
-		ConTicker conTicker,
+		LogTicker logTicker,
 		Disp d
-	) => initStateFun.Run(evt, invalidate, conTicker, Rx.Sched, d);
+	) => initStateFun.Run(evt, invalidate, logTicker, Rx.Sched, d);
 
 
 
@@ -38,7 +38,7 @@ public static class CmdRunner
 		this ToolStateFun initStateFun,
 		Evt evt,
 		Action invalidate,
-		ConTicker conTicker,
+		LogTicker logTicker,
 		IScheduler scheduler,
 		Disp d
 	)
@@ -47,10 +47,10 @@ public static class CmdRunner
 		var state = stateFun.Select(e => (Func<Disp, ToolState>)(d_ => e(d_))).InvokeAndSequentiallyDispose();
 
 		var hotspot = state.TrackHotspot(evt.IsDragging, evt.MousePos, d);
-		conTicker.FancyLog(hotspot.RenderHotspot(), d);
+		logTicker.Log(hotspot.RenderHotspot(), d);
 
-		var cmdEvt = hotspot.ToCmdEvt(state, evt.WhenEvt, evt.IsDragging, conTicker, scheduler, d);
-		conTicker.FancyLog(cmdEvt.RenderCmd(), d);
+		var cmdEvt = hotspot.ToCmdEvt(state, evt.WhenEvt, evt.IsDragging, logTicker, scheduler, d);
+		logTicker.Log(cmdEvt.RenderCmd(), d);
 
 		var mouse = evt.MousePos.WhereSome().Prepend(Pt.Zero).ToVar(d);
 		SetCursor(state, hotspot, evt.SetCursor, d);

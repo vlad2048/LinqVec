@@ -58,3 +58,28 @@ public sealed record KeyEvt(UpDown UpDown, Keys Key) : IEvt
 {
 	public override string ToString() => $"Key.{UpDown}({Key})";
 }
+
+
+
+static class EvtStorybookSamples
+{
+	private static readonly Pt p0 = new(-10, -10);
+	private static readonly Pt p1 = new(2, 3);
+	private static readonly Pt p2 = new(-5, 2);
+
+	public static IEvt[] Samples = [
+		new MouseMoveEvt(p0),
+		new MouseEnterEvt(),
+		new MouseLeaveEvt(),
+		new MouseBtnEvt(p1, UpDown.Down, MouseBtn.Left, ModKeyState.Empty),
+		new MouseBtnEvt(p1, UpDown.Up, MouseBtn.Left, ModKeyState.Empty),
+		new MouseBtnEvt(p1, UpDown.Down, MouseBtn.Right, ModKeyState.Empty),
+		new MouseBtnEvt(p1, UpDown.Up, MouseBtn.Right, ModKeyState.Empty),
+		new MouseBtnEvt(p1, UpDown.Down, MouseBtn.Middle, ModKeyState.Empty),
+		new MouseBtnEvt(p1, UpDown.Up, MouseBtn.Middle, ModKeyState.Empty),
+		new MouseWheelEvt(p2, +1),
+		new MouseWheelEvt(p2, -1),
+		new KeyEvt(UpDown.Down, Keys.S),
+		new KeyEvt(UpDown.Up, Keys.S),
+	];
+}

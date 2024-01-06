@@ -16,6 +16,8 @@ public static class ReactiveVarsLogger
 			throw new ArgumentException("We should be in the MainThread here!");
 	}
 
+	public static bool AreWeOnTheMainThread => Cur.ManagedThreadId == mainThreadId;
+
 	public static void IdentifyMainThread() => mainThreadId = Cur.ManagedThreadId;
 	public static void LogThread(string s) => LogMsg(s);
 	public static IObservable<T> DoLogThread<T>(this IObservable<T> source, string name) =>

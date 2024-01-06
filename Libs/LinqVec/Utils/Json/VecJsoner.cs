@@ -39,9 +39,14 @@ public static class VecJsoner
 
 	static VecJsoner()
 	{
-		configJsonOpt.Converters.Add(new OptionConverterFactory());
-		//vecJsonOpt.Converters.Add(new OptionConverterFactory());
-		vecJsonOpt.Converters.Add(new OptionStringConverter());
+		AddConverters(configJsonOpt);
+		AddConverters(vecJsonOpt);
+	}
+
+	private static void AddConverters(JsonSerializerOptions opt)
+	{
+		opt.Converters.Add(ConverterMaker.ColorConverter);
+		opt.Converters.Add(new OptionConverterFactory());
 	}
 
 	public static readonly Jsoner Config = new(configJsonOpt);

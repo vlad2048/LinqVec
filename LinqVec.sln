@@ -57,9 +57,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeomInt", "LibsBase\GeomInt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PowTrees", "LibsBase\PowTrees\PowTrees.csproj", "{DC117DA0-06BC-4D37-820A-A72BDB70A379}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqVecDocklessDemo", "Demos\LinqVecDocklessDemo\LinqVecDocklessDemo.csproj", "{D5A2DA47-E722-4653-821E-BE2028AEAEB7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqVecDocklessDemo", "Demos\LinqVecDocklessDemo\LinqVecDocklessDemo.csproj", "{D5A2DA47-E722-4653-821E-BE2028AEAEB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storybook", "Demos\Storybook\Storybook.csproj", "{5C9C92AF-06EE-46B4-99D5-0C9783CD41FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Storybook", "Demos\Storybook\Storybook.csproj", "{5C9C92AF-06EE-46B4-99D5-0C9783CD41FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoolColorPicker", "LibsBase\CoolColorPicker\CoolColorPicker.csproj", "{6F438CCB-E1B7-4E0D-802E-CF466911FD1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -151,6 +153,10 @@ Global
 		{5C9C92AF-06EE-46B4-99D5-0C9783CD41FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C9C92AF-06EE-46B4-99D5-0C9783CD41FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C9C92AF-06EE-46B4-99D5-0C9783CD41FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F438CCB-E1B7-4E0D-802E-CF466911FD1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F438CCB-E1B7-4E0D-802E-CF466911FD1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F438CCB-E1B7-4E0D-802E-CF466911FD1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F438CCB-E1B7-4E0D-802E-CF466911FD1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -179,6 +185,7 @@ Global
 		{DC117DA0-06BC-4D37-820A-A72BDB70A379} = {7C483943-C024-4D72-AE1E-5AFDADC92682}
 		{D5A2DA47-E722-4653-821E-BE2028AEAEB7} = {D926964D-5728-4D0C-AA2A-765DD734E2D5}
 		{5C9C92AF-06EE-46B4-99D5-0C9783CD41FD} = {D926964D-5728-4D0C-AA2A-765DD734E2D5}
+		{6F438CCB-E1B7-4E0D-802E-CF466911FD1A} = {7C483943-C024-4D72-AE1E-5AFDADC92682}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {942E18C0-D0C3-41A3-87D2-4474E3F15E70}

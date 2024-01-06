@@ -4,9 +4,13 @@ using LinqVec.Logging;
 using LinqVec.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Tools.Events.Utils;
+using LinqVec.Utils.Json;
 using LinqVec.Utils.Rx;
 using LinqVec.Utils.WinForms_;
+using LogLib;
 using LogLib.ConTickerLogic;
+using LogLib.Structs;
+using PowBasics.Json_;
 using ReactiveVars;
 
 namespace LinqVec.Tools;
@@ -42,7 +46,13 @@ public sealed class ToolEnv : IDisposable
 		this.editorEvt = editorEvt;
 		this.toolReset = toolReset;
 		whenUndoRedo = new Subject<Unit>().D(d);
-		ConTicker = new ConTicker(Rx.Sched, d);
+
+		LogTicker = new LogTicker(
+			Rx.Sched,
+			editorEvt.WhenKeyDown(Keys.F12),
+			(chunks, file) => VecJsoner.Vec.Save(file, chunks),
+			d
+		);
     }
 
 
@@ -54,7 +64,7 @@ public sealed class ToolEnv : IDisposable
     public IObservable<Gfx> WhenPaint => drawPanel.WhenPaint;
     public void Invalidate() => drawPanel.Invalidate();
     public void ToolReset() => toolReset();
-	public ConTicker ConTicker { get; }
+	public LogTicker LogTicker { get; }
 
 	public Evt GetEvtForTool(ITool tool, bool snap, Disp toolD)
 	{
@@ -70,8 +80,8 @@ public sealed class ToolEnv : IDisposable
 				.RestrictToGrid()
 				.ToEvt(e => drawPanel.Cursor = e, WhenUndoRedo, toolD),
 		};
-		ConTicker.FancyLog(evt.IsDragging.RenderFlag(Styles.Slot_IsDragging), d);
-		ConTicker.FancyLog(evt.WhenEvt.RenderEvt(), d);
+		LogTicker.Log(evt.IsDragging.RenderFlag(Styles.Slot_IsDragging), d);
+		LogTicker.Log(evt.WhenEvt.RenderEvt(), d);
 		return evt;
 	}
 }

@@ -85,7 +85,7 @@ sealed class SelectTool(Ctx c) : ITool
 
 		
 		ModeNeutral()
-			.Run(evt, c.Env.Invalidate, c.Env.ConTicker, d);
+			.Run(evt, c.Env.Invalidate, c.Env.LogTicker, d);
 		*/
 	}
 }

@@ -75,6 +75,6 @@ sealed class CurveEditTool(Ctx ctx) : ITool
 
 
 		ModeNeutral()
-			.Run(evt, ctx.Env.Invalidate, ctx.Env.ConTicker, d);
+			.Run(evt, ctx.Env.Invalidate, ctx.Env.LogTicker, d);
 	}
 }

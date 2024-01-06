@@ -55,7 +55,7 @@ sealed class CurveTool(Ctx c) : ITool
 	{
 		var evt = c.Env.GetEvtForTool(this, true, d);
 		var curve = c.Doc.Scope(Curve.Empty(), (e, _) => e, CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun).D(d);
-		c.Env.ConTicker.FancyLog(curve.WhenModEvt.RenderMod(), d);
+		c.Env.LogTicker.Log(curve.WhenModEvt.RenderMod(), d);
 
 		var gizmo = CurveGfxState.AddPoint;
 		Action<Func<CurveGfxState, CurveGfxState>> gizmoApply = f => gizmo = f(gizmo);
@@ -74,7 +74,7 @@ sealed class CurveTool(Ctx c) : ITool
 			States.Neutral,
 			CBase.Cursors.Pen,
 			[
-				Hotspots.CurvePoint(curve.V.V, false)
+				Hotspots.CurvePoint(curve.VGfx, false)
 					.OnHover(
 						Cmd.EmptyHoverAction
 							.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
@@ -115,7 +115,7 @@ sealed class CurveTool(Ctx c) : ITool
 
 
 		ModeNeutral()
-			.Run(evt, c.Env.Invalidate, c.Env.ConTicker, d);
+			.Run(evt, c.Env.Invalidate, c.Env.LogTicker, d);
 
 
 

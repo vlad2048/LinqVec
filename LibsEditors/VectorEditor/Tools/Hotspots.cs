@@ -5,6 +5,7 @@ using VectorEditor._Model.Structs;
 using VectorEditor._Model.Structs.Enums;
 using LinqVec.Tools.Cmds.Structs;
 using LinqVec.Tools.Cmds.Utils;
+using ReactiveVars;
 
 namespace VectorEditor.Tools;
 
@@ -27,12 +28,12 @@ static class Hotspots
 		}
 	);
 
-	public static HotspotNfo<PointId> CurvePoint(Curve curve, bool excludeLast) => new(
+	public static HotspotNfo<PointId> CurvePoint(IRoVar<Curve> curve, bool excludeLast) => new(
 		CurvePointId,
 		p => excludeLast switch
 		{
-			false => curve.GetClosestPointTo(p, C.ActivateMoveMouseDistance),
-			true => curve.GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
+			false => curve.V.GetClosestPointTo(p, C.ActivateMoveMouseDistance),
+			true => curve.V.GetClosestPointToButLast(p, C.ActivateMoveMouseDistance),
 		}
 	);
 

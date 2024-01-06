@@ -7,5 +7,4 @@ public interface ITxtWriter
     IChunk[] Chunks { get; }
     ITxtWriter Write(IChunk chunk);
     ITxtWriter WriteBefore(IChunk chunk);
-    ITxtWriter SetDefaultFore(Col fore);
 }

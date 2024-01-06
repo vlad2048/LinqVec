@@ -6,24 +6,33 @@ namespace LogLib.Utils;
 
 public static class TxtWriterExt
 {
-	public static readonly Col base_colBlack = new(0x000000, nameof(base_colBlack));
-
-
 	// Basics
 	// ======
-	public static W Write(this W w, string text, Col? fore = null, Col? back = null) => w.Write(new TextChunk(text, fore, back));
+	public static W Write(this W w, string text, Option<NamedColor> fore, Option<NamedColor> back) => w.Write(new TextChunk(text, fore, back));
+	public static W Write(this W w, string text, Option<NamedColor> fore) => w.Write(text, fore, None);
+	public static W Write(this W w, string text) => w.Write(text, None, None);
+
+	public static W WriteLine(this W w, string text, Option<NamedColor> fore, Option<NamedColor> back) => w.Write(text, fore, back).WriteLine();
+	public static W WriteLine(this W w, string text, Option<NamedColor> fore) => w.Write(text, fore).WriteLine();
+	public static W WriteLine(this W w, string text) => w.Write(text).WriteLine();
 	public static W WriteLine(this W w) => w.Write(new NewlineChunk());
-	public static W WriteLine(this W w, string text, Col? fore = null, Col? back = null) => w
-		.Write(text, fore, back)
-		.WriteLine();
+
+	public static W Write(this W w, IEnumerable<IChunk> source)
+	{
+		foreach (var elt in source)
+			w.Write(elt);
+		return w;
+	}
+	public static W WriteLine(this W w, IEnumerable<IChunk> source) => w.Write(source).WriteLine();
+
 
 	// Spacing
 	// =======
-	public static W spc(this W w, int n) => w.Write(new string(' ', Math.Max(0, n)), base_colBlack);
+	public static W spc(this W w, int n) => w.Write(new string(' ', Math.Max(0, n)));
 
 	// Branching
 	// =========
-	public static W Write(this W _, Func<W> action) => action();
+	public static W Write(this W w, Func<W, W> action) => action(w);
 
 	// Merge
 	// =====
@@ -55,13 +64,13 @@ public static class TxtWriterExt
 	{
 		var lng = w.Chunks.SumOrZero(e => e.Length);
 		if (n <= lng) return w;
-		return w.WriteBefore(new TextChunk(new string(' ', n - lng), base_colBlack));
+		return w.WriteBefore(new TextChunk(new string(' ', n - lng), None, None));
 	}
 	public static W PadRight(this W w, int n)
 	{
 		var lng = w.Chunks.SumOrZero(e => e.Length);
 		if (n <= lng) return w;
-		w.Write(new TextChunk(new string(' ', n - lng), base_colBlack));
+		w.Write(new string(' ', n - lng));
 		return w;
 	}
 	public static W Surround(this W w, IChunk chunkLeft, IChunk chunkRight)
@@ -70,8 +79,8 @@ public static class TxtWriterExt
 		w.Write(chunkRight);
 		return w;
 	}
-	public static W Surround(this W w, string textLeft, string textRight, Col fore) => w.Surround(new TextChunk(textLeft, fore), new TextChunk(textRight, fore));
-	public static W Surround(this W w, char charLeft, char charRight, Col fore) => w.Surround(new TextChunk(charLeft.ToString(), fore), new TextChunk(charRight.ToString(), fore));
+	public static W Surround(this W w, string textLeft, string textRight, NamedColor fore) => w.Surround(new TextChunk(textLeft, fore, None), new TextChunk(textRight, fore, None));
+	public static W Surround(this W w, char charLeft, char charRight, NamedColor fore) => w.Surround(new TextChunk(charLeft.ToString(), fore, None), new TextChunk(charRight.ToString(), fore, None));
 
 
 	// Utils

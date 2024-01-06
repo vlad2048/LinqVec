@@ -53,14 +53,13 @@ public static class G
 	}
 
 	public static IRoVar<Cfg> Cfg => CfgVar.Switch().ToVar();
-	//public static IRoVar<Cfg> Cfg { get; } = RxCfg.Make(ConfigFile, default(Cfg), VecJsoner.Config);
-	public static void OverrideCfg(Cfg cfg) => CfgVar.V = Var.MakeConst(cfg);
+	//public static void OverrideCfg(Cfg cfg) => CfgVar.V = Var.MakeConst(cfg);
 }
 
 
 public static class CfgExt
 {
-	public static IObservable<T> When<T>(this IObservable<Cfg> cfg, Func<Cfg, T> fun) => cfg.Select(fun).DistinctUntilChanged();
+	public static IRoVar<T> When<T>(this IObservable<Cfg> cfg, Func<Cfg, T> fun) => cfg.Select(fun).DistinctUntilChanged().ToVar();
 
 	public static void RunWhen(this IObservable<Cfg> cfg, Func<Cfg, bool> fun, Disp d, params Func<IDisposable>[] actions)
 	{

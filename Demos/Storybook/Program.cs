@@ -1,25 +1,75 @@
-﻿using System.Windows.Forms;
-using Geom;
-using LinqVec.Tools.Cmds.Enums;
+﻿using CoolColorPicker;
+using LinqVec.Logging;
 using LinqVec.Tools.Cmds.Events;
 using LinqVec.Tools.Cmds.Logic;
-using LinqVec.Tools.Cmds.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Utils.Json;
-using LogLib.Writers;
-using LogLib.Utils;
-using PowBasics.Json_;
 using LogLib;
+using LogLib.Structs;
+using LogLib.Utils;
+using LogLib.Writers;
+using PowBasics.Json_;
+using UILib;
 
 namespace Storybook;
 
+
 static class Program
 {
+	private static string? file;
+
+	public static IChunk[] Chunks => file switch {
+		not null => VecJsoner.Vec.Load<IChunk[]>(file),
+		null => GenerateStorybookSamples(),
+	};
+
+	public const string CSharpColorFile = @"C:\dev\big\LinqVec\LibsBase\LogLib\S.cs";
+
+
+	[STAThread]
+	static void Main(string[] args)
+	{
+		//if (args.Length == 1 && File.Exists(args[0])) file = args[0];
+		file = @"C:\tmp\vec\storybook\storybook.json";
+
+		ApplicationConfiguration.Initialize();
+		LR.IdentifyMainThread();
+		S.Init();
+
+		var win = new MainWin();
+		//var win = new ColorPickerDialog();
+		//win.Color.V = Color.Purple;
+		Application.Run(win.Track());
+
+		LogAndTellIfThereAreUndisposedDisps();
+	}
+
+
+	private static IChunk[] GenerateStorybookSamples()
+	{
+		var w = new MemoryTxtWriter();
+
+		foreach (var elt in EvtStorybookSamples.Samples)
+			w.WriteLine(elt.RenderEvt());
+
+		foreach (var elt in UsrStorybookSamples.Samples)
+			w.WriteLine(elt.RenderUsr());
+
+		foreach (var elt in CmdStorybookSamples.Samples)
+			w.WriteLine(elt.RenderCmd());
+
+		return w.Chunks;
+	}
+
+
+
+
+	/*
 	private const string FileOut = @"C:\tmp\vec\cons\chunks.json";
 
 	static void Main()
 	{
-		/*var totalWriter = new MemoryTxtWriter();
+		var totalWriter = new MemoryTxtWriter();
 		foreach (var element in elements)
 		{
 			var elementWriter = new MemoryTxtWriter();
@@ -27,11 +77,11 @@ static class Program
 			totalWriter.WriteLine(elementWriter);
 		}
 		totalWriter.Chunks.RenderToConsole();
-		VecJsoner.Vec.Save(FileOut, totalWriter.Chunks);*/
+		VecJsoner.Vec.Save(FileOut, totalWriter.Chunks);
 	}
 
 
-	/*private static readonly Pt p0 = new(-10, -10);
+	private static readonly Pt p0 = new(-10, -10);
 	private static readonly Pt p1 = new(2, 3);
 	private static readonly Pt p2 = new(-5, 2);
 	private static readonly Pt p3 = new(-4, 5);

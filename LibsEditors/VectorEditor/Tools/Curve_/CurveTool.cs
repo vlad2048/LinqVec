@@ -1,19 +1,13 @@
 ﻿using System.Reactive.Linq;
-using System.Xml.Linq;
-using Geom;
 using LinqVec;
 using LinqVec.Logging;
 using LinqVec.Tools;
 using LinqVec.Tools.Cmds;
 using LinqVec.Tools.Cmds.Structs;
 using LinqVec.Tools.Cmds.Utils;
-using LinqVec.Tools.Events;
-using LinqVec.Utils;
-using LinqVec.Utils.Rx;
 using PtrLib;
 using ReactiveVars;
 using VectorEditor._Model;
-using VectorEditor._Model.Structs;
 
 namespace VectorEditor.Tools.Curve_;
 
@@ -34,7 +28,7 @@ sealed class CurveTool(Ctx c) : ITool
 	{
 		public const string MovePoint = nameof(MovePoint);
 		public const string AddPoint = nameof(AddPoint);
-		public const string ContinueCurve = nameof(ContinueCurve);
+		public const string CloseCurve = nameof(CloseCurve);
 	}
 
 	private static bool DoesSelectionContainExactlyOneCurve(IRoVar<EditorState> state, IPtr<Doc> doc, out Guid curveId)
@@ -51,77 +45,68 @@ sealed class CurveTool(Ctx c) : ITool
 	}
 
 
+
 	public void Run(Disp d)
 	{
 		var evt = c.Env.GetEvtForTool(this, true, d);
+
 		var curve = c.Doc.Scope(Curve.Empty(), (e, _) => e, CurveFuns.Create_SetFun, CurveFuns.Create_ValidFun).D(d);
 		c.Env.LogTicker.Log(curve.WhenModEvt.RenderMod(), d);
 
-		var gizmo = CurveGfxState.AddPoint;
-		Action<Func<CurveGfxState, CurveGfxState>> gizmoApply = f => gizmo = f(gizmo);
-		//gizmoApply = gizmoApply.Log("CurveTool");
-
-
-		evt.WhenKeyDown(Keys.Enter)
-			.ObserveOnUI()
+		curve.V.Where(e => e.Closed)
 			.Subscribe(_ =>
 			{
 				curve.Commit();
 				c.Env.ToolReset();
 			}).D(d);
 
-		ToolStateFun ModeNeutral() => _ => new ToolState(
+		var stateFun = () => new ToolState(
 			States.Neutral,
 			CBase.Cursors.Pen,
-			[
-				Hotspots.CurvePoint(curve.VGfx, false)
-					.OnHover(
-						Cmd.EmptyHoverAction
-							.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
+		[
+			Hotspots.CurvePoint(curve.VGfx, curve.V.V.CanClose() ? CurvePointType.Middle | CurvePointType.Last : CurvePointType.All)
+				.Do(pointId => [
+					Cmd.Drag(
+						Cmds.MovePoint,
+						curve.ModSetDrag("Curve_MovePoint", (ptStart, ptEnd, curveV) => curveV.MovePoint(pointId, ptEnd))
 					)
-					.Do(pointId => [
-						Cmd.Drag(
-							Cmds.MovePoint,
-							curve.ModSetDrag("Curve_MovePoint", (ptStart, ptEnd, curveV) => curveV.MovePoint(pointId, ptEnd))
-								.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.Edit)
-						)
-					]),
+				]),
 
-				//.. DoesSelectionContainExactlyOneCurve(c.State, c.Doc, out var curveId)
-				//? new[] {
-				//	Cmd.Drag(
-				//		Cmds.ContinueCurve,
-				//
-				//	)
-				//}
-				//: [],
+			.. curve.V.V.CanClose()
+				? new[]
+				{
+					Hotspots.CurvePoint(curve.VGfx, CurvePointType.First)
+						.Do(pointId => [
+							Cmd.Drag(
+								Cmds.CloseCurve,
+								curve.ModSetDrag("Curve_Close", (ptStart, ptEnd, curveV) => curveV.CloseCurve(ptEnd))
+							)
+						])
+				}
+			: [],
 
-
-
-				Hotspots.Anywhere
-					.OnHover(
-						curve.ModSetHover("Curve_AddPoint_Hover", (pt, curveV) => curveV.AddPoint(pt, pt))
-							.UpdateGizmo(gizmoApply, _ => CurveGfxState.AddPoint)
+			Hotspots.Anywhere
+				.OnHover((p, gfx) => Painter.DrawHoverSeg(gfx, curve.VGfx.V, p))
+				.Do(_ => [
+					Cmd.Drag(
+						Cmds.AddPoint,
+						curve.ModSetDrag("Curve_AddPoint", (ptStart, ptEnd, curveV) => curveV.AddPoint(ptStart, ptEnd))
 					)
-					.Do(_ => [
-						Cmd.Drag(
-							Cmds.AddPoint,
-							curve.ModSetDrag("Curve_AddPoint", (ptStart, ptEnd, curveV) => curveV.AddPoint(ptStart, ptEnd))
-								.UpdateGizmoTemp(gizmoApply, _ => CurveGfxState.DragHandle)
-						),
-					]),
-			]
+				]),
+		]
 		);
 
-
-		ModeNeutral()
-			.Run(evt, c.Env.Invalidate, c.Env.LogTicker, d);
+		var cmdOutput = stateFun.Run(evt, c.Env.LogTicker, d);
 
 
+		cmdOutput.PaintActionMay.Subscribe(_ => c.Env.Invalidate()).D(d);
 
 		c.Env.WhenPaint.Subscribe(gfx =>
 		{
-			Painter.PaintCurve(gfx, curve.VGfx.V, gizmo);
+			cmdOutput.PaintActionMay.V(gfx);
+
+			var isAddingPoint = cmdOutput.DragAction.V == Cmds.AddPoint;
+			Painter.DrawCurve(gfx, curve.VGfx.V, isAddingPoint);
 		}).D(d);
 	}
 }

@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using Geom;
 using LinqVec.Logging;
+using LinqVec.Structs;
 using LinqVec.Tools.Cmds.Events;
 using LinqVec.Tools.Cmds.Logic;
 using LinqVec.Tools.Cmds.Structs;
@@ -16,53 +17,65 @@ using ReactiveVars;
 namespace LinqVec.Tools.Cmds;
 
 
+
+
+
 public sealed record CmdOutput(
-	//IObservable<IRunEvt> WhenRunEvt,
-	IObservable<ICmdEvt> WhenCmdEvt
+	IRoVar<Option<string>> DragAction,
+	IRoVar<Action<Gfx>> PaintActionMay
 );
+
+
 
 
 public static class CmdRunner
 {
 	public static CmdOutput Run(
-		this ToolStateFun initStateFun,
+		this Func<ToolState> stateFun,
 		Evt evt,
-		Action invalidate,
 		LogTicker logTicker,
 		Disp d
-	) => initStateFun.Run(evt, invalidate, logTicker, Rx.Sched, d);
+	) => stateFun.Run(evt, logTicker, Rx.Sched, d);
 
 
 
 	internal static CmdOutput Run(
-		this ToolStateFun initStateFun,
+		this Func<ToolState> stateFun,
 		Evt evt,
-		Action invalidate,
 		LogTicker logTicker,
 		IScheduler scheduler,
 		Disp d
 	)
 	{
-		var stateFun = Var.Make(initStateFun, d);
-		var state = stateFun.Select(e => (Func<Disp, ToolState>)(d_ => e(d_))).InvokeAndSequentiallyDispose();
+		var (stateRecalc, whenStateRecalc) = RxEventMaker.Make(d);
+		var state = whenStateRecalc.Prepend(Unit.Default).Select(_ => stateFun()).ToVar(d);
 
-		var hotspot = state.TrackHotspot(evt.IsDragging, evt.MousePos, d);
+		var hotspot = state.TrackHotspot(evt.IsMouseDown, evt.MousePos, d);
 		logTicker.Log(hotspot.RenderHotspot(), d);
 
-		var cmdEvt = hotspot.ToCmdEvt(state, evt.WhenEvt, evt.IsDragging, logTicker, scheduler, d);
+		var cmdEvt = hotspot.ToCmdEvt(state, evt.WhenEvt, scheduler, d);
 		logTicker.Log(cmdEvt.RenderCmd(), d);
 
 		var mouse = evt.MousePos.WhereSome().Prepend(Pt.Zero).ToVar(d);
 		SetCursor(state, hotspot, evt.SetCursor, d);
-		hotspot.Run_Hotspot_HoverActions(evt.IsDragging, mouse, d);
-		cmdEvt.Run_Cmd_Actions(hotspot, evt.IsDragging, mouse, e => stateFun.V = e, d);
+		//hotspot.Run_Hotspot_HoverActions(evt.IsDragging, mouse, d);
+		var dragAction = cmdEvt.Run_Cmd_Actions(mouse, stateRecalc, d);
 
 		return new CmdOutput(
-			cmdEvt
+			dragAction,
+			hotspot.Select(m => m.Match(
+				e => Mk(gfx =>
+				{
+					if (evt.IsMouseDown.V) return;
+					e.HotspotNfo.HoverAction(e.HotspotValue, gfx);
+				}),
+				() => Mk(_ => {})
+			))
+			.ToVar()
 		);
 	}
 
-
+	private static Action<Gfx> Mk(Action<Gfx> a) => a;
 
 
 

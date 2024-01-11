@@ -13,6 +13,7 @@ public static class DrawingExt
 	{
 		var winPts = pts.SelectToArray(e => e.ToWinPt());
 		if (winPts.Length < 4) return;
+		if ((winPts.Length - 4) % 3 != 0) throw new ArgumentException();
 		using var path = new GraphicsPath();
 		path.AddBeziers(winPts);
 		gfx.Graphics.DrawPath(gfx.Pen(pen), path);

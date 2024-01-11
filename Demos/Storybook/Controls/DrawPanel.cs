@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.ComponentModel;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using LinqVec.Utils;
 using LogLib.Structs;
@@ -23,6 +24,10 @@ sealed partial class DrawPanel : UserControl
 	{
 		DoubleBuffered = true;
 		InitializeComponent();
+
+		//File.WriteAllText(@"C:\tmp\log.txt", $"designLicense: {LicenseManager.UsageMode}\ndesign:{DesignMode}\nproc:{System.Diagnostics.Process.GetCurrentProcess().ProcessName}");
+
+		if (WinFormsUtils.IsDesignMode) return;
 
 		//var chunks = VecJsoner.Vec.Load<Txt>(Program.File);
 		var chunks = Program.Chunks;

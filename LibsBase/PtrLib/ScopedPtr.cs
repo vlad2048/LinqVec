@@ -12,8 +12,7 @@ sealed class ScopedPtr<TSub> : IScopedPtr<TSub>
 	private void EnsureNotDisp() => ObjectDisposedException.ThrowIf(d.IsDisposed, this);
 	public void Dispose()
 	{
-		// we can when we close the doc
-		//mod.V.IfSome(modV => throw new InvalidOperationException($"Cannot dispose ScopePtr<{typeof(TSub).Name}> while a Mod is active. Mod.Name: '{modV.Name}'"));
+		if (d.IsDisposed) return;
 		whenFinished.OnNext(isCommited);
 		whenFinished.OnCompleted();
 		d.Dispose();
@@ -34,9 +33,12 @@ sealed class ScopedPtr<TSub> : IScopedPtr<TSub>
 	public IObservable<bool> WhenFinished => whenFinished.AsObservable();
 	public void Commit()
 	{
+		//Console.WriteLine("Commit_1");
 		EnsureNotDisp();
 		isCommited = true;
-		Dispose();
+		//Console.WriteLine("Commit_2");
+		//Dispose();
+		//Console.WriteLine("Commit_3");
 	}
 
 	public ScopedPtr(
@@ -54,7 +56,7 @@ sealed class ScopedPtr<TSub> : IScopedPtr<TSub>
 			.Select(e => e.Match(
 				f => f.Fun.InterceptErrorAndCompletion(commit =>
 					{
-						//L.WriteLine($"Intercept: {commit}");
+						//Console.WriteLine($"Intercept: {commit}");
 						if (commit)
 							V.V = VGfx.V;
 						else

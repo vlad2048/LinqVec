@@ -2,7 +2,6 @@
 using Geom;
 using LinqVec.Tools.Cmds.Structs;
 using LinqVec.Utils;
-using LinqVec.Utils.Rx;
 using ReactiveVars;
 
 namespace LinqVec.Tools.Cmds.Logic;
@@ -11,15 +10,20 @@ static class HotspotTracker
 {
 	public static IRoVar<Option<Hotspot>> TrackHotspot(
 		this IRoVar<ToolState> state,
-		IRoVar<bool> isDragging,
+		IRoVar<bool> isMouseDown,
 		IRoVar<Option<Pt>> mousePos,
 		Disp d
 	) =>
-		Var.MakeOptionalFromOptionalObs(
-
-			state.WithLatestFrom(isDragging, (state_, _) => state_)
-				.Select(state_ => mousePos.Map2(mousePos_ =>
-							state_.Hotspots
+		mousePos
+			.WithLatestFrom(state, (mousePos_, state_) => (mousePos_, state_))
+			.WithLatestFrom(isMouseDown, (t_, isMouseDown_) => (t_.mousePos_, t_.state_, isMouseDown_))
+			.Select(t => !t.isMouseDown_ switch {
+				false =>
+					Option<Hotspot>.None,
+				true =>
+					t.mousePos_.Match(
+						mousePos_ =>
+							t.state_.Hotspots
 								.Select(hotspotCmdsNfo => hotspotCmdsNfo.Hotspot.Fun(mousePos_)
 									.Map(hotspotValue => new {
 										hotspotValue,
@@ -32,12 +36,11 @@ static class HotspotTracker
 									u.hotspotValue,
 									u.hotspotCmdsNfo.Cmds(u.hotspotValue),
 									false
-								))
-						))
-				.Switch()
-				.Select(e => e.Flatten())
-				.DistinctUntilChanged(e => e.Map(f => f.HotspotNfo))
-				.MakeHot(d),
-			d
-		);
+								)),
+						() => None
+					)
+			})
+			.Prepend(Option<Hotspot>.None)
+			.DistinctUntilChanged(e => e.Map(f => (f.HotspotNfo.Name, f.HotspotValue)))
+			.ToVar(d);
 }

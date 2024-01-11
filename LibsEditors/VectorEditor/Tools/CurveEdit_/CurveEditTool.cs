@@ -32,6 +32,7 @@ sealed class CurveEditTool(Ctx ctx) : ITool
 		var doc = ctx.Doc;
 		var evt = ctx.Env.GetEvtForTool(this, true, d);
 
+		/*
 		ToolStateFun ModeNeutral() => _ => new ToolState(
 			States.Neutral,
 			CBase.Cursors.BlackArrow,
@@ -76,5 +77,6 @@ sealed class CurveEditTool(Ctx ctx) : ITool
 
 		ModeNeutral()
 			.Run(evt, ctx.Env.Invalidate, ctx.Env.LogTicker, d);
+		*/
 	}
 }

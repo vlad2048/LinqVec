@@ -18,7 +18,7 @@ public static class EvtRestricter
 		{
 			var d = MkD("EvtRestricter");
 
-			bool? isIn = null;
+			var isIn = false;
 
 			void Send(IEvt e) => obs.OnNext(e);
 
@@ -31,7 +31,7 @@ public static class EvtRestricter
 					case MouseMoveEvt { Pos: var pos }:
 
 						// Enter
-						if (predicate(pos) && isIn != true)
+						if (predicate(pos) && !isIn)
 						{
 							Send(new MouseEnterEvt());
 							Send(e);
@@ -39,15 +39,14 @@ public static class EvtRestricter
 						}
 
 						// Leave
-						else if (!predicate(pos) && isIn != false)
+						else if (!predicate(pos) && isIn)
 						{
 							Send(new MouseLeaveEvt());
-							Send(e);
 							isIn = false;
 						}
 
 						// Move when in
-						else if (predicate(pos) && isIn == true)
+						else if (predicate(pos) && isIn)
 						{
 							Send(e);
 						}
@@ -57,7 +56,7 @@ public static class EvtRestricter
 					case MouseEnterEvt:
 						break;
 
-					case MouseLeaveEvt when isIn != false:
+					case MouseLeaveEvt when isIn:
 						Send(e);
 						isIn = false;
 						break;

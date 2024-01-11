@@ -148,4 +148,12 @@ public static class EvtExt
 			)
 			.Prepend(false)
 			.ToVar();
+
+	public static IRoVar<bool> IsMouseDown(this IObservable<IEvt> src, Disp d, MouseBtn btn = MouseBtn.Left) =>
+		Obs.Merge(
+				src.WhenMouseDown(btn).Select(_ => true),
+				src.WhenMouseUp(btn).Select(_ => false)
+			)
+			.Prepend(false)
+			.ToVar(d);
 }

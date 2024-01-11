@@ -1,4 +1,6 @@
-﻿namespace LinqVec;
+﻿using LogLib;
+
+namespace LinqVec;
 
 public record struct CfgLogCmd(
 	bool Hotspot,
@@ -14,9 +16,12 @@ public record struct CfgLog(
 	bool UndoRedo,
 	bool CurTool,
 	bool EditorState,
+	bool DisableLogTicker,
+	TimeLogType TimeLogType,
 	CfgLogCmd LogCmd
 );
 
 public record struct Cfg(
-	CfgLog Log
+	CfgLog Log,
+	bool DisableRepeatLastMouseMove
 );

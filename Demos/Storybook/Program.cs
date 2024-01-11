@@ -29,8 +29,8 @@ static class Program
 	[STAThread]
 	static void Main(string[] args)
 	{
-		//if (args.Length == 1 && File.Exists(args[0])) file = args[0];
-		file = @"C:\tmp\vec\storybook\storybook.json";
+		if (args.Length == 1 && File.Exists(args[0])) file = args[0];
+		//file = @"C:\tmp\vec\storybook\storybook.json";
 
 		ApplicationConfiguration.Initialize();
 		LR.IdentifyMainThread();

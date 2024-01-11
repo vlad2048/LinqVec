@@ -1,5 +1,14 @@
 ﻿namespace LinqVec.Tools.Cmds.Enums;
 
+public enum Gesture
+{
+	Click,
+	RightClick,
+	DoubleClick,
+	ShiftClick,
+}
+
+/*
 [Flags]
 public enum Gesture
 {
@@ -18,3 +27,4 @@ public enum ClickGesture
 	DoubleClick = Gesture.DoubleClick,
 	ShiftClick = Gesture.ShiftClick,
 }
+*/

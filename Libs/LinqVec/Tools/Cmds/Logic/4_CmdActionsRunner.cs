@@ -8,24 +8,22 @@ namespace LinqVec.Tools.Cmds.Logic;
 
 static class CmdActionsRunner
 {
-	public static void Run_Cmd_Actions(
+	public static IRoVar<Option<string>> Run_Cmd_Actions(
 		this IObservable<ICmdEvt> cmdEvt,
-		IRoVar<Option<Hotspot>> hotspot,
-		IRwVar<bool> isDragging,
 		IRoVar<Pt> mouse,
-		Action<ToolStateFun> setState,
+		Action stateRecalc,
 		Disp d
 	)
 	{
+		var dragAction = Option<string>.None.Make(d);
+
 		Obs.Merge(
-				cmdEvt.OfType<ConfirmCmdEvt>().Where(e => e.HotspotCmd is ClickHotspotCmd)
+				cmdEvt.OfType<ConfirmCmdEvt>()
 					.Do(
 						cmd =>
 						{
-							isDragging.V = true;
-							var stateNextOpt = ((ClickHotspotCmd)cmd.HotspotCmd).ClickAction();
-							stateNextOpt.IfSome(setState);
-							isDragging.V = false;
+							cmd.HotspotCmd.ClickAction();
+							stateRecalc();
 						}
 					)
 					.ToUnit(),
@@ -33,9 +31,9 @@ static class CmdActionsRunner
 					.Select(
 						cmd =>
 						{
-							isDragging.V = true;
 							//LR.LogThread("           Drag Start_1");
-							var stopFun = ((DragHotspotCmd)cmd.HotspotCmd).DragAction(cmd.PtStart, mouse);
+							var stopFun = cmd.HotspotCmd.DragAction(cmd.PtStart, mouse);
+							dragAction.V = cmd.HotspotCmd.Name;
 							//LR.LogThread("           Drag Start_2");
 							return
 								Obs.Amb(
@@ -45,10 +43,11 @@ static class CmdActionsRunner
 									.Take(1)
 									.Do(commit =>
 									{
+										dragAction.V = None;
 										//LR.LogThread("           Drag Stop_1");
 										stopFun(commit);
 										//LR.LogThread("           Drag Stop_2");
-										isDragging.V = false;
+										stateRecalc();
 									});
 						}
 					)
@@ -57,5 +56,7 @@ static class CmdActionsRunner
 					.ToUnit()
 			)
 			.Subscribe(_ => {}).D(d);
+
+		return dragAction;
 	}
 }

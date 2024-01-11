@@ -7,9 +7,7 @@ using LinqVec.Tools.Events.Utils;
 using LinqVec.Utils.Json;
 using LinqVec.Utils.Rx;
 using LinqVec.Utils.WinForms_;
-using LogLib;
 using LogLib.ConTickerLogic;
-using LogLib.Structs;
 using PowBasics.Json_;
 using ReactiveVars;
 
@@ -51,6 +49,8 @@ public sealed class ToolEnv : IDisposable
 			Rx.Sched,
 			editorEvt.WhenKeyDown(Keys.F12),
 			(chunks, file) => VecJsoner.Vec.Save(file, chunks),
+			G.Cfg.When(e => e.Log.TimeLogType),
+			G.Cfg.When(e => e.Log.DisableLogTicker),
 			d
 		);
     }
@@ -80,8 +80,9 @@ public sealed class ToolEnv : IDisposable
 				.RestrictToGrid()
 				.ToEvt(e => drawPanel.Cursor = e, WhenUndoRedo, toolD),
 		};
-		LogTicker.Log(evt.IsDragging.RenderFlag(Styles.Slot_IsDragging), d);
+		//evt.WhenEvt.Log(toolD);
 		LogTicker.Log(evt.WhenEvt.RenderEvt(), d);
+		LogTicker.Log(evt.IsMouseDown.RenderFlag(Styles.Slot_IsDragging), d);
 		return evt;
 	}
 }

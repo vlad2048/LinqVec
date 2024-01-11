@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.ComponentModel;
+using System.Reactive.Linq;
 using Jot;
 using ReactiveVars;
 using UILib.Utils;
@@ -29,6 +30,10 @@ public static class WinFormsUtils
 
 		return obj;
 	}
+
+	public static bool IsDesignMode =>
+		LicenseManager.UsageMode == LicenseUsageMode.Designtime ||
+		System.Diagnostics.Process.GetCurrentProcess().ProcessName == "DesignToolsServer";
 
 	public static void InitRX<T>(this Control ctrl, IObservable<T> whenInit, Action<T, Disp> initAction)
 	{

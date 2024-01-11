@@ -13,15 +13,29 @@ namespace VectorEditor._Model;
 
 public sealed record Curve(
 	Guid Id,
-	CurvePt[] Pts
+	CurvePt[] Pts,
+	bool Closed
 ) : IObj
 {
-	public static Curve Empty() => new(Guid.NewGuid(), []);
+	public static Curve Empty() => new(Guid.NewGuid(), [], false);
 
-	public R BoundingBox => this.GetDrawPoints().GetBBox();
-	public double DistanceToPoint(Pt pt) => this.GetDrawPoints().DistanceToPoint(pt);
+	public R BoundingBox => GetDrawPoints(this).GetBBox();
+	public double DistanceToPoint(Pt pt) => GetDrawPoints(this).DistanceToPoint(pt);
 
 	public override string ToString() => $"Curve({Pts.Select(e => $"({e})").JoinText(",")})";
+
+
+	private static Pt[] GetDrawPoints(Curve model) =>
+		model.Pts
+			.SelectMany(p => new[]
+			{
+				p.HLeft,
+				p.P,
+				p.HRight
+			})
+			.Skip(1)
+			.SkipLast(1)
+			.ToArray();
 }
 
 
@@ -73,23 +87,16 @@ static class CurveMods
 			Pts = curve.Pts.AddArr(CurvePt.Make(ptStart, ptEnd))
 		};
 
-	/*public static Mod<Curve> AddPoint_Hover(IRoVar<Option<Pt>> mouse) =>
-		new(
-			nameof(AddPoint_Hover),
-			false,
-			mouse
-				.WhereSome()
-				.Select(m => Mk(curve =>
-					curve with
-					{
-						Pts = curve.Pts.AddArr(CurvePt.Make(m, m))
-					}))
-				.ToVar()
-		);*/
+	public static bool CanClose(this Curve curve) => curve is { Closed: false, Pts.Length: >= 2 };
+	public static Curve CloseCurve(this Curve curve, Pt mouse)
+	{
+		if (!curve.CanClose()) throw new ArgumentException();
+		return curve with {
+			Pts = curve.Pts.SetIdxArr(0, p => p with { HRight = mouse, HLeft = p.P + p.P - mouse }),
+			Closed = true,
+		};
+	}
 
-
-
-	private static Func<Curve, Curve> Mk(Func<Curve, Curve> f) => f;
 
 	private static CurvePt Move(this CurvePt pt, PointType type, Pt pos) => type switch
 	{
@@ -126,12 +133,12 @@ static class CurveUtils
 	private sealed record PtNfo(PointId Id, double Distance);
 
 	
-	public static Option<PointId> GetClosestPointTo(this Curve model, Pt pt, double threshold)
+	public static Option<PointId> GetClosestPointTo(this Curve curve, Pt pt, double threshold)
 	{
 		PtNfo Mk(CurvePt mp, int idx, PointType type) => new(new PointId(idx, type), (mp.GetPt(type) - pt).Length);
 
 		Option<PointId> For(PointType type) =>
-			model.Pts
+			curve.Pts
 				.Select((e, i) => Mk(e, i, type))
 				.OrderByDescending(e => e.Distance)
 				.Where(e => e.Distance < threshold)
@@ -144,39 +151,6 @@ static class CurveUtils
 			For(PointType.RightHandle)
 		);
 	}
-
-	public static Option<PointId> GetClosestPointToButLast(this Curve model, Pt pt, double threshold)
-	{
-		PtNfo Mk(CurvePt mp, int idx, PointType type) => new(new PointId(idx, type), (mp.GetPt(type) - pt).Length);
-
-		Option<PointId> For(PointType type) =>
-			model.Pts
-				.Select((e, i) => Mk(e, i, type))
-				.SkipLast(1)
-				.OrderByDescending(e => e.Distance)
-				.Where(e => e.Distance < threshold)
-				.Select(e => e.Id)
-				.FirstOrOption();
-
-		return OptionExt.AggregateArr(
-			For(PointType.Point),
-			For(PointType.LeftHandle),
-			For(PointType.RightHandle)
-		);
-	}
-
-	public static Pt[] GetDrawPoints(this Curve model) =>
-		model.Pts
-			.SelectMany(p => new[]
-			{
-				p.HLeft,
-				p.P,
-				p.HRight
-			})
-			.Skip(1)
-			.SkipLast(1)
-			.ToArray();
-
 
 	public static Option<StartOrEnd> GetExtremityAt(this Curve curve, Pt p, double threshold) =>
 		from pointId in curve.GetClosestPointTo(p, threshold)

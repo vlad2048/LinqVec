@@ -1,4 +1,5 @@
 ﻿using Geom;
+using LinqVec.Structs;
 using LinqVec.Tools.Cmds.Structs;
 using ReactiveVars;
 
@@ -17,7 +18,7 @@ public sealed record HotspotNfo<TH>(
 )
 {
 	public Cursor? Cursor { get; init; }
-	public Func<IRoVar<Pt>, Action<bool>> HoverAction { get; init; } = _ => _ => { };
+	public Action<TH, Gfx> HoverAction { get; init; } = (_, _) => {};
 }
 
 
@@ -44,6 +45,6 @@ public static class HotspotExt
 		hotspot.Name,
 		p => hotspot.Fun(p).Map(e => (object)e!),
 		hotspot.Cursor,
-		hotspot.HoverAction
+		(p, gfx) => hotspot.HoverAction((TH)p, gfx)
 	);
 }

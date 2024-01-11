@@ -30,6 +30,7 @@
 		{
 			statusStrip = new StatusStrip();
 			drawPanel = new Controls.DrawPanel();
+			btnSave = new Button();
 			SuspendLayout();
 			// 
 			// statusStrip
@@ -42,17 +43,27 @@
 			// 
 			// drawPanel
 			// 
-			drawPanel.Dock = DockStyle.Fill;
-			drawPanel.Location = new Point(0, 0);
+			drawPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+			drawPanel.Location = new Point(0, 35);
 			drawPanel.Name = "drawPanel";
-			drawPanel.Size = new Size(800, 428);
+			drawPanel.Size = new Size(800, 390);
 			drawPanel.TabIndex = 1;
+			// 
+			// btnSave
+			// 
+			btnSave.Location = new Point(5, 5);
+			btnSave.Name = "btnSave";
+			btnSave.Size = new Size(75, 23);
+			btnSave.TabIndex = 2;
+			btnSave.Text = "Save";
+			btnSave.UseVisualStyleBackColor = true;
 			// 
 			// MainWin
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(800, 450);
+			Controls.Add(btnSave);
 			Controls.Add(drawPanel);
 			Controls.Add(statusStrip);
 			Name = "MainWin";
@@ -65,5 +76,6 @@
 
 		private StatusStrip statusStrip;
 		private Controls.DrawPanel drawPanel;
+		private Button btnSave;
 	}
 }

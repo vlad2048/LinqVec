@@ -5,6 +5,21 @@ using LogLib.Writers;
 namespace LogLib;
 
 
+public enum TimeLogType
+{
+	None,
+	Delta,
+	Elapsed,
+}
+
+public record TimeRec(
+	TimeSpan Delta,
+	TimeSpan Elapsed
+)
+{
+	public static readonly TimeRec Default = new(TimeSpan.Zero, TimeSpan.Zero);
+}
+
 public static class PrettyRenderExt
 {
 	public static void RenderFlag(this ITxtWriter w, bool val, string name) => w
@@ -12,19 +27,35 @@ public static class PrettyRenderExt
 		.Surround($"[{name}:", "]", S.General.Neutral);
 
 
-	public static IChunk[] RenderDeltaTime(this TimeSpan t)
+	public static IChunk[] RenderDeltaTime(this TimeRec t, TimeLogType type)
 	{
 		var w = new MemoryTxtWriter();
-		w.RenderDeltaTime(t);
+		switch (type)
+		{
+			case TimeLogType.Delta:
+				w.RenderDeltaTime(t);
+				break;
+			case TimeLogType.Elapsed:
+				w.RenderEllapsedTime(t);
+				break;
+			default:
+				throw new ArgumentException();
+		}
 		return w.Chunks;
 	}
 
-	private static void RenderDeltaTime(this ITxtWriter w, TimeSpan t)
+	private static void RenderDeltaTime(this ITxtWriter w, TimeRec t)
 	{
-		var ms = t.TotalMilliseconds;
+		var ms = t.Delta.TotalMilliseconds;
 		w
-			.Write("[" + $"{(int)ms}ms".PadLeft(7) + "]", ms2col(ms))
-			.spc(1);
+			.Write("[" + $"{(int)ms}ms".PadLeft(9) + "]", ms2col(ms));
+	}
+
+	private static void RenderEllapsedTime(this ITxtWriter w, TimeRec t)
+	{
+		var ms = t.Delta.TotalMilliseconds;
+		w
+			.Write("[" + $@"{t.Elapsed.TotalSeconds:F3}s".PadLeft(9) + "]", ms2col(ms));
 	}
 
 	private static NamedColor ms2col(double ms)

@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿/*
+using System.Reactive.Disposables;
 using Geom;
 using LinqVec.Tools.Cmds.Structs;
 using ReactiveVars;
@@ -40,3 +41,4 @@ static class HotspotHoverActionRunner
 			}).D(d);
 	}
 }
+*/

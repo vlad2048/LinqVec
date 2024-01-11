@@ -20,14 +20,15 @@ sealed partial class MainWin : Form
 
 		this.InitRX(d =>
 		{
+			var canSave = false.Make(d);
+
 			statusStrip.AddColor("fore", drawPanel.HoveredChunk.Map2(e => e.Fore).SelectMany(e => e), d);
 			statusStrip.AddColor("back", drawPanel.HoveredChunk.Map2(e => e.Back).SelectMany(e => e), d);
 			statusStrip.AddLabel("text", drawPanel.HoveredChunk.Map2IfNone(e => e.Text, "")).D(d);
-			
+
 			drawPanel.WhenColorClicked.Subscribe(e =>
 			{
 				using var dlg = new ColorPickerDialog();
-				//dlg.Color.V = e.NamedColor.Color.FullAlpha();
 				dlg.Color.V = PaletteKeeper.GetColorForDisplayNoOverride(e.NamedColor.Name);
 
 				var dlgD = dlg.GetD();
@@ -39,6 +40,7 @@ sealed partial class MainWin : Form
 				if (dlg.ShowDialog() == DialogResult.OK)
 				{
 					PaletteKeeper.OverrideAccept();
+					canSave.V = true;
 				}
 				else
 				{
@@ -47,11 +49,15 @@ sealed partial class MainWin : Form
 
 			}).D(d);
 
-			drawPanel.Events().KeyDown.Subscribe(e =>
-			{
-				if (e.KeyCode != Keys.F2) return;
-				PaletteKeeper.SaveChanges();
-			}).D(d);
+			canSave.Subscribe(e => btnSave.Enabled = e).D(d);
+
+			drawPanel.Events().KeyDown
+				.Where(e => e.KeyCode == Keys.S && e.Control && canSave.V)
+				.Subscribe(e =>
+				{
+					PaletteKeeper.SaveChanges();
+					canSave.V = false;
+				}).D(d);
 		});
 	}
 }

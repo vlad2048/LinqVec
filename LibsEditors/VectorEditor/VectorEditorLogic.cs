@@ -71,7 +71,7 @@ public sealed class VectorEditorLogic : EditorLogic
 					switch (obj)
 					{
 						case Curve curve:
-							Painter.PaintCurve(gfx, curve, CurveGfxState.None);
+							Painter.DrawCurve(gfx, curve, false);
 							break;
 					}
 				}

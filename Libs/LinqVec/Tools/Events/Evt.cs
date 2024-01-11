@@ -4,15 +4,12 @@ using ReactiveVars;
 
 namespace LinqVec.Tools.Events;
 
-public class Evt : IDisposable
+public class Evt
 {
-	private readonly Disp d;
-	public void Dispose() => d.Dispose();
-
 	private readonly Action<Cursor> setCursor;
 
 	public IObservable<IEvt> WhenEvt { get; }
-	public IRwVar<bool> IsDragging { get; }
+	public IRoVar<bool> IsMouseDown { get; }
 	public void SetCursor(Cursor? cursor)
 	{
 		if (cursor != null)
@@ -28,9 +25,18 @@ public class Evt : IDisposable
 		Disp d
 	)
 	{
-		this.d = d;
-		WhenEvt = whenEvt.MakeHot(d);
-		IsDragging = Var.Make(false, d);
+		WhenEvt = whenEvt
+			//.Where(e => !IsMouseUp(e))
+			.MakeHot(d);
+		//IsMouseDown = WhenEvt.IsMouseDown();
+		IsMouseDown =
+			Obs.Merge(
+					WhenEvt.WhenMouseDown().Select(_ => true),
+					WhenEvt.WhenMouseUp().Select(_ => false),
+					WhenEvt.OfType<MouseLeftBtnUpOutside>().Select(_ => false)
+				)
+				.Prepend(false)
+				.ToVar(d);
 		this.setCursor = setCursor;
 		MousePos = Var.MakeOptionalFromOptionalObs(
 			Obs.Merge(
@@ -41,4 +47,10 @@ public class Evt : IDisposable
 		);
 		WhenUndoRedo = whenUndoRedo;
 	}
+
+	private static bool IsMouseUp(IEvt e) => e switch {
+		MouseBtnEvt { UpDown: UpDown.Up, Btn: MouseBtn.Left } => true,
+		MouseLeftBtnUpOutside => true,
+		_ => false
+	};
 }

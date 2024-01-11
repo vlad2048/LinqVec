@@ -42,11 +42,12 @@ public static class VecJsoner
 		AddConverters(configJsonOpt);
 		AddConverters(vecJsonOpt);
 	}
-
+	
 	private static void AddConverters(JsonSerializerOptions opt)
 	{
 		opt.Converters.Add(ConverterMaker.ColorConverter);
 		opt.Converters.Add(new OptionConverterFactory());
+		opt.Converters.Add(new JsonStringEnumConverter());
 	}
 
 	public static readonly Jsoner Config = new(configJsonOpt);

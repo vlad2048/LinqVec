@@ -74,7 +74,7 @@ public static class S
 	public static class Misc
 	{
 		public static readonly NamedColor Keys = new(Color.FromArgb(0x0f6e0f));
-		public static readonly NamedColor MousePos = new(Color.FromArgb(0xcacaca));
+		public static readonly NamedColor MousePos = new(Color.FromArgb(0xa7a7a7));
 
 
 		public static readonly NamedColor Time = new(Color.FromArgb(0xbf9822));

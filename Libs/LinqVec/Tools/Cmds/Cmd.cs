@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Geom;
+using LinqVec.Structs;
 using LinqVec.Tools.Cmds.Enums;
 using LinqVec.Tools.Cmds.Structs;
 using LinqVec.Tools.Cmds.Utils;
@@ -12,17 +13,17 @@ namespace LinqVec.Tools.Cmds;
 
 public static class Cmd
 {
-	public static HotspotNfo<TH> OnHover<TH>(this HotspotNfo<TH> hotspot, Func<IRoVar<Pt>, Action<bool>> hoverAction) => hotspot with { HoverAction = hoverAction };
+	public static HotspotNfo<TH> OnHover<TH>(this HotspotNfo<TH> hotspot, Action<TH, Gfx> hoverAction) => hotspot with { HoverAction = hoverAction };
 
 	public static readonly Func<IRoVar<Pt>, Action<bool>> EmptyHoverAction = _ => _ => {};
 
 	public static ClickHotspotCmd ClickRet(
 		string name,
-		ClickGesture gesture,
-		Func<Option<ToolStateFun>> clickAction
+		Gesture gesture,
+		Action clickAction
 	) => new(
 		name,
-		(Gesture)gesture,
+		gesture,
 		clickAction
 	);
 
@@ -31,7 +32,6 @@ public static class Cmd
 		Func<Pt, IRoVar<Pt>, Action<bool>> dragAction
 	) => new(
 		name,
-		Gesture.Drag,
 		dragAction
 	);
 
@@ -40,23 +40,6 @@ public static class Cmd
 		Keys key,
 		Action action
 	) => new(name, key, action);
-
-	// *************
-	// * Utilities *
-	// *************
-	public static ClickHotspotCmd Click(
-		string name,
-		ClickGesture gesture,
-		Action clickAction
-	) => new(
-		name,
-		(Gesture)gesture,
-		() =>
-		{
-			clickAction();
-			return None;
-		}
-	);
 }
 
 

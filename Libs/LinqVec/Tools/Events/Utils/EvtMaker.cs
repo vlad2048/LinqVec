@@ -23,9 +23,8 @@ static class EvtMaker
 		var whenKeyUp = ctrl.Events().KeyUp.Select(e => new KeyEvt(UpDown.Up, e.KeyCode));
 
 		var whenMouseMoveRepeat = whenRepeatLastMouseMove
-			//.Do(_ => LR.LogThread("whenRepeatLastMouseMove -> Triggered (1)"))
+			.Where(_ => !G.Cfg.V.DisableRepeatLastMouseMove)
 			.Delay(TimeSpan.Zero, Rx.Sched)
-			//.Do(_ => LR.LogThread("whenRepeatLastMouseMove -> Triggered (2)"))
 			.WithLatestFrom(whenMouseMove).Select(e => e.Second);
 		var ctrlD = ctrl.GetD();
 		return

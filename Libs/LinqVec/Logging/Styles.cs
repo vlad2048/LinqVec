@@ -29,8 +29,8 @@ public static class Styles
 	// ***********
 	public static readonly SlotNfo Slot_Hotspot = MkSlot(
 		SlotType.Event,
-		priority: 1,
-		size: 10,
+		priority: 2,
+		size: 19,
 		cfg => cfg.Log.LogCmd.Hotspot
 	);
 
@@ -48,10 +48,16 @@ public static class Styles
 	// **************
 	public static readonly SlotNfo Slot_IsDragging = MkSlot(
 		SlotType.Event,
-		priority: 2,
+		priority: 1,
 		size: 10,
 		cfg => cfg.Log.LogCmd.Drag
 	);
+
+	public static RenderNfo RenderEnum<E>(this IObservable<E> source, SlotNfo slot) =>
+		source.Prettify((e, w) => w
+				.Write($"{e}")
+			)
+			.WithSlot(slot);
 
 	public static RenderNfo RenderFlag(this IRoVar<bool> source, SlotNfo slot) =>
 		source.Prettify((e, w) => w

@@ -15,8 +15,4 @@
     <ProjectReference Include="..\ReactiveVars\ReactiveVars.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ConTickerLogic\Logic\" />
-  </ItemGroup>
-
 </Project>

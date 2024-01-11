@@ -8,10 +8,7 @@ using LinqVec.Tools.Cmds.Structs;
 using LinqVec.Tools.Events;
 using LinqVec.Utils;
 using LinqVec.Utils.Rx;
-using LogLib;
 using LogLib.ConTickerLogic;
-using LogLib.Structs;
-using LogLib.Writers;
 using ReactiveVars;
 
 namespace LinqVec.Tools.Cmds.Logic;
@@ -79,8 +76,6 @@ static class CmdEvtGenerator
 		this IRoVar<Option<Hotspot>> hotspot,
 		IRoVar<ToolState> state,
 		IObservable<IEvt> evt,
-		IRoVar<bool> isDragging,
-		LogTicker logTicker,
 		IScheduler scheduler,
 		Disp d
 	)
@@ -89,14 +84,21 @@ static class CmdEvtGenerator
 			.TimeInterval(scheduler)
 			.Select(e => e.Value.ToUsr(e.Interval <= ClickDelay))
 			.WhereSome()
-			;//.MakeHot(d);
+			.MakeHot(d);
 
 
-		logTicker.Log(usrEvt.RenderUsr(), d);
+		//logTicker.Log(usrEvt.RenderUsr(), d);
 
-		return hotspot
+		/*return hotspot
 			.SwitchOption_NeverIfNone(hotspot_ =>
 				hotspot_.ToCmdEvt(usrEvt, state.V.Shortcuts, scheduler, d))
+			.MakeHot(d);*/
+
+		return hotspot
+			.WhereSome()
+			//.Do(_ => L.WriteLine("DOOOOOOOOOOOOOOOOOOOOOO"))
+			.Select(hotspot_ => hotspot_.ToCmdEvt(usrEvt, state.V.Shortcuts, scheduler, d))
+			.Switch()
 			.MakeHot(d);
 	}
 
@@ -109,44 +111,17 @@ static class CmdEvtGenerator
 		Disp d
 	)
 	{
-		/*
-		var whenDragStart =
-			hotspot.Cmds
-				.FirstOrOption(e => e.Gesture == Gesture.Drag)
-				.Map(cmd => usrEvt
-					.SpotMatches(seqDrag)
-					.Select(e => new DragStartCmdEvt(cmd, ((LDownUsr)e).Pt)))
-				.IfNone(Obs.Never<DragStartCmdEvt>)
-				//.Lg("DragStart")
-				.MakeHot(d);
+		var cmdsDrag = hotspot.Cmds.OfType<DragHotspotCmd>().ToArray();
+		var cmdsClick = hotspot.Cmds.OfType<ClickHotspotCmd>().ToArray();
 
-		var whenDragEnd =
-			whenDragStart
-				.Select(whenDragStart_ =>
-						usrEvt
-							//.Lg("  DragEnd - 1")
-							.Where(e => e is LUpUsr)
-							//.Lg("  DragEnd - 2")
-							.Select(e => new DragFinishCmdEvt(hotspot.Cmds.Single(f => f.Gesture == Gesture.Drag), whenDragStart_.PtStart, ((LUpUsr)e).Pt))
-							//.Lg("  DragEnd - 3")
-							.Take(1)
-							//.Lg("  DragEnd - 4")
-				)
-				.Switch()
-				//.Lg("  DragEnd - Switch")
-				.MakeHot(d);
+		if (cmdsDrag.Length > 1) throw new ArgumentException("Cannot have more than 1 Drag command for a single Hotspot");
+		if (cmdsClick.Select(e => e.Gesture).Distinct().Count() != cmdsClick.Length) throw new ArgumentException("Gestures should be unique for a Hotspot");
 
-		return Obs.Merge<ICmdEvt>(whenDragStart, whenDragEnd);
-		*/
-
-
-
-		if (hotspot.Cmds.Select(e => e.Gesture).Distinct().Count() != hotspot.Cmds.Length) throw new ArgumentException("Gestures should be unique for a Hotspot");
-		var hasBothSingleAndDoubleClicks = hotspot.Cmds.Any(e => e.Gesture == Gesture.Click) && hotspot.Cmds.Any(e => e.Gesture == Gesture.DoubleClick);
+		var cmdDrag = cmdsDrag.FirstOrOption();
+		var hasBothSingleAndDoubleClicks = cmdsClick.Any(e => e.Gesture == Gesture.Click) && cmdsClick.Any(e => e.Gesture == Gesture.DoubleClick);
 
 		var whenDragStart =
-			hotspot.Cmds
-				.FirstOrOption(e => e.Gesture == Gesture.Drag)
+			cmdDrag
 				.Map(cmd => usrEvt
 					.SpotMatches(seqDrag)
 					.Select(e => new DragStartCmdEvt(cmd, ((LDownUsr)e).Pt)))
@@ -161,7 +136,7 @@ static class CmdEvtGenerator
 						//.Lg("  DragEnd - 1")
 						.Where(e => e is LUpUsr)
 						//.Lg("  DragEnd - 2")
-						.Select(e => new DragFinishCmdEvt(hotspot.Cmds.Single(f => f.Gesture == Gesture.Drag), whenDragStart_.PtStart, ((LUpUsr)e).Pt))
+						.Select(e => new DragFinishCmdEvt(whenDragStart_.HotspotCmd, whenDragStart_.PtStart, ((LUpUsr)e).Pt))
 						//.Lg("  DragEnd - 3")
 						.Take(1)
 						//.Lg("  DragEnd - 4")
@@ -179,7 +154,7 @@ static class CmdEvtGenerator
 				.ToVar(d);
 
 		var whenRightClick =
-			hotspot.Cmds
+			cmdsClick
 				.FirstOrOption(e => e.Gesture == Gesture.RightClick)
 				.Map(cmd =>
 					usrEvt
@@ -191,7 +166,7 @@ static class CmdEvtGenerator
 				.MakeHot(d);
 
 		var whenDoubleClick =
-			hotspot.Cmds
+			cmdsClick
 				.FirstOrOption(e => e.Gesture == Gesture.DoubleClick)
 				.Map(cmd =>
 					usrEvt
@@ -206,7 +181,7 @@ static class CmdEvtGenerator
 			.MakeHot(d);
 
 		var whenClick =
-			hotspot.Cmds
+			cmdsClick
 				.FirstOrOption(e => e.Gesture == Gesture.Click)
 				.Map(cmd =>
 					hasBothSingleAndDoubleClicks switch
@@ -233,7 +208,7 @@ static class CmdEvtGenerator
 				.MakeHot(d);
 
 		var whenShiftClick =
-			hotspot.Cmds
+			cmdsClick
 				.FirstOrOption(e => e.Gesture == Gesture.ShiftClick)
 				.Map(cmd =>
 					usrEvt

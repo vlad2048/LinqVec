@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Drawing;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using DynamicData;
@@ -28,25 +27,14 @@ static class LogTickerConstants
 
 public class LogTicker : IDisposable
 {
-	private static readonly SlotNfo Slot_DeltaTime = new(
-		SlotType.Var,
-		"time",
-		Priority: -1,
-		Size: 9,
-		Obs.Return(true)
-	);
-
 	private readonly Disp d;
 	public void Dispose() => d.Dispose();
 
-    private readonly Func<DateTime> time;
     private readonly ISourceCache<SlotUnsortedInst, string> slots;
     private readonly LogTickerHistory history;
     private IRoVar<SlotInst[]> Slots { get; }
 	private readonly Set tickFired = new();
 	private bool HasFiredAndFlag(string name) => !tickFired.Add(name);
-	private DateTime tickStart;
-	private bool IsTickTooLong() => time() - tickStart > LogTickerConstants.MaxTickLength;
 	private bool IsTickEmpty() => tickFired.Count == 0;
 
 
@@ -57,14 +45,14 @@ public class LogTicker : IDisposable
 		IScheduler scheduler,
 		IObservable<Unit> whenSave,
 		Action<IChunk[], string> saveAction,
+		IRoVar<TimeLogType> timeLogType,
+		IRoVar<bool> disableLogTicker,
 		Disp d
 	)
 	{
 		S.Init();
 		history = new LogTickerHistory(saveAction);
-		time = () => scheduler.Now.DateTime;
 		this.d = d;
-		var tickDelta = Var.Make(TimeSpan.Zero, d);
 		slots = new SourceCache<SlotUnsortedInst, string>(e => e.Nfo.Name).D(d);
 		Slots = slots.Connect()
 			.FilterOnObservable(e => e.Nfo.WhenEnabled)
@@ -72,18 +60,26 @@ public class LogTicker : IDisposable
 			.Select(SlotArranger.Arrange)
 			.ToVar(d);
 
-		Add(new SlotUnsortedInst(Slot_DeltaTime, new VarSrc(tickDelta.Select(t => t.RenderDeltaTime()).ToVar())), d);
+		var timeTracker = new TimeTracker(scheduler, d);
+		var slotTime = new SlotNfo(
+			SlotType.Var,
+			"time",
+			Priority: -1,
+			Size: 11,
+			timeLogType.Select(e => e != TimeLogType.None).ObserveOn(scheduler)
+		);
+		Add(new SlotUnsortedInst(slotTime, new VarSrc(timeTracker.TimeRec.Select(t => t.RenderDeltaTime(timeLogType.V)).ToVar())), d);
 
 		// New tick happens when:
 		//		- slots are added/removed
 		//		- a slot of type Event fires BUT it already fired during this tick
 		//		- a slot of type Event fires BUT this tick is already too long
 		Obs.Merge(
-				Slots.Select(_ => Option<LogEvt>.None),
+				Slots.Where(_ => !disableLogTicker.V).Select(_ => Option<LogEvt>.None),
 				Slots
 					.MergeManyItems(e => e.Source.WhenEvt)
-					.Select(e => new LogEvt(e, IsTickTooLong() || HasFiredAndFlag(e.Item.Nfo.Name)))
-					.Where(e => e.NewTick)
+					.Where(_ => !disableLogTicker.V)
+					.Select(e => new LogEvt(e, timeTracker.IsTickTooLong() || HasFiredAndFlag(e.Item.Nfo.Name)))
 					.Select(Some)
 			)
 			.Subscribe(tOpt =>
@@ -91,9 +87,7 @@ public class LogTicker : IDisposable
 				if (tOpt.Map(e => e.NewTick).IfNone(false))
 				{
 					tickFired.Clear();
-					var now = time();
-					tickDelta.V = now - tickStart;
-					tickStart = now;
+					timeTracker.NewTick();
 					history.NewTick();
 					Console.WriteLine();
 				}
@@ -104,14 +98,10 @@ public class LogTicker : IDisposable
 		whenSave.Subscribe(_ =>
 		{
 			var file = Path.GetTempFileName();
-			file = @"C:\tmp\vec\storybook\storybook.json";
 			history.Save(file);
 			Process.Start(LogTickerConstants.StorybookExe, file);
-			disabled = true;
 		}).D(d);
 	}
-
-	private bool disabled = false;
 
 	public void Log(
 		RenderNfo renderNfo,
@@ -128,7 +118,6 @@ public class LogTicker : IDisposable
 
 	private void LogEvent(ItemWithValue<SlotInst, IChunk[]> item)
 	{
-		if (disabled) return;
 		ReactiveVarsLogger.EnsureMainThread();
 		var txt = item.Value;
 		var slot = item.Item;

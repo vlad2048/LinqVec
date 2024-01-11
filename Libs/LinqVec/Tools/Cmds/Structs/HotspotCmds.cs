@@ -1,6 +1,5 @@
 ﻿using Geom;
 using LinqVec.Tools.Cmds.Enums;
-using LinqVec.Tools.Events;
 using ReactiveVars;
 using System.Text.Json.Serialization;
 
@@ -12,19 +11,17 @@ namespace LinqVec.Tools.Cmds.Structs;
 public interface IHotspotCmd
 {
 	string Name { get; }
-	Gesture Gesture { get; }
 }
 
 public sealed record ClickHotspotCmd(
 	string Name,
 	Gesture Gesture,
 	[property: JsonIgnore]
-	Func<Option<ToolStateFun>> ClickAction
+	Action ClickAction
 ) : IHotspotCmd;
 
 public sealed record DragHotspotCmd(
 	string Name,
-	Gesture Gesture,
 	[property: JsonIgnore]
 	Func<Pt, IRoVar<Pt>, Action<bool>> DragAction
 ) : IHotspotCmd
